@@ -42,7 +42,7 @@ QgsValueMapConfigDlg::QgsValueMapConfigDlg( QgsVectorLayer *vl, int fieldIdx, QW
   tableWidget->horizontalHeader()->setSectionsClickable( true );
   tableWidget->setSortingEnabled( true );
 
-  connect( addNullButton, &QAbstractButton::clicked, this, &QgsValueMapConfigDlg::addNullButtonPushed );
+  //connect( addNullButton, &QAbstractButton::clicked, this, &QgsValueMapConfigDlg::addNullButtonPushed );
   connect( removeSelectedButton, &QAbstractButton::clicked, this, &QgsValueMapConfigDlg::removeSelectedButtonPushed );
   connect( loadFromLayerButton, &QAbstractButton::clicked, this, &QgsValueMapConfigDlg::loadFromLayerButtonPushed );
   connect( loadFromCSVButton, &QAbstractButton::clicked, this, &QgsValueMapConfigDlg::loadFromCSVButtonPushed );
@@ -55,8 +55,10 @@ QVariantMap QgsValueMapConfigDlg::config()
   QList<QVariant> valueList;
 
   //store data to map
+  QVariantMap value;
   for ( int i = 0; i < tableWidget->rowCount() - 1; i++ )
   {
+    value.clear();
     QTableWidgetItem *ki = tableWidget->item( i, 0 );
     QTableWidgetItem *vi = tableWidget->item( i, 1 );
 
@@ -67,11 +69,9 @@ QVariantMap QgsValueMapConfigDlg::config()
     if ( ( ks == QgsApplication::nullRepresentation() ) && !( ki->flags() & Qt::ItemIsEditable ) )
       ks = QgsValueMapFieldFormatter::NULL_VALUE;
 
-    QVariantMap value;
-
     if ( !vi || vi->text().isNull() )
     {
-      value.insert( ks, ks );
+        value.insert( ks, ks );
     }
     else
     {
@@ -79,6 +79,13 @@ QVariantMap QgsValueMapConfigDlg::config()
     }
     valueList.append( value );
   }
+  // if ( !layer()->defaultValueDefinition( field() ).replaceNullValue() )
+  // {
+  //   value.clear();
+  //   value.insert( QgsValueMapFieldFormatter::NULL_VALUE, QgsValueMapFieldFormatter::NULL_VALUE);
+  //   valueList.append( value );
+  // }
+
 
   QVariantMap cfg;
   cfg.insert( QStringLiteral( "map" ), valueList );
@@ -276,6 +283,11 @@ void QgsValueMapConfigDlg::populateComboBox( QComboBox *comboBox, const QVariant
         continue;
 
       comboBox->addItem( valueMap.constBegin().key(), valueMap.constBegin().value() );
+    }
+    if ( valueList.count() == 1 )
+    {
+      comboBox->setDisabled( true );
+      comboBox->setToolTip( tr( "No default value or other values in value map set" ) );
     }
   }
   else

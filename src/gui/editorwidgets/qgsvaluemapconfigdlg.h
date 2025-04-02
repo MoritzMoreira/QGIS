@@ -20,6 +20,8 @@
 
 #include "qgseditorconfigwidget.h"
 #include "qgis_gui.h"
+#include "qgsattributetypedialog.h"
+
 
 class QComboBox;
 

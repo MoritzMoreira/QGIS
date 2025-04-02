@@ -33,7 +33,6 @@ QString QgsValueMapFieldFormatter::id() const
 QString QgsValueMapFieldFormatter::representValue( QgsVectorLayer *layer, int fieldIndex, const QVariantMap &config, const QVariant &cache, const QVariant &value ) const
 {
   Q_UNUSED( cache )
-
   QString valueInternalText;
   if ( QgsVariantUtils::isNull( value ) )
     valueInternalText = NULL_VALUE;
@@ -77,6 +76,8 @@ QVariantList QgsValueMapFieldFormatter::availableValues( const QVariantMap &conf
   const QList<QVariant> valueList = config.value( QStringLiteral( "map" ) ).toList();
   for ( const QVariant &item : valueList )
   {
+    if ( QgsVariantUtils::isNull( item.toMap().constBegin().value() ) )
+      continue;
     values.append( item.toMap().constBegin().value() );
     if ( values.count() == countLimit )
       break;

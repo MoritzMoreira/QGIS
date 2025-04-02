@@ -150,6 +150,7 @@ void QgsValueMapSearchWidgetWrapper::initWidget( QWidget *editor )
 
     connect( mComboBox, static_cast<void ( QComboBox::* )( int )>( &QComboBox::currentIndexChanged ), this, &QgsValueMapSearchWidgetWrapper::comboBoxIndexChanged );
   }
+  mComboBox->setEnabled(false);
 }
 
 void QgsValueMapSearchWidgetWrapper::setExpression( const QString &expression )

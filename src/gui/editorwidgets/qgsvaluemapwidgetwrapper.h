@@ -35,6 +35,7 @@ SIP_NO_FILE
  * Any option will be treated as entry in the value map.
  * \note not available in Python bindings
  */
+class QComboBoxIgnoreClick;
 
 class GUI_EXPORT QgsValueMapWidgetWrapper : public QgsEditorWidgetWrapper
 {
@@ -56,11 +57,12 @@ class GUI_EXPORT QgsValueMapWidgetWrapper : public QgsEditorWidgetWrapper
   public:
     QVariant value() const override;
     void showIndeterminateState() override;
+    QComboBox *comboBox();
+    bool valid() const override;
 
   protected:
     QWidget *createWidget( QWidget *parent ) override;
     void initWidget( QWidget *editor ) override;
-    bool valid() const override;
 
   private:
     void updateValues( const QVariant &value, const QVariantList & = QVariantList() ) override;

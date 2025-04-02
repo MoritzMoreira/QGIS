@@ -53,6 +53,8 @@ QWidget *QgsWidgetWrapper::widget()
   {
     mWidget->setProperty( "EWV2Wrapper", QVariant::fromValue<QgsWidgetWrapper *>( this ) );
     initWidget( mWidget );
+    //mWidget->setDisabled(true);
+    //bool en = mWidget->isEnabled();
     mInitialized = true;
   }
 

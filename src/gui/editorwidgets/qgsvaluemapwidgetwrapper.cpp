@@ -38,7 +38,10 @@ QVariant QgsValueMapWidgetWrapper::value() const
   }
 
   if ( v == QgsValueMapFieldFormatter::NULL_VALUE )
+  {
+    //mComboBox = nullptr; //setCurrentIndex( -1 );
     v = QgsVariantUtils::createNullVariant( field().type() );
+  }
 
   return v;
 }
@@ -49,6 +52,11 @@ void QgsValueMapWidgetWrapper::showIndeterminateState()
   {
     whileBlocking( mComboBox )->setCurrentIndex( -1 );
   }
+}
+
+QComboBox *QgsValueMapWidgetWrapper::comboBox()
+{
+  return mComboBox;
 }
 
 QWidget *QgsValueMapWidgetWrapper::createWidget( QWidget *parent )
@@ -62,7 +70,6 @@ QWidget *QgsValueMapWidgetWrapper::createWidget( QWidget *parent )
 void QgsValueMapWidgetWrapper::initWidget( QWidget *editor )
 {
   mComboBox = qobject_cast<QComboBox *>( editor );
-
   if ( mComboBox )
   {
     QgsValueMapConfigDlg::populateComboBox( mComboBox, config(), false );
@@ -78,25 +85,44 @@ bool QgsValueMapWidgetWrapper::valid() const
 
 void QgsValueMapWidgetWrapper::updateValues( const QVariant &value, const QVariantList & )
 {
+  int i = 1;
   QString v;
-  if ( QgsVariantUtils::isNull( value ) )
-    v = QgsValueMapFieldFormatter::NULL_VALUE;
-  else
+  // if ( QgsVariantUtils::isNull( value ) )
+  //   v = QgsValueMapFieldFormatter::NULL_VALUE;
+  // else
     v = value.toString();
 
   if ( mComboBox )
   {
     if ( mComboBox->findData( v ) == -1 )
     {
-      if ( QgsVariantUtils::isNull( value ) )
+      QMap constraintAndStrength = layer()->fieldConstraintsAndStrength( fieldIdx() );
+      auto notNullIt = constraintAndStrength.find( QgsFieldConstraints::ConstraintNotNull );
+      bool notNullHard = false;
+      if( notNullIt != constraintAndStrength.end() )
+        notNullHard = ( notNullIt.value() == QgsFieldConstraints::ConstraintStrengthHard );
+      if ( QgsVariantUtils::isNull( value ) && !notNullHard )
       {
+        //
         mComboBox->addItem( QgsApplication::nullRepresentation().prepend( '(' ).append( ')' ), v );
+        i = 0;
       }
       else
       {
-        mComboBox->addItem( QString( v ).prepend( '(' ).append( ')' ), v );
+        if ( !QgsVariantUtils::isNull( value ) )
+        {
+          mComboBox->addItem( QString( v ).prepend( '(' ).append( ')' ), v );
+          i = 0;
+        }
+        //add additional null value option
+        if ( !layer()->defaultValueDefinition( fieldIdx() ).replaceNullValue() && !notNullHard )
+        {
+          mComboBox->addItem( QgsApplication::nullRepresentation().prepend( '(' ).append( ')' ), v );
+          i = 0;
+        }
       }
     }
-    mComboBox->setCurrentIndex( mComboBox->findData( v ) );
+    int y = mComboBox->findData( v );
+    mComboBox->setCurrentIndex( mComboBox->findData( v ) + i );
   }
 }

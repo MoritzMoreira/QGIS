@@ -98,6 +98,10 @@ QgsAttributeTypeDialog::QgsAttributeTypeDialog( QgsVectorLayer *vl, int fieldIdx
   mWarnDefaultValueHasFieldsWidget->setVisible( false );
   connect( mApplyDefaultValueOnUpdateCheckBox, &QCheckBox::stateChanged, this, &QgsAttributeTypeDialog::defaultExpressionChanged );
 
+  connect( mReplaceNullValueCheckBox, &QCheckBox::stateChanged, this, &QgsAttributeTypeDialog::defaultExpressionChanged );
+  if ( defaultValueExpression().isEmpty() )
+    mReplaceNullValueCheckBox->setDisabled( true );
+
   constraintExpressionWidget->setAllowEmptyFieldName( true );
   constraintExpressionWidget->setLayer( vl );
 
@@ -406,6 +410,16 @@ void QgsAttributeTypeDialog::setApplyDefaultValueOnUpdate( bool applyDefaultValu
   mApplyDefaultValueOnUpdateCheckBox->setChecked( applyDefaultValueOnUpdate );
 }
 
+bool QgsAttributeTypeDialog::replaceNullWithDefaultValue() const
+{
+  return mReplaceNullValueCheckBox->isChecked();
+}
+
+void QgsAttributeTypeDialog::setReplaceNullWithDefaultValue( bool replaceNullWithDefaultValue )
+{
+  mReplaceNullValueCheckBox->setChecked( replaceNullWithDefaultValue );
+}
+
 Qgis::FieldDomainSplitPolicy QgsAttributeTypeDialog::splitPolicy() const
 {
   return mSplitPolicyComboBox->currentData().value<Qgis::FieldDomainSplitPolicy>();
@@ -530,6 +544,10 @@ void QgsAttributeTypeDialog::defaultExpressionChanged()
   const QString previewText = fieldFormatter->representValue( mLayer, mFieldIdx, editorWidgetConfig(), QVariant(), val );
 
   mDefaultPreviewLabel->setText( "<i>" + previewText + "</i>" );
+
+  mReplaceNullValueCheckBox->setEnabled( true );
+  //mReplaceNullValueCheckBox->setChecked( true );
+
 }
 
 void QgsAttributeTypeDialog::updateSplitPolicyLabel()

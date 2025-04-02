@@ -57,6 +57,7 @@
 #include "qgstexteditwrapper.h"
 #include "qgsfieldmodel.h"
 #include "qgscollapsiblegroupbox.h"
+#include "qgsvaluemapwidgetwrapper.h"
 
 #include <QDir>
 #include <QTextStream>
@@ -557,11 +558,11 @@ void QgsAttributeForm::updateValuesDependenciesDefaultValues( const int originId
     if ( eww )
     {
       // Update only on form opening (except when applyOnUpdate is activated)
-      if ( mValuesInitialized && !eww->field().defaultValueDefinition().applyOnUpdate() )
+      if ( mValuesInitialized && !eww->field().defaultValueDefinition().applyOnUpdate() /*&& !eww->field().defaultValueDefinition().replaceNullValue()*/ )
         continue;
 
       // Update only when mMode is AddFeatureMode (except when applyOnUpdate is activated)
-      if ( mMode != QgsAttributeEditorContext::AddFeatureMode && !eww->field().defaultValueDefinition().applyOnUpdate() )
+      if ( mMode != QgsAttributeEditorContext::AddFeatureMode && !eww->field().defaultValueDefinition().applyOnUpdate() /*&& !eww->field().defaultValueDefinition().replaceNullValue()*/ )
       {
         continue;
       }
@@ -1568,7 +1569,25 @@ void QgsAttributeForm::synchronizeState()
   for ( QgsWidgetWrapper *ww : std::as_const( mWidgets ) )
   {
     QgsEditorWidgetWrapper *eww = qobject_cast<QgsEditorWidgetWrapper *>( ww );
-    if ( eww )
+    QgsValueMapWidgetWrapper *vmww = qobject_cast<QgsValueMapWidgetWrapper *>( eww );
+    if ( vmww )
+    {
+      if ( vmww->comboBox()->count() == 0 ) //comboBox()->currentIndex() == -1
+      {
+        ww->setEnabled( false );
+        vmww->comboBox()->setToolTip( tr( "No value set in value map configuration" ) );
+        isEditable = false;
+      }
+      else if ( vmww->comboBox()->count() == 1 )
+      {
+        ww->setEnabled( false );
+        vmww->comboBox()->setToolTip( tr( "No other value set in value map configuration" ) );
+        isEditable = true;
+      }
+      else
+        ww->setEnabled( true );
+    }
+    else if ( eww )
     {
       const QList<QgsAttributeFormEditorWidget *> formWidgets = mFormEditorWidgets.values( eww->fieldIdx() );
 
@@ -1576,7 +1595,7 @@ void QgsAttributeForm::synchronizeState()
         formWidget->setConstraintResultVisible( isEditable );
 
       eww->setConstraintResultVisible( isEditable );
-
+      //mFeature.fields()
       bool enabled = isEditable && fieldIsEditable( eww->fieldIdx() );
       ww->setEnabled( enabled );
 
