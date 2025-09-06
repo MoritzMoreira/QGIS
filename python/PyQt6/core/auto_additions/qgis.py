@@ -3894,6 +3894,21 @@ Qgis.JoinStyle.__doc__ = """Join styles for buffers.
 # --
 Qgis.JoinStyle.baseClass = Qgis
 # monkey patching scoped based enum
+Qgis.JoinStyle3D.Round.__doc__ = "Smooth, rounded buffer around the input geometry"
+Qgis.JoinStyle3D.Flat.__doc__ = "Flat ends and constant width along the linestring"
+Qgis.JoinStyle3D.CylindersAndSpheres.__doc__ = "Cylinders along the linestring segments with spheres at the vertices"
+Qgis.JoinStyle3D.__doc__ = """Join styles for 3D buffers.
+
+.. versionadded:: 4.0
+
+* ``Round``: Smooth, rounded buffer around the input geometry
+* ``Flat``: Flat ends and constant width along the linestring
+* ``CylindersAndSpheres``: Cylinders along the linestring segments with spheres at the vertices
+
+"""
+# --
+Qgis.JoinStyle3D.baseClass = Qgis
+# monkey patching scoped based enum
 Qgis.GeosCreationFlag.RejectOnInvalidSubGeometry.__doc__ = "Don't allow geometries with invalid sub-geometries to be created"
 Qgis.GeosCreationFlag.SkipEmptyInteriorRings.__doc__ = "Skip any empty polygon interior ring"
 Qgis.GeosCreationFlag.__doc__ = """Flags which control geos geometry creation behavior.
@@ -6128,6 +6143,19 @@ Qgis.PlotAxisSuffixPlacement.__doc__ = """Placement options for suffixes in the 
 # --
 Qgis.PlotAxisSuffixPlacement.baseClass = Qgis
 # monkey patching scoped based enum
+Qgis.PlotAxisType.Interval.__doc__ = "The axis represents a range of values"
+Qgis.PlotAxisType.Categorical.__doc__ = "The axis represents categories"
+Qgis.PlotAxisType.__doc__ = """Plots axis types.
+
+.. versionadded:: 4.0
+
+* ``Interval``: The axis represents a range of values
+* ``Categorical``: The axis represents categories
+
+"""
+# --
+Qgis.PlotAxisType.baseClass = Qgis
+# monkey patching scoped based enum
 Qgis.DpiMode.All.__doc__ = "All"
 Qgis.DpiMode.Off.__doc__ = "Off"
 Qgis.DpiMode.QGIS.__doc__ = "QGIS"
@@ -7976,6 +8004,20 @@ Qgis.LayerTreeFilterFlag.baseClass = Qgis
 Qgis.LayerTreeFilterFlags = lambda flags=0: Qgis.LayerTreeFilterFlag(flags)
 Qgis.LayerTreeFilterFlags.baseClass = Qgis
 LayerTreeFilterFlags = Qgis  # dirty hack since SIP seems to introduce the flags in module
+# monkey patching scoped based enum
+Qgis.MapLayerLegendFlag.ExcludeByDefault.__doc__ = "If set, the layer should not be included in legends by default, and must be manually added by a user"
+Qgis.MapLayerLegendFlag.__doc__ = """Map layer legend flags.
+
+.. versionadded:: 4.0
+
+* ``ExcludeByDefault``: If set, the layer should not be included in legends by default, and must be manually added by a user
+
+"""
+# --
+Qgis.MapLayerLegendFlag.baseClass = Qgis
+Qgis.MapLayerLegendFlags = lambda flags=0: Qgis.MapLayerLegendFlag(flags)
+Qgis.MapLayerLegendFlags.baseClass = Qgis
+MapLayerLegendFlags = Qgis  # dirty hack since SIP seems to introduce the flags in module
 QgsLegendStyle.Style = Qgis.LegendComponent
 # monkey patching scoped based enum
 QgsLegendStyle.Undefined = Qgis.LegendComponent.Undefined
@@ -11656,6 +11698,7 @@ try:
     Qgis.geosVersionMinor = staticmethod(Qgis.geosVersionMinor)
     Qgis.geosVersionPatch = staticmethod(Qgis.geosVersionPatch)
     Qgis.geosVersion = staticmethod(Qgis.geosVersion)
+    Qgis.hasQtWebkit = staticmethod(Qgis.hasQtWebkit)
     Qgis.geoNone = staticmethod(Qgis.geoNone)
     Qgis.geographicCrsAuthId = staticmethod(Qgis.geographicCrsAuthId)
     Qgis.geoWkt = staticmethod(Qgis.geoWkt)

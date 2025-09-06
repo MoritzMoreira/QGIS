@@ -90,7 +90,11 @@ set(QGIS_CORE_SRCS
   gps/qgssatelliteinformation.cpp
   gps/qgsvectorlayergpslogger.cpp
 
+  plot/qgsbarchartplot.cpp
+  plot/qgslinechartplot.cpp
+  plot/qgsplotregistry.cpp
   plot/qgsplot.cpp
+  plot/qgsvectorlayerplotdatagatherer.cpp
 
   symbology/qgs25drenderer.cpp
   symbology/qgsarrowsymbollayer.cpp
@@ -681,6 +685,7 @@ set(QGIS_CORE_SRCS
   layout/qgslayoutgeopdfexporter.cpp
   layout/qgslayoutitem.cpp
   layout/qgslayoutitemattributetable.cpp
+  layout/qgslayoutitemchart.cpp
   layout/qgslayoutitemelevationprofile.cpp
   layout/qgslayoutitemgroup.cpp
   layout/qgslayoutitemgroupundocommand.cpp
@@ -1621,6 +1626,7 @@ set(QGIS_CORE_HDRS
   layout/qgslayoutguidecollection.h
   layout/qgslayoutitem.h
   layout/qgslayoutitemattributetable.h
+  layout/qgslayoutitemchart.h
   layout/qgslayoutitemelevationprofile.h
   layout/qgslayoutitemgroup.h
   layout/qgslayoutitemgroupundocommand.h
@@ -1739,7 +1745,11 @@ set(QGIS_CORE_HDRS
 
   pdf/qgspdfrenderer.h
 
+  plot/qgsbarchartplot.h
+  plot/qgslinechartplot.h
+  plot/qgsplotregistry.h
   plot/qgsplot.h
+  plot/qgsvectorlayerplotdatagatherer.cpp
 
   pointcloud/qgspointcloudattribute.h
   pointcloud/qgspointcloudattributebyramprenderer.h
@@ -2203,6 +2213,18 @@ if (HAVE_WEBENGINE)
     )
 endif()
 
+if (WITH_SFCGAL)
+  set(QGIS_CORE_SRCS ${QGIS_CORE_SRCS}
+    geometry/qgssfcgalengine.cpp
+    geometry/qgssfcgalgeometry.cpp
+  )
+
+  set(QGIS_CORE_HDRS ${QGIS_CORE_HDRS}
+    geometry/qgssfcgalengine.h
+    geometry/qgssfcgalgeometry.h
+  )
+endif()
+
 if(MSVC)
   set_source_files_properties(
       ${CMAKE_CURRENT_BINARY_DIR}/qgsexpression_texts.cpp
@@ -2210,6 +2232,7 @@ if(MSVC)
       expression/qgsexpressionfunction.cpp
       proj/qgscoordinatereferencesystem.cpp
       textrenderer/qgsfontmanager.cpp
+      qgsapplication.cpp
       PROPERTIES COMPILE_FLAGS "/bigobj"
   )
 else()
@@ -2604,6 +2627,12 @@ endif()
 if (WITH_PDAL)
   target_link_libraries(qgis_core
     ${PDAL_LIBRARIES}
+  )
+endif()
+
+if (WITH_SFCGAL)
+  target_link_libraries(qgis_core
+    SFCGAL::SFCGAL
   )
 endif()
 

@@ -2090,6 +2090,19 @@ class CORE_EXPORT Qgis
     Q_ENUM( JoinStyle )
 
     /**
+     * Join styles for 3D buffers.
+     *
+     * \since QGIS 4.0
+     */
+    enum class JoinStyle3D : int
+    {
+      Round = 1,           //!< Smooth, rounded buffer around the input geometry
+      Flat,                //!< Flat ends and constant width along the linestring
+      CylindersAndSpheres, //!< Cylinders along the linestring segments with spheres at the vertices
+    };
+    Q_ENUM( JoinStyle3D )
+
+    /**
      * Flags which control geos geometry creation behavior.
      *
      * \since QGIS 3.40
@@ -3253,6 +3266,19 @@ class CORE_EXPORT Qgis
       FirstAndLastLabels, //!< Place suffix after the first and last label values only
     };
     Q_ENUM( PlotAxisSuffixPlacement )
+
+
+    /**
+     * Plots axis types.
+     *
+     * \since QGIS 4.0
+     */
+    enum class PlotAxisType
+    {
+      Interval, //!< The axis represents a range of values
+      Categorical, //!< The axis represents categories
+    };
+    Q_ENUM( PlotAxisType )
 
     /**
      * DpiMode enum
@@ -4446,6 +4472,25 @@ class CORE_EXPORT Qgis
      */
     Q_DECLARE_FLAGS( LayerTreeFilterFlags, LayerTreeFilterFlag )
     Q_FLAG( LayerTreeFilterFlags )
+
+    /**
+     * Map layer legend flags.
+     *
+     * \since QGIS 4.0
+     */
+    enum class MapLayerLegendFlag : int SIP_ENUM_BASETYPE( IntFlag )
+    {
+      ExcludeByDefault = 1 << 0, //!< If set, the layer should not be included in legends by default, and must be manually added by a user
+    };
+    Q_ENUM( MapLayerLegendFlag )
+
+    /**
+     * Map layer legend flags.
+     *
+     * \since QGIS 4.0
+     */
+    Q_DECLARE_FLAGS( MapLayerLegendFlags, MapLayerLegendFlag )
+    Q_FLAG( MapLayerLegendFlags )
 
     /**
      * Component of legends which can be styled.
@@ -6109,6 +6154,13 @@ class CORE_EXPORT Qgis
     static QString geosVersion();
 
     /**
+     * Returns TRUE if the QGIS build contains QtWebkit.
+     *
+     * \since QGIS 4.0
+     */
+    static bool hasQtWebkit();
+
+    /**
      * Constant that holds the string representation for "No ellipse/No CRS".
      *
      * \since QGIS 3.44
@@ -6237,6 +6289,7 @@ Q_DECLARE_OPERATORS_FOR_FLAGS( Qgis::DataProviderReadFlags )
 Q_DECLARE_OPERATORS_FOR_FLAGS( Qgis::VectorProviderCapabilities )
 Q_DECLARE_OPERATORS_FOR_FLAGS( Qgis::MapCanvasFlags )
 Q_DECLARE_OPERATORS_FOR_FLAGS( Qgis::LayoutRenderFlags )
+Q_DECLARE_OPERATORS_FOR_FLAGS( Qgis::MapLayerLegendFlags )
 Q_DECLARE_METATYPE( Qgis::LayoutRenderFlags )
 Q_DECLARE_METATYPE( QTimeZone )
 
@@ -6752,12 +6805,16 @@ CORE_EXPORT qlonglong qgsPermissiveToLongLong( QString string, bool &ok );
  *
  * Invalid < NULL < Values
  *
+ * Since QGIS 4.0 the \a strictTypeCheck argument can be used to specify that variants
+ * of different types should be compared using their userType ID only, and not attempt
+ * to check the actual variant value.
+ *
  * \see qgsVariantLessThan()
  * \see qgsVariantGreaterThan()
  *
  * \since QGIS 3.44
  */
-CORE_EXPORT int qgsVariantCompare( const QVariant &lhs, const QVariant &rhs );
+CORE_EXPORT int qgsVariantCompare( const QVariant &lhs, const QVariant &rhs, bool strictTypeCheck = false );
 
 /**
  * Compares two QVariant values and returns whether the first is less than the second.
@@ -6765,7 +6822,7 @@ CORE_EXPORT int qgsVariantCompare( const QVariant &lhs, const QVariant &rhs );
  * QVariant data types (such as strings, numeric values, dates and times)
  *
  * Invalid < NULL < Values
- *
+
  * \see qgsVariantGreaterThan()
  * \see qgsVariantCompare()
  */
@@ -6795,27 +6852,34 @@ CORE_EXPORT bool qgsVariantGreaterThan( const QVariant &lhs, const QVariant &rhs
 
 /**
  * Compares two QVariant values and returns whether the first is greater than the second.
- * Useful for sorting lists of variants, correctly handling sorting of the various
- * QVariant data types (such as strings, numeric values, dates and times)
+ *
+ * \note This method performs strict type checking, and considers variants of different
+ * types using their userType ID only. It is accordingly appropriate for use with QMap
+ * with QVariant keys. If loose type checking is required then the qgsVariantGreaterThan()
+ * function should be used.
+ *
  * \see qgsVariantLessThan()
+ * \see qgsVariantGreaterThan()
  */
 inline bool operator> ( const QVariant &v1, const QVariant &v2 )
 {
-  return qgsVariantGreaterThan( v1, v2 );
+  return qgsVariantCompare( v1, v2, true ) > 0;
 }
 
 /**
  * Compares two QVariant values and returns whether the first is less than the second.
- * Useful for sorting lists of variants, correctly handling sorting of the various
- * QVariant data types (such as strings, numeric values, dates and times)
  *
- * Invalid < NULL < Values
+ * \note This method performs strict type checking, and considers variants of different
+ * types using their userType ID only. It is accordingly appropriate for use with QMap
+ * with QVariant keys. If loose type checking is required then the qgsVariantLessThan()
+ * function should be used.
  *
+ * \see qgsVariantLessThan()
  * \see qgsVariantGreaterThan()
  */
 inline bool operator< ( const QVariant &v1, const QVariant &v2 )
 {
-  return qgsVariantLessThan( v1, v2 );
+  return qgsVariantCompare( v1, v2, true ) < 0;
 }
 #endif
 
