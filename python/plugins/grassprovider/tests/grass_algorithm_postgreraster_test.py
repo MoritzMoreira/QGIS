@@ -16,8 +16,6 @@ import tempfile
 import unittest
 from shutil import rmtree
 
-from grassprovider.grass_provider import GrassProvider
-from grassprovider.grass_utils import GrassUtils
 from qgis import processing
 from qgis.core import (
     QgsApplication,
@@ -28,6 +26,9 @@ from qgis.core import (
     QgsRasterLayer,
 )
 from qgis.testing import QgisTestCase, start_app
+
+from grassprovider.grass_provider import GrassProvider
+from grassprovider.grass_utils import GrassUtils
 
 QGIS_AUTH_DB_DIR_PATH = tempfile.mkdtemp()
 os.environ["QGIS_AUTH_DB_DIR_PATH"] = QGIS_AUTH_DB_DIR_PATH

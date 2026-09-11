@@ -23,10 +23,11 @@ import shutil
 
 import AlgorithmsTestBase
 import nose2
-from grassprovider.grass_provider import GrassProvider
-from grassprovider.grass_utils import GrassUtils
 from qgis.core import QgsApplication
 from qgis.testing import QgisTestCase, start_app
+
+from grassprovider.grass_provider import GrassProvider
+from grassprovider.grass_utils import GrassUtils
 
 
 class TestGrassAlgorithmsRasterTest(QgisTestCase, AlgorithmsTestBase.AlgorithmsTest):

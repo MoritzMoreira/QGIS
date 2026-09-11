@@ -31,7 +31,6 @@ from copy import deepcopy
 import nose2
 import processing
 import yaml
-from grassprovider.grass_utils import GrassUtils
 from numpy import nan_to_num
 from osgeo import gdal
 from osgeo.gdalconst import GA_ReadOnly
@@ -53,6 +52,8 @@ from qgis.core import (
 from qgis.PyQt.QtCore import QT_VERSION
 from qgis.testing import QgisTestCase, _UnexpectedSuccess, start_app
 from utilities import unitTestDataPath
+
+from grassprovider.grass_utils import GrassUtils
 
 gdal.UseExceptions()
 
