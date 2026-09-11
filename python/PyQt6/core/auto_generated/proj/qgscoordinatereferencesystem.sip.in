@@ -15,6 +15,9 @@
 
 
 
+
+
+
 class QgsCoordinateReferenceSystem
 {
 %Docstring(signature="appended")
@@ -208,7 +211,6 @@ the same. QGIS is able to consume both flavors.
     static const QMetaObject staticMetaObject;
 
   public:
-
     enum CrsType /BaseType=IntEnum/
     {
       InternalCrsId,
@@ -1310,6 +1312,39 @@ Returns ``True`` if the CRS has a vertical axis.
 Returns auth id of related geographic CRS
 %End
 
+    bool topocentricOrigin( double &latitude /Out/, double &longitude /Out/ ) const;
+%Docstring
+Returns the topocentric origin of a topocentric compatible CRS.
+
+
+
+:return: - ``True`` if this CRS is a topocentric compatible CRS and the
+           origin was successfully retrieved
+         - latitude: Latitude of topocentric origin in decimal degrees
+         - longitude: Longitude of topocentric origin in decimal degrees
+
+.. versionadded:: 4.2
+%End
+
+
+    QgsCoordinateReferenceSystem toTopocentricCrs( double latitude, double longitude ) const;
+%Docstring
+Constructs a topocentric CRS derived from this CRS with origin at
+``latitude``, ``longitude`` in decimal degrees.
+
+If the CRS is not topocentric compatible, returns invalid CRS.
+
+.. versionadded:: 4.2
+%End
+
+    QgsCoordinateReferenceSystem topocentricBaseCrs() const;
+%Docstring
+Returns the base CRS for this topocentric CRS, or an invalid CRS if this
+is not a topocentric CRS or no base CRS has been set.
+
+.. versionadded:: 4.2
+%End
+
     SIP_PYOBJECT __repr__();
 %MethodCode
     const QString str = sipCpp->isValid() ? QStringLiteral( "<QgsCoordinateReferenceSystem: %1%2>" ).arg( !sipCpp->authid().isEmpty() ? sipCpp->authid() : sipCpp->toWkt( Qgis::CrsWktVariant::Preferred ),
@@ -1318,6 +1353,27 @@ Returns auth id of related geographic CRS
     sipRes = PyUnicode_FromString( str.toUtf8().constData() );
 %End
 
+
+    bool isEarthCrs() const;
+%Docstring
+Returns ``True`` if the CRS is associated with the Earth.
+
+.. seealso:: :py:func:`celestialBodyName`
+
+.. seealso:: :py:func:`isSameCelestialBody`
+
+.. versionadded:: 4.2
+%End
+
+    bool isSameCelestialBody( const QgsCoordinateReferenceSystem &other ) const;
+%Docstring
+Returns ``True`` if ``other`` crs is associated with the same celestial
+body.
+
+.. seealso:: :py:func:`celestialBodyName`
+
+.. versionadded:: 4.2
+%End
 
  static QStringList recentProjections() /Deprecated="Since 3.10. Use QgsApplication.coordinateReferenceSystemRegistry()->recentCrs() instead."/;
 %Docstring

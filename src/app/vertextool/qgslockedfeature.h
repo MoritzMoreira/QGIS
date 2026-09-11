@@ -16,11 +16,11 @@
 #ifndef QGSLOCKEDFEATURE_H
 #define QGSLOCKEDFEATURE_H
 
-#include <QObject>
-
 #include "qgis_app.h"
-#include "qgsgeometry.h"
 #include "qgsfeatureid.h"
+#include "qgsgeometry.h"
+
+#include <QObject>
 
 class QgsMapCanvas;
 class QgsVectorLayer;
@@ -39,7 +39,7 @@ class APP_EXPORT QgsLockedFeature : public QObject
   public:
     /**
      * Creates a locked feature
-     * \param featureId id of feature which was selected
+     * \param id id of feature which was selected
      * \param layer vector layer in which feature is selected
      * \param canvas mapCanvas on which we are working
      */

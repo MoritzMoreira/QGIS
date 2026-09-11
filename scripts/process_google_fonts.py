@@ -1,5 +1,5 @@
+import json
 import re
-
 from pathlib import Path
 
 # path to checked out Google Fonts repo
@@ -1446,7 +1446,6 @@ fonts = [
     "Tilt Prism",
     "Tilt Warp",
     "Timmana",
-    "Tinos",
     "Tiro Bangla",
     "Tiro Devanagari Hindi",
     "Tiro Devanagari Marathi",
@@ -1565,7 +1564,6 @@ fonts = [
 
 font_details = {}
 for p in path.rglob("*METADATA.pb"):
-
     with open(p, encoding="utf8") as f_in:
         contents = f_in.readlines()
 
@@ -1588,7 +1586,7 @@ for p in path.rglob("*METADATA.pb"):
         match = re.match(r'\s*filename: "(.*)"', line)
         if match:
             filenames.append(
-                f'{github_path}/{match.group(1).replace("[", "%5B").replace("]", "%5D")}'
+                f"{github_path}/{match.group(1).replace('[', '%5B').replace(']', '%5D')}"
             )
 
     license_path = None
@@ -1607,16 +1605,20 @@ def process_font(family: str):
     assert family in font_details, family
     assert font_details[family]["license_path"], family
 
-    filenames = ", ".join(
-        [f'QStringLiteral( "{f}" )' for f in font_details[family]["filenames"]]
-    )
-
-    print(
-        'GoogleFontDetails( QStringLiteral( "{}" ), {{ {} }}, QStringLiteral( "{}" ) ),'.format(
-            family, filenames, font_details[family]["license_path"]
-        )
-    )
+    return {
+        "family": family,
+        "paths": font_details[family]["filenames"],
+        "license": font_details[family]["license_path"],
+    }
 
 
+font_data = []
 for f in fonts:
-    process_font(f)
+    font_data.append(process_font(f))
+
+with open(
+    Path(__file__).parent.parent / "resources" / "data" / "google_fonts.json",
+    "w",
+    encoding="utf8",
+) as f_out:
+    f_out.write(json.dumps(font_data, indent=2))

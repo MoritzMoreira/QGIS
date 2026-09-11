@@ -19,40 +19,38 @@ __author__ = "Victor Olaya"
 __date__ = "August 2012"
 __copyright__ = "(C) 2012, Victor Olaya"
 
-from typing import Optional
+import math
 import os
 import platform
 import re
 from dataclasses import dataclass
-import math
+from typing import Optional
 
 import psycopg2
-
 from qgis.core import (
     Qgis,
-    QgsBlockingProcess,
-    QgsRunProcess,
     QgsApplication,
-    QgsVectorFileWriter,
-    QgsProcessingFeedback,
-    QgsProcessingUtils,
-    QgsMessageLog,
-    QgsSettings,
+    QgsBlockingProcess,
+    QgsCoordinateReferenceSystem,
     QgsCredentials,
     QgsDataSourceUri,
-    QgsCoordinateReferenceSystem,
-    QgsProcessingException,
-    QgsProviderRegistry,
-    QgsMapLayer,
-    QgsProcessingContext,
-    QgsRectangle,
-    QgsPointXY,
     QgsDistanceArea,
-    QgsRasterLayer,
-    QgsWmsUtils,
+    QgsMapLayer,
+    QgsMessageLog,
+    QgsPointXY,
+    QgsProcessingContext,
+    QgsProcessingException,
+    QgsProcessingFeedback,
     QgsProcessingRasterLayerDefinition,
+    QgsProcessingUtils,
+    QgsProviderRegistry,
+    QgsRasterLayer,
+    QgsRectangle,
+    QgsRunProcess,
+    QgsSettings,
+    QgsVectorFileWriter,
+    QgsWmsUtils,
 )
-
 from qgis.PyQt.QtCore import (
     QCoreApplication,
     QFile,
@@ -113,6 +111,10 @@ class GdalUtils:
 
     supportedRasters = None
     supportedOutputRasters = None
+
+    @staticmethod
+    def is_windows() -> bool:
+        return os.name == "nt"
 
     @staticmethod
     def runGdal(commands, feedback=None):
@@ -299,15 +301,18 @@ class GdalUtils:
         return allexts
 
     @staticmethod
-    def getSupportedOutputRasterExtensions():
-        allexts = []
-        for exts in list(GdalUtils.getSupportedOutputRasters().values()):
+    def getSupportedOutputRasterFormatAndExtensions():
+        res = []
+        for format, exts in GdalUtils.getSupportedOutputRasters().items():
             for ext in exts:
-                if ext not in allexts and ext not in ["", "tif", "tiff"]:
-                    allexts.append(ext)
-        allexts.sort()
-        allexts[0:0] = ["tif", "tiff"]
-        return allexts
+                if ext != "" and format != "GTiff":
+                    res.append((format, ext))
+        res.sort()
+        res[0:0] = [
+            ("GTiff", "tif"),
+            ("GTiff", "tiff"),
+        ]
+        return res
 
     @staticmethod
     def getVectorDriverFromFileName(filename):
@@ -569,9 +574,7 @@ class GdalUtils:
                             connection_string=wms_description_file_path
                         )
                     else:
-                        message = "Cannot create XML description file for WMS layer. Details: {}".format(
-                            xml_wms_error
-                        )
+                        message = f"Cannot create XML description file for WMS layer. Details: {xml_wms_error}"
                         QgsMessageLog.logMessage(
                             message, "Processing", Qgis.MessageLevel.Warning
                         )

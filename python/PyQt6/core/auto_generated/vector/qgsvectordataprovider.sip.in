@@ -9,6 +9,8 @@
 
 
 
+
+
 typedef QHash<int, QString> QgsAttrPalIndexNameHash;
 
 
@@ -26,12 +28,11 @@ feature and attribute information from a spatial datasource.
 #include "qgsvectordataprovider.h"
 %End
   public:
-
     static const int EditingCapabilities;
 
-    QgsVectorDataProvider( const QString &uri = QString(),
-                           const QgsDataProvider::ProviderOptions &providerOptions = QgsDataProvider::ProviderOptions(),
-                           Qgis::DataProviderReadFlags flags = Qgis::DataProviderReadFlags() );
+    QgsVectorDataProvider(
+      const QString &uri = QString(), const QgsDataProvider::ProviderOptions &providerOptions = QgsDataProvider::ProviderOptions(), Qgis::DataProviderReadFlags flags = Qgis::DataProviderReadFlags()
+    );
 %Docstring
 Constructor for a vector data provider.
 
@@ -157,6 +158,7 @@ Returns the fields associated with this data provider.
     virtual QString sourceName() const;
 
     virtual QString dataComment() const;
+
 %Docstring
 Returns a short comment for the data that this provider is providing
 access to (e.g. the comment for postgres table).
@@ -186,8 +188,7 @@ and maximal values. If provider has facilities to retrieve maximal value
 directly, override this function.
 %End
 
-    virtual QStringList uniqueStringsMatching( int index, const QString &substring, int limit = -1,
-        QgsFeedback *feedback = 0 ) const;
+    virtual QStringList uniqueStringsMatching( int index, const QString &substring, int limit = -1, QgsFeedback *feedback = 0 ) const;
 %Docstring
 Returns unique string values of an attribute which contain a specified
 subset string. Subset matching is done in a case-insensitive manner.
@@ -201,12 +202,9 @@ subset string. Subset matching is done in a case-insensitive manner.
 :return: list of unique strings containing substring
 %End
 
-    virtual QVariant aggregate( Qgis::Aggregate aggregate,
-                                int index,
-                                const QgsAggregateCalculator::AggregateParameters &parameters,
-                                QgsExpressionContext *context,
-                                bool &ok,
-                                QgsFeatureIds *fids = 0 ) const;
+    virtual QVariant aggregate(
+      Qgis::Aggregate aggregate, int index, const QgsAggregateCalculator::AggregateParameters &parameters, QgsExpressionContext *context, bool &ok, QgsFeatureIds *fids = 0
+    ) const;
 %Docstring
 Calculates an aggregated value from the layer's features. The base
 implementation does nothing, but subclasses can override this method to
@@ -223,7 +221,7 @@ handoff calculation of aggregates to the provider.
 :return: calculated aggregate value
 %End
 
-    virtual void enumValues( int index, QStringList &enumList /Out/ ) const;
+ virtual void enumValues( int index, QStringList &enumList /Out/ ) const /Deprecated="Since 4.4. Use codedValues() instead."/;
 %Docstring
 Returns the possible enum values of an attribute. Returns an empty
 stringlist if a provider does not support enum types or if the given
@@ -231,7 +229,26 @@ attribute is not an enum type.
 
 :param index: the index of the attribute
 
-:return: reference to the list to fill
+:return: - enumList: reference to the list to fill
+
+.. deprecated:: 4.4
+
+   Use :py:func:`~QgsVectorDataProvider.codedValues` instead.
+%End
+
+    virtual QList<QPair<QString, QString>> codedValues( int index ) const;
+%Docstring
+Returns the possible enum or coded values of an attribute in key-value
+pairs. Returns an empty list if a provider does not support enum types,
+if the given attribute is not an enum type or using a field domain for
+coded values.
+
+:param index: the index of the attribute
+
+:return: list of code-value pairs. If the attribute is enum type, then
+         both key and value will contain the same enum value
+
+.. versionadded:: 4.4
 %End
 
     virtual bool addFeatures( QgsFeatureList &flist /In,Out/, QgsFeatureSink::Flags flags = QgsFeatureSink::Flags() );
@@ -318,8 +335,7 @@ capability or if any of the changes could not be successfully applied.
 :return: ``True`` in case of success and ``False`` in case of failure
 %End
 
-    virtual bool changeFeatures( const QgsChangedAttributesMap &attr_map,
-                                 const QgsGeometryMap &geometry_map );
+    virtual bool changeFeatures( const QgsChangedAttributesMap &attr_map, const QgsGeometryMap &geometry_map );
 %Docstring
 Changes attribute values and geometries of existing features. This
 should succeed if the provider reports both the ChangeAttributeValues
@@ -497,19 +513,23 @@ check if provider supports type of field
 
     struct NativeType
     {
-      NativeType( const QString &typeDesc, const QString &typeName, QMetaType::Type type, int minLen = 0, int maxLen = 0, int minPrec = 0, int maxPrec = 0, QMetaType::Type subType = QMetaType::Type::UnknownType );
+        NativeType(
+          const QString &typeDesc, const QString &typeName, QMetaType::Type type, int minLen = 0, int maxLen = 0, int minPrec = 0, int maxPrec = 0, QMetaType::Type subType = QMetaType::Type::UnknownType
+        );
 
- NativeType( const QString &typeDesc, const QString &typeName, QVariant::Type type, int minLen = 0, int maxLen = 0, int minPrec = 0, int maxPrec = 0, QVariant::Type subType = QVariant::Type::Invalid );
+ NativeType(
+          const QString &typeDesc, const QString &typeName, QVariant::Type type, int minLen = 0, int maxLen = 0, int minPrec = 0, int maxPrec = 0, QVariant::Type subType = QVariant::Type::Invalid
+        );
 
 
-          QString mTypeDesc;
-      QString mTypeName;
-      QMetaType::Type mType;
-      int mMinLen;
-      int mMaxLen;
-      int mMinPrec;
-      int mMaxPrec;
-      QMetaType::Type mSubType;
+        QString mTypeDesc;
+        QString mTypeName;
+        QMetaType::Type mType;
+        int mMinLen;
+        int mMaxLen;
+        int mMinPrec;
+        int mMaxPrec;
+        QMetaType::Type mSubType;
     };
 
     QList< QgsVectorDataProvider::NativeType > nativeTypes() const;
@@ -586,6 +606,24 @@ labeling settings. Other providers will return ``None``.
 .. versionadded:: 3.6
 %End
 
+    virtual const QgsLayerRenderingSettings *renderingSettings( const QVariantMap &configuration = QVariantMap() ) const;
+%Docstring
+Returns layer-level rendering settings, using provider backend specific
+information.
+
+The ``configuration`` map can be used to pass provider-specific
+configuration maps to the provider to allow customization of the
+returned settings. Support and format of ``configuration`` varies by
+provider.
+
+When called with an empty ``configuration`` map the provider's default
+rendering settings will be returned.
+
+Providers which do not support this should return None.
+
+.. versionadded:: 4.4
+%End
+
     static QVariant convertValue( QMetaType::Type type, const QString &value );
 %Docstring
 Convert ``value`` to ``type``
@@ -605,11 +643,11 @@ Convert ``value`` to ``type``
 Returns the transaction this data provider is included in, if any.
 %End
 
- virtual void forceReload() /Deprecated="Since 3.12. Will be removed in QGIS 4.0 - use reloadData() instead."/;
+ virtual void forceReload() /Deprecated="Since 3.12. Will be removed in QGIS 5.0 - use reloadData() instead."/;
 %Docstring
 .. deprecated:: 3.12
 
-   Will be removed in QGIS 4.0 - use :py:func:`~QgsVectorDataProvider.reloadData` instead.
+   Will be removed in QGIS 5.0 - use :py:func:`~QgsVectorDataProvider.reloadData` instead.
 %End
 
     virtual QSet<QgsMapLayerDependency> dependencies() const;
@@ -676,7 +714,6 @@ Signals an error in this provider
 %End
 
   protected:
-
     void clearMinMaxCache();
 %Docstring
 Invalidates the min/max cache. This will force the provider to
@@ -717,7 +754,7 @@ the constructor.
 %End
 
 
-    static QgsGeometry convertToProviderType( const QgsGeometry &geometry,  Qgis::WkbType providerGeometryType );
+    static QgsGeometry convertToProviderType( const QgsGeometry &geometry, Qgis::WkbType providerGeometryType );
 %Docstring
 Converts the ``geometry`` to the provider geometry type
 ``providerGeometryType`` if possible / necessary

@@ -18,26 +18,27 @@
 #ifndef QGSRENDERCONTEXT_H
 #define QGSRENDERCONTEXT_H
 
-#include "qgis_core.h"
-#include "qgis_sip.h"
-#include <QColor>
-#include <QPainter>
-#include <QPainterPath>
 #include <memory>
 
+#include "qgis_core.h"
+#include "qgis_sip.h"
 #include "qgscoordinatetransform.h"
+#include "qgscoordinatetransformcontext.h"
+#include "qgsdistancearea.h"
 #include "qgsexpressioncontext.h"
 #include "qgsfeaturefilterprovider.h"
 #include "qgslabelsink.h"
 #include "qgsmaptopixel.h"
 #include "qgsmapunitscale.h"
-#include "qgsrectangle.h"
-#include "qgsvectorsimplifymethod.h"
-#include "qgsdistancearea.h"
-#include "qgscoordinatetransformcontext.h"
-#include "qgspathresolver.h"
-#include "qgstemporalrangeobject.h"
 #include "qgsmaskrendersettings.h"
+#include "qgspathresolver.h"
+#include "qgsrectangle.h"
+#include "qgstemporalrangeobject.h"
+#include "qgsvectorsimplifymethod.h"
+
+#include <QColor>
+#include <QPainter>
+#include <QPainterPath>
 
 class QPainter;
 class QgsAbstractGeometry;
@@ -107,7 +108,7 @@ class CORE_EXPORT QgsRenderContext : public QgsTemporalRangeObject
      * Returns the destination QPainter for the render operation.
      * \see setPainter()
     */
-    QPainter *painter() {return mPainter;}
+    QPainter *painter() { return mPainter; }
 
 #ifndef SIP_RUN
 
@@ -127,7 +128,7 @@ class CORE_EXPORT QgsRenderContext : public QgsTemporalRangeObject
      * \see setPreviewRenderPainter()
      * \since QGIS 3.34
     */
-    QPainter *previewRenderPainter() {return mPreviewRenderPainter;}
+    QPainter *previewRenderPainter() { return mPreviewRenderPainter; }
 
 #ifndef SIP_RUN
 
@@ -164,7 +165,7 @@ class CORE_EXPORT QgsRenderContext : public QgsTemporalRangeObject
      */
     QPainter *maskPainter( int id = 0 ) { return mMaskPainter.value( id, nullptr ); }
 
-    // TODO QGIS 4 : remove the V2 from method name
+    // TODO QGIS 5 : remove the V2 from method name
 
     /**
      * When rendering a map layer in a second pass (for selective masking),
@@ -233,7 +234,7 @@ class CORE_EXPORT QgsRenderContext : public QgsTemporalRangeObject
      *
      * \see setCoordinateTransform()
      */
-    QgsCoordinateTransform coordinateTransform() const {return mCoordTransform;}
+    QgsCoordinateTransform coordinateTransform() const { return mCoordTransform; }
 
     /**
      * A general purpose distance and area calculator, capable of performing ellipsoid based calculations.
@@ -308,7 +309,7 @@ class CORE_EXPORT QgsRenderContext : public QgsTemporalRangeObject
      *
      * \see setMapToPixel()
      */
-    const QgsMapToPixel &mapToPixel() const {return mMapToPixel;}
+    const QgsMapToPixel &mapToPixel() const { return mMapToPixel; }
 
     /**
      * Returns the scaling factor for the render to convert painter units
@@ -316,7 +317,7 @@ class CORE_EXPORT QgsRenderContext : public QgsTemporalRangeObject
      * per millimeter.
      * \see setScaleFactor()
      */
-    double scaleFactor() const {return mScaleFactor;}
+    double scaleFactor() const { return mScaleFactor; }
 
     /**
      * Returns the targeted DPI for rendering.
@@ -324,7 +325,7 @@ class CORE_EXPORT QgsRenderContext : public QgsTemporalRangeObject
      * \see setDpiTarget()
      * \since QGIS 3.20
      */
-    double dpiTarget() const {return mDpiTarget;}
+    double dpiTarget() const { return mDpiTarget; }
 
     /**
      * Returns TRUE if the rendering operation has been stopped and any ongoing
@@ -335,7 +336,7 @@ class CORE_EXPORT QgsRenderContext : public QgsTemporalRangeObject
      * \see setRenderingStopped()
      * \see feedback()
      */
-    bool renderingStopped() const {return mRenderingStopped;}
+    bool renderingStopped() const { return mRenderingStopped; }
 
     /**
      * Attach a \a feedback object that can be queried regularly during rendering to check
@@ -397,7 +398,7 @@ class CORE_EXPORT QgsRenderContext : public QgsTemporalRangeObject
      * for the rendered map, eg 1000.0 for a 1:1000 map render.
      * \see setRendererScale()
      */
-    double rendererScale() const {return mRendererScale;}
+    double rendererScale() const { return mRendererScale; }
 
 
     /**
@@ -465,7 +466,7 @@ class CORE_EXPORT QgsRenderContext : public QgsTemporalRangeObject
      *
      * \see mapToPixel()
      */
-    void setMapToPixel( const QgsMapToPixel &mtp ) {mMapToPixel = mtp;}
+    void setMapToPixel( const QgsMapToPixel &mtp ) { mMapToPixel = mtp; }
 
     /**
      * When rendering a map layer, calling this method sets the "clipping"
@@ -479,7 +480,7 @@ class CORE_EXPORT QgsRenderContext : public QgsTemporalRangeObject
      * \see setExtent()
      * \see setMapExtent()
      */
-    void setExtent( const QgsRectangle &extent ) {mExtent = extent;}
+    void setExtent( const QgsRectangle &extent ) { mExtent = extent; }
 
     /**
      * Sets the original \a extent of the map being rendered.
@@ -510,13 +511,13 @@ class CORE_EXPORT QgsRenderContext : public QgsTemporalRangeObject
      * \see feedback()
      * \see setFeedback()
      */
-    void setRenderingStopped( bool stopped ) {mRenderingStopped = stopped;}
+    void setRenderingStopped( bool stopped ) { mRenderingStopped = stopped; }
 
     /**
      * A general purpose distance and area calculator, capable of performing ellipsoid based calculations.
      * Will be used to convert meter distances to active MapUnit values for QgsUnitTypes::RenderMetersInMapUnits
      */
-    void setDistanceArea( const QgsDistanceArea &distanceArea ) {mDistanceArea = distanceArea ;}
+    void setDistanceArea( const QgsDistanceArea &distanceArea ) { mDistanceArea = distanceArea; }
 
     /**
      * Sets the scaling factor for the render to convert painter units
@@ -524,7 +525,7 @@ class CORE_EXPORT QgsRenderContext : public QgsTemporalRangeObject
      * per millimeter.
      * \see scaleFactor()
      */
-    void setScaleFactor( double factor ) {mScaleFactor = factor;}
+    void setScaleFactor( double factor ) { mScaleFactor = factor; }
 
     /**
      * Sets the targeted \a dpi for rendering.
@@ -532,14 +533,14 @@ class CORE_EXPORT QgsRenderContext : public QgsTemporalRangeObject
      * \see dpiTarget()
      * \since QGIS 3.20
      */
-    void setDpiTarget( double dpi ) {mDpiTarget = dpi;}
+    void setDpiTarget( double dpi ) { mDpiTarget = dpi; }
 
     /**
      * Sets the renderer map scale. This should match the desired scale denominator
      * for the rendered map, eg 1000.0 for a 1:1000 map render.
      * \see rendererScale()
      */
-    void setRendererScale( double scale ) {mRendererScale = scale;}
+    void setRendererScale( double scale ) { mRendererScale = scale; }
 
     /**
      * Sets the symbology reference \a scale.
@@ -564,7 +565,7 @@ class CORE_EXPORT QgsRenderContext : public QgsTemporalRangeObject
      * of any rendering operations.
      * \see painter()
      */
-    void setPainter( QPainter *p ) {mPainter = p;}
+    void setPainter( QPainter *p ) { mPainter = p; }
 
     /**
      * Sets the destination \a painter for temporary in-progress preview renders.
@@ -754,7 +755,9 @@ class CORE_EXPORT QgsRenderContext : public QgsTemporalRangeObject
      * \see convertFromPainterUnits()
      * \see convertToMapUnits()
      */
-    double convertToPainterUnits( double size, Qgis::RenderUnit unit, const QgsMapUnitScale &scale = QgsMapUnitScale(), Qgis::RenderSubcomponentProperty property = Qgis::RenderSubcomponentProperty::Generic ) const;
+    double convertToPainterUnits(
+      double size, Qgis::RenderUnit unit, const QgsMapUnitScale &scale = QgsMapUnitScale(), Qgis::RenderSubcomponentProperty property = Qgis::RenderSubcomponentProperty::Generic
+    ) const;
 
     /**
      * Converts a size from painter units (pixels) to the specified render unit.
@@ -790,10 +793,7 @@ class CORE_EXPORT QgsRenderContext : public QgsTemporalRangeObject
      * \see setTextRenderFormat()
      * \since QGIS 3.4.3
      */
-    Qgis::TextRenderFormat textRenderFormat() const
-    {
-      return mTextRenderFormat;
-    }
+    Qgis::TextRenderFormat textRenderFormat() const { return mTextRenderFormat; }
 
     /**
      * Sets the text render \a format, which dictates how text is rendered (e.g. as paths or real text objects).
@@ -801,10 +801,7 @@ class CORE_EXPORT QgsRenderContext : public QgsTemporalRangeObject
      * \see textRenderFormat()
      * \since QGIS 3.4.3
      */
-    void setTextRenderFormat( Qgis::TextRenderFormat format )
-    {
-      mTextRenderFormat = format;
-    }
+    void setTextRenderFormat( Qgis::TextRenderFormat format ) { mTextRenderFormat = format; }
 
     /**
      * Returns the list of rendered feature handlers to use while rendering map layers.
@@ -1157,7 +1154,7 @@ class CORE_EXPORT QgsRenderContext : public QgsTemporalRangeObject
     * \see setRendererUsage()
     * \since QGIS 3.24
     */
-    Qgis::RendererUsage rendererUsage() const {return mRendererUsage;}
+    Qgis::RendererUsage rendererUsage() const { return mRendererUsage; }
 
     /**
     * Sets the renderer usage
@@ -1168,7 +1165,7 @@ class CORE_EXPORT QgsRenderContext : public QgsTemporalRangeObject
     * \see rendererUsage()
     * \since QGIS 3.24
     */
-    void setRendererUsage( Qgis::RendererUsage usage ) {mRendererUsage = usage;}
+    void setRendererUsage( Qgis::RendererUsage usage ) { mRendererUsage = usage; }
 
     /**
      * Returns the frame rate of the map, for maps which are part of an animation.
@@ -1230,7 +1227,6 @@ class CORE_EXPORT QgsRenderContext : public QgsTemporalRangeObject
     void setElevationMap( QgsElevationMap *map );
 
   private:
-
     void matchRasterizedRenderingPolicyToFlags();
 
     Qgis::RenderContextFlags mFlags;
@@ -1380,7 +1376,6 @@ class CORE_EXPORT QgsRenderContext : public QgsTemporalRangeObject
 class QgsScopedRenderContextPainterSwap
 {
   public:
-
     /**
      * Constructor for QgsScopedRenderContextPainterSwap.
      *
@@ -1409,13 +1404,9 @@ class QgsScopedRenderContextPainterSwap
     /**
      * Returns the destination painter for the context back to the original QPainter object.
      */
-    ~QgsScopedRenderContextPainterSwap()
-    {
-      reset();
-    }
+    ~QgsScopedRenderContextPainterSwap() { reset(); }
 
   private:
-
     QgsRenderContext &mContext;
     QPainter *mPreviousPainter = nullptr;
     bool mReleased = false;
@@ -1436,7 +1427,6 @@ class QgsScopedRenderContextPainterSwap
 class QgsScopedRenderContextScaleToMm
 {
   public:
-
     /**
      * Constructor for QgsScopedRenderContextScaleToMm.
      *
@@ -1461,7 +1451,6 @@ class QgsScopedRenderContextScaleToMm
     }
 
   private:
-
     QgsRenderContext &mContext;
 };
 
@@ -1480,7 +1469,6 @@ class QgsScopedRenderContextScaleToMm
 class QgsScopedRenderContextScaleToPixels
 {
   public:
-
     /**
      * Constructor for QgsScopedRenderContextScaleToPixels.
      *
@@ -1505,7 +1493,6 @@ class QgsScopedRenderContextScaleToPixels
     }
 
   private:
-
     QgsRenderContext &mContext;
 };
 
@@ -1524,7 +1511,6 @@ class QgsScopedRenderContextScaleToPixels
 class QgsScopedQPainterState
 {
   public:
-
     /**
      * Constructor for QgsScopedQPainterState.
      *
@@ -1539,13 +1525,9 @@ class QgsScopedQPainterState
     /**
      * Restores the painter back to its original state.
      */
-    ~QgsScopedQPainterState()
-    {
-      mPainter->restore();
-    }
+    ~QgsScopedQPainterState() { mPainter->restore(); }
 
   private:
-
     QPainter *mPainter = nullptr;
 };
 
@@ -1563,7 +1545,6 @@ class QgsScopedQPainterState
 class QgsScopedRenderContextReferenceScaleOverride
 {
   public:
-
     /**
      * Constructor for QgsScopedRenderContextReferenceScaleOverride.
      *
@@ -1596,7 +1577,6 @@ class QgsScopedRenderContextReferenceScaleOverride
     }
 
   private:
-
     QgsRenderContext *mContext = nullptr;
     double mOriginalScale = 0;
 };

@@ -13,8 +13,10 @@
  *                                                                         *
  ***************************************************************************/
 #include "qgspluginlayer.h"
-#include "moc_qgspluginlayer.cpp"
+
 #include "qgsiconutils.h"
+
+#include "moc_qgspluginlayer.cpp"
 
 QgsPluginLayer::QgsPluginLayer( const QString &layerType, const QString &layerName )
   : QgsMapLayer( Qgis::LayerType::Plugin, layerName )
@@ -66,9 +68,7 @@ QIcon QgsPluginLayer::icon() const
 // QgsPluginLayerDataProvider
 //
 ///@cond PRIVATE
-QgsPluginLayerDataProvider::QgsPluginLayerDataProvider( const QString &layerType,
-    const ProviderOptions &options,
-    Qgis::DataProviderReadFlags flags )
+QgsPluginLayerDataProvider::QgsPluginLayerDataProvider( const QString &layerType, const ProviderOptions &options, Qgis::DataProviderReadFlags flags )
   : QgsDataProvider( QString(), options, flags )
   , mName( layerType )
 {}

@@ -17,11 +17,14 @@
 #define QGSLAYERTREENODE_H
 
 #include "qgis_core.h"
-#include <QObject>
-
+#include "qgis_sip.h"
 #include "qgsobjectcustomproperties.h"
 #include "qgsreadwritecontext.h"
-#include "qgis_sip.h"
+
+#include <QObject>
+#include <QString>
+
+using namespace Qt::StringLiterals;
 
 class QDomElement;
 
@@ -95,7 +98,7 @@ class CORE_EXPORT QgsLayerTreeNode : public QObject
     }
     else
       sipType = 0;
-    SIP_END
+  SIP_END
 #endif
 
   public:
@@ -103,17 +106,18 @@ class CORE_EXPORT QgsLayerTreeNode : public QObject
     //! Enumeration of possible tree node types
     enum NodeType
     {
-      NodeGroup,   //!< Container of other groups and layers
-      NodeLayer,    //!< Leaf node pointing to a layer
-      NodeCustom    //!< Leaf node pointing to a custom object
+      NodeGroup, //!< Container of other groups and layers
+      NodeLayer, //!< Leaf node pointing to a layer
+      NodeCustom //!< Leaf node pointing to a custom object
     };
 
     ~QgsLayerTreeNode() override;
 
 #ifdef SIP_RUN
+    // clang-format off
     SIP_PYOBJECT __repr__();
     % MethodCode
-    QString str = QStringLiteral( "<QgsLayerTreeNode: %1>" ).arg( sipCpp->name() );
+    QString str = u"<QgsLayerTreeNode: %1>"_s.arg( sipCpp->name() );
     sipRes = PyUnicode_FromString( str.toUtf8().constData() );
     % End
 
@@ -125,6 +129,12 @@ class CORE_EXPORT QgsLayerTreeNode : public QObject
     int __len__() const;
     % MethodCode
     sipRes = sipCpp->children().count();
+    % End
+
+    //! Ensures that bool(obj) returns TRUE (otherwise __len__() would be used)
+    int __bool__() const;
+    % MethodCode
+    sipRes = true;
     % End
 
     /**
@@ -148,10 +158,14 @@ class CORE_EXPORT QgsLayerTreeNode : public QObject
       sipRes = sipConvertFromType( child, sipType_QgsLayerTreeNode, NULL );
     }
     % End
+// clang-format on
 #endif
 
-    //! Find out about type of the node. It is usually shorter to use convenience functions from QgsLayerTree namespace for that
-    NodeType nodeType() const { return mNodeType; }
+        //! Find out about type of the node. It is usually shorter to use convenience functions from QgsLayerTree namespace for that
+        NodeType nodeType() const
+    {
+      return mNodeType;
+    }
     //! Gets pointer to the parent. If parent is NULLPTR, the node is a root node
     QgsLayerTreeNode *parent() { return mParent; }
     //! Gets list of children of the node. Children are owned by the parent
@@ -175,6 +189,20 @@ class CORE_EXPORT QgsLayerTreeNode : public QObject
      * Set name of the node. Emits nameChanged signal.
      */
     virtual void setName( const QString &name ) = 0;
+
+    /**
+     * Returns the node's unique identifier.
+     *
+     * Each node subclass defines the identity it exposes: a group or custom node
+     * returns its own generated id, while a layer node returns the id of the map
+     * layer it references (see QgsLayerTreeLayer::layerId()).
+     *
+     * The base class returns an empty string; subclasses override this to return
+     * their identifier.
+     *
+     * \since QGIS 4.4
+     */
+    virtual QString id() const { return QString(); }
 
     /**
      * Read layer tree from XML. Returns new instance.
@@ -296,7 +324,6 @@ class CORE_EXPORT QgsLayerTreeNode : public QObject
     void nameChanged( QgsLayerTreeNode *node, QString name );
 
   protected:
-
     //! Constructor
     QgsLayerTreeNode( NodeType t, bool checked = true );
     QgsLayerTreeNode( const QgsLayerTreeNode &other );
@@ -322,7 +349,7 @@ class CORE_EXPORT QgsLayerTreeNode : public QObject
     //! list of children - node is responsible for their deletion
     QList<QgsLayerTreeNode *> mChildren;
     //! whether the node should be shown in GUI as expanded
-    bool mExpanded;
+    bool mExpanded = true;
     //! custom properties attached to the node
     QgsObjectCustomProperties mProperties;
 
@@ -331,10 +358,7 @@ class CORE_EXPORT QgsLayerTreeNode : public QObject
 
   private:
     QgsLayerTreeNode &operator=( const QgsLayerTreeNode & ) = delete;
-
 };
-
-
 
 
 #endif // QGSLAYERTREENODE_H

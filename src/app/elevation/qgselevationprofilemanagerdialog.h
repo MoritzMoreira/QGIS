@@ -17,10 +17,10 @@
 #ifndef QGSELEVATIONPROFILEMANAGERDIALOG_H
 #define QGSELEVATIONPROFILEMANAGERDIALOG_H
 
+#include "ui_qgselevationprofilemanagerbase.h"
+
 #include <QItemDelegate>
 #include <QSortFilterProxyModel>
-
-#include "ui_qgselevationprofilemanagerbase.h"
 
 class QListWidgetItem;
 class QgsElevationProfile;
@@ -48,8 +48,8 @@ class QgsElevationProfileManagerDialog : public QDialog, private Ui::QgsElevatio
     QgsElevationProfileManagerProxyModel *mProxyModel = nullptr;
 
 #ifdef Q_OS_MAC
-    void showEvent( QShowEvent *event );
-    void changeEvent( QEvent * );
+    void showEvent( QShowEvent *event ) override;
+    void changeEvent( QEvent * ) override;
 
     QAction *mWindowAction = nullptr;
 #endif

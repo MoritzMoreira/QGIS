@@ -13,14 +13,17 @@
  *                                                                         *
  ***************************************************************************/
 
+#include "qgsgeometrypointcoveredbylinecheck.h"
+
+#include "qgsfeaturepool.h"
 #include "qgsfeedback.h"
 #include "qgsgeometrycheckcontext.h"
-#include "qgsgeometrypointcoveredbylinecheck.h"
-#include "qgslinestring.h"
-#include "qgsfeaturepool.h"
 #include "qgsgeometrycheckerror.h"
+#include "qgslinestring.h"
 
-QgsGeometryCheck::Result QgsGeometryPointCoveredByLineCheck::collectErrors( const QMap<QString, QgsFeaturePool *> &featurePools, QList<QgsGeometryCheckError *> &errors, QStringList &messages, QgsFeedback *feedback, const LayerFeatureIds &ids ) const
+QgsGeometryCheck::Result QgsGeometryPointCoveredByLineCheck::collectErrors(
+  const QMap<QString, QgsFeaturePool *> &featurePools, QList<QgsGeometryCheckError *> &errors, QStringList &messages, QgsFeedback *feedback, const LayerFeatureIds &ids
+) const
 {
   Q_UNUSED( messages )
 
@@ -91,7 +94,8 @@ QgsGeometryCheck::Result QgsGeometryPointCoveredByLineCheck::collectErrors( cons
   return QgsGeometryCheck::Result::Success;
 }
 
-void QgsGeometryPointCoveredByLineCheck::fixError( const QMap<QString, QgsFeaturePool *> &featurePools, QgsGeometryCheckError *error, int method, const QMap<QString, int> & /*mergeAttributeIndices*/, Changes & /*changes*/ ) const
+void QgsGeometryPointCoveredByLineCheck::
+  fixError( const QMap<QString, QgsFeaturePool *> &featurePools, QgsGeometryCheckError *error, int method, const QMap<QString, int> & /*mergeAttributeIndices*/, Changes & /*changes*/ ) const
 {
   Q_UNUSED( featurePools )
 

@@ -17,7 +17,13 @@
 
 
 #include "qgsalgorithmapproximatemedialaxis.h"
+
 #include "qgsexception.h"
+
+#include <QString>
+
+using namespace Qt::StringLiterals;
+
 #ifdef WITH_SFCGAL
 #include "qgssfcgalgeometry.h"
 #endif
@@ -26,7 +32,7 @@
 
 QString QgsApproximateMedialAxisAlgorithm::name() const
 {
-  return QStringLiteral( "approximatemedialaxis" );
+  return u"approximatemedialaxis"_s;
 }
 
 QString QgsApproximateMedialAxisAlgorithm::displayName() const
@@ -46,16 +52,20 @@ QString QgsApproximateMedialAxisAlgorithm::group() const
 
 QString QgsApproximateMedialAxisAlgorithm::groupId() const
 {
-  return QStringLiteral( "vectorgeometry" );
+  return u"vectorgeometry"_s;
 }
 
 QString QgsApproximateMedialAxisAlgorithm::shortHelpString() const
 {
-  return QObject::tr( "The Approximate Medial Axis algorithm generates a simplified skeleton of a shape by approximating its medial axis. \n\n"
-                      "The output is a collection of lines that follow the central structure of the shape. The result is a thin, stable set "
-                      "of curves that capture the main topology while ignoring noise.\n\n"
-                      "This algorithm ignores the Z dimensions. If the geometry is 3D, the approximate medial axis will be calculated from "
-                      "its 2D projection." );
+  return QObject::tr(
+    "The Approximate Medial Axis algorithm generates a simplified skeleton of a shape by approximating its medial axis. \n\n"
+    "The output is a collection of lines that follow the central structure of the shape. The result is a thin, stable set "
+    "of curves that capture the main topology while ignoring noise.\n\n"
+    "This algorithm ignores the Z dimensions. If the geometry is 3D, the approximate medial axis will be calculated from "
+    "its 2D projection.\n\n"
+    "The option \"Extend end points to the polygon boundary\" extends the medial axis so that its endpoints reach "
+    "the boundary of the input polygon. This option is only available with SFCGAL version 2.3 or higher."
+  );
 }
 
 QString QgsApproximateMedialAxisAlgorithm::shortDescription() const
@@ -71,7 +81,7 @@ QgsApproximateMedialAxisAlgorithm *QgsApproximateMedialAxisAlgorithm::createInst
 QgsFields QgsApproximateMedialAxisAlgorithm::outputFields( const QgsFields &inputFields ) const
 {
   QgsFields newFields;
-  newFields.append( QgsField( QStringLiteral( "length" ), QMetaType::Type::Double, QString(), 20, 6 ) );
+  newFields.append( QgsField( u"length"_s, QMetaType::Type::Double, QString(), 20, 6 ) );
   return QgsProcessingUtils::combineFields( inputFields, newFields );
 }
 
@@ -96,6 +106,11 @@ Qgis::WkbType QgsApproximateMedialAxisAlgorithm::outputWkbType( Qgis::WkbType in
   return Qgis::WkbType::MultiLineString;
 }
 
+void QgsApproximateMedialAxisAlgorithm::initParameters( const QVariantMap & )
+{
+  addParameter( new QgsProcessingParameterBoolean( u"EXTEND_TO_EDGES"_s, QObject::tr( "Extend endpoints to the polygon boundary" ), false ) );
+}
+
 bool QgsApproximateMedialAxisAlgorithm::prepareAlgorithm( const QVariantMap &parameters, QgsProcessingContext &context, QgsProcessingFeedback *feedback )
 {
   Q_UNUSED( parameters )
@@ -103,6 +118,15 @@ bool QgsApproximateMedialAxisAlgorithm::prepareAlgorithm( const QVariantMap &par
   Q_UNUSED( feedback )
 
 #ifdef WITH_SFCGAL
+  mExtendToEdges = parameterAsBool( parameters, "EXTEND_TO_EDGES", context );
+
+#if SFCGAL_VERSION_NUM < SFCGAL_MAKE_VERSION( 2, 3, 0 )
+  if ( mExtendToEdges )
+  {
+    throw QgsProcessingException( QObject::tr( "The \"extend to the polygon boundary\" option requires a QGIS build based on SFCGAL 2.3 or later." ) );
+  }
+#endif
+
   return true;
 #else
   throw QgsProcessingException( QObject::tr( "This processing algorithm requires a QGIS installation with SFCGAL support enabled. Please use a version of QGIS that includes SFCGAL." ) );
@@ -111,6 +135,8 @@ bool QgsApproximateMedialAxisAlgorithm::prepareAlgorithm( const QVariantMap &par
 
 QgsFeatureList QgsApproximateMedialAxisAlgorithm::processFeature( const QgsFeature &feature, QgsProcessingContext &context, QgsProcessingFeedback *feedback )
 {
+  QGS_MARK_ALGORITHM_SOURCE
+
   Q_UNUSED( context )
 
 #ifdef WITH_SFCGAL
@@ -133,7 +159,7 @@ QgsFeatureList QgsApproximateMedialAxisAlgorithm::processFeature( const QgsFeatu
     {
       try
       {
-        std::unique_ptr<QgsSfcgalGeometry> outputSfcgalGeometry = inputSfcgalGeometry.approximateMedialAxis();
+        std::unique_ptr<QgsSfcgalGeometry> outputSfcgalGeometry = inputSfcgalGeometry.approximateMedialAxis( mExtendToEdges );
         outputGeometry = QgsGeometry( outputSfcgalGeometry->asQgisGeometry() );
         modifiedFeature.setGeometry( outputGeometry );
       }

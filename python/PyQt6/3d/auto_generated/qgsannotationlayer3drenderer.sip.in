@@ -9,7 +9,6 @@
 
 
 
-
 // this is needed for the "convert to subclass" code below to compile
 %ModuleHeaderCode
 #include "qgsannotationlayer3drenderer.h"
@@ -53,12 +52,6 @@ class QgsAnnotationLayer3DRenderer : QgsAbstract3DRenderer
 
 %TypeHeaderCode
 #include "qgsannotationlayer3drenderer.h"
-%End
-%ConvertToSubClassCode
-    if ( dynamic_cast<QgsAnnotationLayer3DRenderer *>( sipCpp ) != nullptr )
-      sipType = sipType_QgsAnnotationLayer3DRenderer;
-    else
-      sipType = nullptr;
 %End
   public:
     QgsAnnotationLayer3DRenderer();
@@ -136,6 +129,7 @@ to the terrain.
 
 .. seealso:: :py:func:`showCalloutLines`
 %End
+
 
 
 

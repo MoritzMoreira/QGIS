@@ -35,7 +35,6 @@ class QgsRasterInterface;
 class CORE_EXPORT QgsHillshadeRenderer : public QgsRasterRenderer
 {
   public:
-
     /**
      * \brief A renderer for generating live hillshade models.
      * \param input The input raster interface
@@ -54,7 +53,7 @@ class CORE_EXPORT QgsHillshadeRenderer : public QgsRasterRenderer
      * \param input The raster input interface.
      * \returns A new QgsHillshadeRenderer.
      */
-    static QgsRasterRenderer *create( const QDomElement &elem, QgsRasterInterface *input ) SIP_FACTORY;
+    static std::unique_ptr<QgsRasterRenderer> create( const QDomElement &elem, QgsRasterInterface *input );
 
     void writeXml( QDomDocument &doc, QDomElement &parentElem ) const override;
 
@@ -92,13 +91,13 @@ class CORE_EXPORT QgsHillshadeRenderer : public QgsRasterRenderer
      * Returns the angle of the light source over the raster.
      * \see setAltitude()
      */
-    double altitude()  const { return mLightAngle; }
+    double altitude() const { return mLightAngle; }
 
     /**
      * Returns the Z scaling factor.
      * \see setZFactor()
      */
-    double zFactor()  const { return mZFactor; }
+    double zFactor() const { return mZFactor; }
 
     /**
      * Returns TRUE if the renderer is using multi-directional hillshading.
@@ -140,7 +139,6 @@ class CORE_EXPORT QgsHillshadeRenderer : public QgsRasterRenderer
     double mLightAngle = 45;
     double mLightAzimuth = 315;
     bool mMultiDirectional = false;
-
 };
 
 #endif // QGSHILLSHADERENDERER_H

@@ -15,17 +15,19 @@
 #ifndef QGSUSERPROFILEMANAGER_H
 #define QGSUSERPROFILEMANAGER_H
 
-#include <QSettings>
-#include <QFileSystemWatcher>
-
+#include <memory>
 
 #include "qgis.h"
-#include "qgis_sip.h"
 #include "qgis_core.h"
+#include "qgis_sip.h"
 #include "qgserror.h"
 #include "qgsuserprofile.h"
 
-#include <memory>
+#include <QFileSystemWatcher>
+#include <QSettings>
+
+class QgsSettingsEntryBool;
+class QgsSettingsEntryString;
 
 /**
  * \ingroup core
@@ -43,6 +45,9 @@ class CORE_EXPORT QgsUserProfileManager : public QObject
     Q_OBJECT
 
   public:
+    static const QgsSettingsEntryBool *settingsOverrideLocalProfile SIP_SKIP;
+
+    static const QgsSettingsEntryString *settingsDefaultProfile SIP_SKIP;
 
     /**
      * User profile manager used to manage user profiles for the instance of QGIS.
@@ -230,7 +235,6 @@ class CORE_EXPORT QgsUserProfileManager : public QObject
     void profilesChanged();
 
   private:
-
     bool mWatchProfiles = false;
     std::unique_ptr<QFileSystemWatcher> mWatcher;
 

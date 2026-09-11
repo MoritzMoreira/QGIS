@@ -17,10 +17,9 @@
 #define QGSLABELINGENGINE_H
 
 #include "qgis_core.h"
-#include "qgsmapsettings.h"
-
 #include "qgsfeedback.h"
 #include "qgslabelobstaclesettings.h"
+#include "qgsmapsettings.h"
 
 class QgsLabelingEngine;
 class QgsLabelingResults;
@@ -33,7 +32,7 @@ namespace pal
   class Problem;
   class Pal;
   class LabelPosition;
-}
+} //namespace pal
 #endif
 
 /**
@@ -43,7 +42,10 @@ namespace pal
 class CORE_EXPORT QgsLabelCandidate
 {
   public:
-    QgsLabelCandidate( const QRectF &r, double c ): rect( r ), cost( c ) {}
+    QgsLabelCandidate( const QRectF &r, double c )
+      : rect( r )
+      , cost( c )
+    {}
 
     QRectF rect;
     double cost;
@@ -66,7 +68,6 @@ class CORE_EXPORT QgsLabelCandidate
  */
 class CORE_EXPORT QgsAbstractLabelProvider
 {
-
   public:
     //! Construct the provider with default values
     QgsAbstractLabelProvider( QgsMapLayer *layer, const QString &providerId = QString() );
@@ -78,9 +79,9 @@ class CORE_EXPORT QgsAbstractLabelProvider
 
     enum Flag
     {
-      DrawLabels              = 1 << 1,  //!< Whether the labels should be rendered
-      MergeConnectedLines     = 1 << 3,  //!< Whether adjacent lines (with the same label text) should be merged
-      CentroidMustBeInside    = 1 << 4,  //!< Whether location of centroid must be inside of polygons
+      DrawLabels = 1 << 1,           //!< Whether the labels should be rendered
+      MergeConnectedLines = 1 << 3,  //!< Whether adjacent lines (with the same label text) should be merged
+      CentroidMustBeInside = 1 << 4, //!< Whether location of centroid must be inside of polygons
     };
     Q_DECLARE_FLAGS( Flags, Flag )
 
@@ -216,7 +217,6 @@ class CORE_EXPORT QgsAbstractLabelProvider
     Qgis::UpsideDownLabelHandling mUpsidedownLabels = Qgis::UpsideDownLabelHandling::FlipUpsideDownLabels;
 
   private:
-
     std::unique_ptr< QgsExpressionContextScope > mLayerExpressionContextScope;
     double mLayerReferenceScale = -1;
 };
@@ -235,7 +235,6 @@ class CORE_EXPORT QgsLabelingEngineFeedback : public QgsFeedback
     Q_OBJECT
 
   public:
-
     /**
      * Constructor for QgsLabelingEngineFeedback, with the specified \a parent object.
      */
@@ -363,7 +362,7 @@ class CORE_EXPORT QgsLabelingEngine
 {
   public:
     //! Construct the labeling engine with default settings
-    QgsLabelingEngine();
+    QgsLabelingEngine( const QgsMapSettings &mapSettings );
     //! Clean up everything (especially the registered providers)
     virtual ~QgsLabelingEngine();
 
@@ -451,7 +450,6 @@ class CORE_EXPORT QgsLabelingEngine
     void processProvider( QgsAbstractLabelProvider *provider, QgsRenderContext &context, pal::Pal &p );
 
   protected:
-
     /**
      * Runs the label registration step.
      *
@@ -508,9 +506,7 @@ class CORE_EXPORT QgsLabelingEngine
     QList<pal::LabelPosition *> mLabels;
 
   private:
-
     QStringList mLayerRenderingOrderIds;
-
 };
 
 /**
@@ -526,13 +522,12 @@ class CORE_EXPORT QgsDefaultLabelingEngine : public QgsLabelingEngine
 {
   public:
     //! Construct the labeling engine with default settings
-    QgsDefaultLabelingEngine();
+    QgsDefaultLabelingEngine( const QgsMapSettings &mapSettings );
 
     QgsDefaultLabelingEngine( const QgsDefaultLabelingEngine &rh ) = delete;
     QgsDefaultLabelingEngine &operator=( const QgsDefaultLabelingEngine &rh ) = delete;
 
     void run( QgsRenderContext &context ) override;
-
 };
 
 /**
@@ -550,7 +545,7 @@ class CORE_EXPORT QgsStagedRenderLabelingEngine : public QgsLabelingEngine
 {
   public:
     //! Construct the labeling engine with default settings
-    QgsStagedRenderLabelingEngine();
+    QgsStagedRenderLabelingEngine( const QgsMapSettings &mapSettings );
 
     QgsStagedRenderLabelingEngine( const QgsStagedRenderLabelingEngine &rh ) = delete;
     QgsStagedRenderLabelingEngine &operator=( const QgsStagedRenderLabelingEngine &rh ) = delete;
@@ -581,7 +576,6 @@ class CORE_EXPORT QgsStagedRenderLabelingEngine : public QgsLabelingEngine
 class CORE_EXPORT QgsLabelingUtils
 {
   public:
-
     /**
      * Encodes an ordered list of predefined point label positions to a string.
      * \param positions order list of positions
@@ -609,7 +603,6 @@ class CORE_EXPORT QgsLabelingUtils
      * \see encodeLinePlacementFlags()
      */
     static Qgis::LabelLinePlacementFlags decodeLinePlacementFlags( const QString &string );
-
 };
 
 #endif

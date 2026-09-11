@@ -16,13 +16,19 @@
  ***************************************************************************/
 
 #include "qgsalgorithmpoleofinaccessibility.h"
+
+#include "qgsacademicreference.h"
 #include "qgsapplication.h"
+
+#include <QString>
+
+using namespace Qt::StringLiterals;
 
 ///@cond PRIVATE
 
 QString QgsPoleOfInaccessibilityAlgorithm::name() const
 {
-  return QStringLiteral( "poleofinaccessibility" );
+  return u"poleofinaccessibility"_s;
 }
 
 QString QgsPoleOfInaccessibilityAlgorithm::displayName() const
@@ -42,35 +48,48 @@ QString QgsPoleOfInaccessibilityAlgorithm::group() const
 
 QString QgsPoleOfInaccessibilityAlgorithm::groupId() const
 {
-  return QStringLiteral( "vectorgeometry" );
+  return u"vectorgeometry"_s;
 }
 
 QString QgsPoleOfInaccessibilityAlgorithm::shortHelpString() const
 {
-  return QObject::tr( "This algorithm calculates the pole of inaccessibility for a polygon layer, which is the most "
-                      "distant internal point from the boundary of the surface. This algorithm uses the 'polylabel' "
-                      "algorithm (Vladimir Agafonkin, 2016), which is an iterative approach guaranteed to find the "
-                      "true pole of inaccessibility within a specified tolerance (in layer units). More precise "
-                      "tolerances require more iterations and will take longer to calculate." )
-         + QStringLiteral( "\n\n" )
-         + QObject::tr( "The distance from the calculated pole to the polygon boundary will be stored as a new "
-                        "attribute in the output layer." );
+  return QObject::tr(
+           "This algorithm calculates the pole of inaccessibility for a polygon layer, which is the most "
+           "distant internal point from the boundary of the surface. This algorithm uses the 'polylabel' "
+           "algorithm (Vladimir Agafonkin, 2016), which is an iterative approach guaranteed to find the "
+           "true pole of inaccessibility within a specified tolerance (in layer units). More precise "
+           "tolerances require more iterations and will take longer to calculate."
+         )
+         + u"\n\n"_s
+         + QObject::tr(
+           "The distance from the calculated pole to the polygon boundary will be stored as a new "
+           "attribute in the output layer."
+         );
 }
 
 QString QgsPoleOfInaccessibilityAlgorithm::shortDescription() const
 {
-  return QObject::tr( "Creates a point layer with features representing the most "
-                      "distant internal point from the boundary of the surface for a polygon layer." );
+  return QObject::tr(
+    "Creates a point layer with features representing the most "
+    "distant internal point from the boundary of the surface for a polygon layer."
+  );
+}
+
+QList<QgsAcademicReference> QgsPoleOfInaccessibilityAlgorithm::academicReferences() const
+{
+  const QgsAcademicReference agafonkinReference = QgsAcademicReference::
+    createWebPage( { u"Agafonkin, V."_s }, 2016, u"A new algorithm for finding a visual center of a polygon"_s, u"https://medium.com/mapbox/a-new-algorithm-for-finding-a-visual-center-of-a-polygon-7c77e6492fbc"_s );
+  return { agafonkinReference };
 }
 
 QString QgsPoleOfInaccessibilityAlgorithm::svgIconPath() const
 {
-  return QgsApplication::iconPath( QStringLiteral( "/algorithms/mAlgorithmCentroids.svg" ) );
+  return QgsApplication::iconPath( u"/algorithms/mAlgorithmCentroids.svg"_s );
 }
 
 QIcon QgsPoleOfInaccessibilityAlgorithm::icon() const
 {
-  return QgsApplication::getThemeIcon( QStringLiteral( "/algorithms/mAlgorithmCentroids.svg" ) );
+  return QgsApplication::getThemeIcon( u"/algorithms/mAlgorithmCentroids.svg"_s );
 }
 
 QString QgsPoleOfInaccessibilityAlgorithm::outputName() const
@@ -98,7 +117,7 @@ Qgis::WkbType QgsPoleOfInaccessibilityAlgorithm::outputWkbType( Qgis::WkbType in
 QgsFields QgsPoleOfInaccessibilityAlgorithm::outputFields( const QgsFields &inputFields ) const
 {
   QgsFields newFields;
-  newFields.append( QgsField( QStringLiteral( "dist_pole" ), QMetaType::Type::Double ) );
+  newFields.append( QgsField( u"dist_pole"_s, QMetaType::Type::Double ) );
 
   return QgsProcessingUtils::combineFields( inputFields, newFields );
 }
@@ -110,25 +129,27 @@ QgsPoleOfInaccessibilityAlgorithm *QgsPoleOfInaccessibilityAlgorithm::createInst
 
 void QgsPoleOfInaccessibilityAlgorithm::initParameters( const QVariantMap & )
 {
-  auto toleranceParam = std::make_unique<QgsProcessingParameterDistance>( QStringLiteral( "TOLERANCE" ), QObject::tr( "Tolerance" ), 1.0, QStringLiteral( "INPUT" ), 0.0 );
+  auto toleranceParam = std::make_unique<QgsProcessingParameterDistance>( u"TOLERANCE"_s, QObject::tr( "Tolerance" ), 1.0, u"INPUT"_s, 0.0 );
   toleranceParam->setIsDynamic( true );
-  toleranceParam->setDynamicPropertyDefinition( QgsPropertyDefinition( QStringLiteral( "Tolerance" ), QObject::tr( "Tolerance" ), QgsPropertyDefinition::Double ) );
-  toleranceParam->setDynamicLayerParameterName( QStringLiteral( "INPUT" ) );
+  toleranceParam->setDynamicPropertyDefinition( QgsPropertyDefinition( u"Tolerance"_s, QObject::tr( "Tolerance" ), QgsPropertyDefinition::Double ) );
+  toleranceParam->setDynamicLayerParameterName( u"INPUT"_s );
   addParameter( toleranceParam.release() );
 }
 
 bool QgsPoleOfInaccessibilityAlgorithm::prepareAlgorithm( const QVariantMap &parameters, QgsProcessingContext &context, QgsProcessingFeedback * )
 {
-  mTolerance = parameterAsDouble( parameters, QStringLiteral( "TOLERANCE" ), context );
-  mDynamicTolerance = QgsProcessingParameters::isDynamic( parameters, QStringLiteral( "TOLERANCE" ) );
+  mTolerance = parameterAsDouble( parameters, u"TOLERANCE"_s, context );
+  mDynamicTolerance = QgsProcessingParameters::isDynamic( parameters, u"TOLERANCE"_s );
   if ( mDynamicTolerance )
-    mToleranceProperty = parameters.value( QStringLiteral( "TOLERANCE" ) ).value<QgsProperty>();
+    mToleranceProperty = parameters.value( u"TOLERANCE"_s ).value<QgsProperty>();
 
   return true;
 }
 
 QgsFeatureList QgsPoleOfInaccessibilityAlgorithm::processFeature( const QgsFeature &feature, QgsProcessingContext &context, QgsProcessingFeedback * )
 {
+  QGS_MARK_ALGORITHM_SOURCE
+
   QgsFeature outFeature = feature;
   if ( outFeature.hasGeometry() )
   {

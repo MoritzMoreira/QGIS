@@ -16,8 +16,8 @@
 #ifndef QGSGEOMETRYGENERATORSYMBOLLAYER_H
 #define QGSGEOMETRYGENERATORSYMBOLLAYER_H
 
-#include "qgis_core.h"
 #include "qgis.h"
+#include "qgis_core.h"
 #include "qgssymbollayer.h"
 
 class QgsFillSymbol;
@@ -102,7 +102,7 @@ class CORE_EXPORT QgsGeometryGeneratorSymbolLayer : public QgsSymbolLayer
      * \see units()
      * \since QGIS 3.22
      */
-    void setUnits( Qgis::RenderUnit units ) { mUnits = units;}
+    void setUnits( Qgis::RenderUnit units ) { mUnits = units; }
 
     QgsSymbol *subSymbol() override { return mSymbol; }
 
@@ -161,7 +161,7 @@ class CORE_EXPORT QgsGeometryGeneratorSymbolLayer : public QgsSymbolLayer
     /**
      * The type of the sub symbol.
      */
-    Qgis::SymbolType mSymbolType;
+    Qgis::SymbolType mSymbolType = Qgis::SymbolType::Marker;
 
     Qgis::RenderUnit mUnits = Qgis::RenderUnit::MapUnits;
 

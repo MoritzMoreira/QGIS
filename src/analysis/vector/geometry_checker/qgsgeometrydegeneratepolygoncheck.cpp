@@ -13,14 +13,16 @@
  *                                                                         *
  ***************************************************************************/
 
+#include "qgsgeometrydegeneratepolygoncheck.h"
+
+#include "qgsfeaturepool.h"
 #include "qgsfeedback.h"
 #include "qgsgeometrycheckcontext.h"
-#include "qgsgeometrydegeneratepolygoncheck.h"
-#include "qgsfeaturepool.h"
 #include "qgsgeometrycheckerror.h"
 
-
-QgsGeometryCheck::Result QgsGeometryDegeneratePolygonCheck::collectErrors( const QMap<QString, QgsFeaturePool *> &featurePools, QList<QgsGeometryCheckError *> &errors, QStringList &messages, QgsFeedback *feedback, const LayerFeatureIds &ids ) const
+QgsGeometryCheck::Result QgsGeometryDegeneratePolygonCheck::collectErrors(
+  const QMap<QString, QgsFeaturePool *> &featurePools, QList<QgsGeometryCheckError *> &errors, QStringList &messages, QgsFeedback *feedback, const LayerFeatureIds &ids
+) const
 {
   Q_UNUSED( messages )
 
@@ -51,7 +53,7 @@ QgsGeometryCheck::Result QgsGeometryDegeneratePolygonCheck::collectErrors( const
         if ( QgsGeometryCheckerUtils::polyLineSize( geom, iPart, iRing ) < 3 )
         {
           const QgsVertexId vidx( iPart, iRing );
-          errors.append( new QgsGeometryCheckError( this, layerFeature, geom->vertexAt( vidx ), vidx ) );
+          errors.append( new QgsGeometryCheckError( this, layerFeature, geom->vertexAt( QgsVertexId( iPart, iRing, 0 ) ), vidx ) );
         }
       }
     }
@@ -59,7 +61,9 @@ QgsGeometryCheck::Result QgsGeometryDegeneratePolygonCheck::collectErrors( const
   return QgsGeometryCheck::Result::Success;
 }
 
-void QgsGeometryDegeneratePolygonCheck::fixError( const QMap<QString, QgsFeaturePool *> &featurePools, QgsGeometryCheckError *error, int method, const QMap<QString, int> & /*mergeAttributeIndices*/, Changes &changes ) const
+void QgsGeometryDegeneratePolygonCheck::fixError(
+  const QMap<QString, QgsFeaturePool *> &featurePools, QgsGeometryCheckError *error, int method, const QMap<QString, int> & /*mergeAttributeIndices*/, Changes &changes
+) const
 {
   QgsFeaturePool *featurePool = featurePools[error->layerId()];
   QgsFeature feature;
@@ -73,7 +77,7 @@ void QgsGeometryDegeneratePolygonCheck::fixError( const QMap<QString, QgsFeature
   const QgsVertexId vidx = error->vidx();
 
   // Check if ring still exists
-  if ( !vidx.isValid( geom ) )
+  if ( !geom->hasVertex( QgsVertexId( vidx.part, vidx.ring, 0 ) ) )
   {
     error->setObsolete();
     return;

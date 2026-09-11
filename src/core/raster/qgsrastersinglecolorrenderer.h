@@ -18,11 +18,11 @@
 #ifndef QGSRASTERSINGLECOLORRENDERER_H
 #define QGSRASTERSINGLECOLORRENDERER_H
 
+#include <memory>
+
 #include "qgis_core.h"
 #include "qgis_sip.h"
 #include "qgsrasterrenderer.h"
-
-#include <memory>
 
 class QDomElement;
 
@@ -31,10 +31,9 @@ class QDomElement;
   * \brief Raster renderer which renders all data pixels using a single color.
   * \since QGIS 3.38
   */
-class CORE_EXPORT QgsRasterSingleColorRenderer: public QgsRasterRenderer
+class CORE_EXPORT QgsRasterSingleColorRenderer : public QgsRasterRenderer
 {
   public:
-
     //! Creates a single \a color renderer
     QgsRasterSingleColorRenderer( QgsRasterInterface *input, int band, const QColor &color );
 
@@ -47,7 +46,7 @@ class CORE_EXPORT QgsRasterSingleColorRenderer: public QgsRasterRenderer
     Qgis::RasterRendererFlags flags() const override;
 
     //! Creates an instance of the renderer based on definition from XML (used by the renderer registry)
-    static QgsRasterRenderer *create( const QDomElement &elem, QgsRasterInterface *input ) SIP_FACTORY;
+    static std::unique_ptr<QgsRasterRenderer> create( const QDomElement &elem, QgsRasterInterface *input );
 
     QgsRasterBlock *block( int bandNo, const QgsRectangle &extent, int width, int height, QgsRasterBlockFeedback *feedback = nullptr ) override SIP_FACTORY;
 

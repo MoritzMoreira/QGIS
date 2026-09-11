@@ -16,9 +16,11 @@
 #ifndef QGSANNOTATIONITEMPROPERTIESWIDGET_H
 #define QGSANNOTATIONITEMPROPERTIESWIDGET_H
 
+#include "ui_qgsannotationitempropertieswidgetbase.h"
+
 #include "qgsmaplayerconfigwidget.h"
 #include "qgsmaplayerconfigwidgetfactory.h"
-#include "ui_qgsannotationitempropertieswidgetbase.h"
+
 #include <QPointer>
 
 class QgsAnnotationLayer;
@@ -36,6 +38,8 @@ class QgsAnnotationItemPropertiesWidget : public QgsMapLayerConfigWidget, public
     void setMapLayerConfigWidgetContext( const QgsMapLayerConfigWidgetContext &context ) override;
     void setDockMode( bool dockMode ) final;
 
+    void setLabelMessage( const QString &message );
+
   public slots:
     void apply() override;
     void focusDefaultWidget() override;
@@ -44,14 +48,17 @@ class QgsAnnotationItemPropertiesWidget : public QgsMapLayerConfigWidget, public
 
     void onChanged();
     void onLayerPropertyChanged();
+    void onLayerItemsChanged();
 
   private:
     void setItemId( const QString &itemId );
 
+    QLabel *mLabel = nullptr;
     QPointer<QgsAnnotationLayer> mLayer;
     QPointer<QgsAnnotationItemBaseWidget> mItemWidget;
     QWidget *mPageNoItem = nullptr;
     bool mBlockLayerUpdates = false;
+    bool mBlockItemUpdates = false;
 
     std::unique_ptr<QgsPaintEffect> mPaintEffect;
 };

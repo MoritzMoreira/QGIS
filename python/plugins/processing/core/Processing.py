@@ -22,39 +22,37 @@ __copyright__ = "(C) 2012, Victor Olaya"
 import os
 import traceback
 
-from qgis.PyQt.QtCore import Qt, QCoreApplication
-from qgis.PyQt.QtWidgets import QApplication
-from qgis.PyQt.QtGui import QCursor
-
-from qgis.utils import iface
+from qgis.analysis import QgsNativeAlgorithms
 from qgis.core import (
-    QgsMessageLog,
     QgsApplication,
     QgsMapLayer,
-    QgsProcessingProvider,
+    QgsMessageLog,
     QgsProcessingAlgorithm,
     QgsProcessingException,
-    QgsProcessingParameterDefinition,
-    QgsProcessingOutputVectorLayer,
-    QgsProcessingOutputRasterLayer,
-    QgsProcessingOutputPointCloudLayer,
+    QgsProcessingFeedback,
     QgsProcessingOutputMapLayer,
     QgsProcessingOutputMultipleLayers,
-    QgsProcessingFeedback,
+    QgsProcessingOutputPointCloudLayer,
+    QgsProcessingOutputRasterLayer,
+    QgsProcessingOutputVectorLayer,
+    QgsProcessingParameterDefinition,
+    QgsProcessingProjectModelProvider,
+    QgsProcessingProvider,
+    QgsProject,
     QgsRuntimeProfiler,
 )
-from qgis.analysis import QgsNativeAlgorithms
+from qgis.PyQt.QtCore import QCoreApplication, Qt
+from qgis.PyQt.QtGui import QCursor
+from qgis.PyQt.QtWidgets import QApplication
+from qgis.utils import iface
 
 import processing
 from processing.core.ProcessingConfig import ProcessingConfig
+from processing.gui.AlgorithmExecutor import execute
 from processing.gui.MessageBarProgress import MessageBarProgress
 from processing.gui.RenderingStyles import RenderingStyles
-from processing.gui.AlgorithmExecutor import execute
 from processing.script import ScriptUtils
 from processing.tools import dataobjects
-
-with QgsRuntimeProfiler.profile("Import QGIS Provider"):
-    from processing.algs.qgis.QgisAlgorithmProvider import QgisAlgorithmProvider  # NOQA
 
 with QgsRuntimeProfiler.profile("Import GDAL Provider"):
     from processing.algs.gdal.GdalAlgorithmProvider import GdalAlgorithmProvider  # NOQA
@@ -66,7 +64,6 @@ with QgsRuntimeProfiler.profile("Import Script Provider"):
 
 # should be loaded last - ensures that all dependent algorithms are available when loading models
 from processing.modeler.ModelerAlgorithmProvider import ModelerAlgorithmProvider  # NOQA
-from processing.modeler.ProjectProvider import ProjectProvider  # NOQA
 
 
 class Processing:
@@ -100,7 +97,6 @@ class Processing:
             return
 
         with QgsRuntimeProfiler.profile("Initialize"):
-
             # add native provider if not already added
             if "native" not in [
                 p.id() for p in QgsApplication.processingRegistry().providers()
@@ -139,14 +135,17 @@ class Processing:
 
             # Add the basic providers
             basic_providers = [
-                QgisAlgorithmProvider,
                 GdalAlgorithmProvider,
                 ScriptAlgorithmProvider,
             ]
 
             # model providers are deferred for qgis_process startup
             if QgsApplication.platform() != "qgis_process":
-                basic_providers.extend([ModelerAlgorithmProvider, ProjectProvider])
+                basic_providers.extend(
+                    [
+                        ModelerAlgorithmProvider,
+                    ]
+                )
 
             for c in basic_providers:
                 p = c()
@@ -156,6 +155,14 @@ class Processing:
             if QgsApplication.platform() == "external":
                 # for external applications we must also load the builtin providers stored in separate plugins
                 try:
+                    from qgisprovider.qgis_provider import QgisAlgorithmProvider
+
+                    p = QgisAlgorithmProvider()
+                    if QgsApplication.processingRegistry().addProvider(p):
+                        Processing.BASIC_PROVIDERS.append(p)
+                except ImportError:
+                    pass
+                try:
                     from grassprovider.grass_provider import GrassProvider
 
                     p = GrassProvider()
@@ -163,6 +170,10 @@ class Processing:
                         Processing.BASIC_PROVIDERS.append(p)
                 except ImportError:
                     pass
+
+                p = QgsProcessingProjectModelProvider(QgsProject.instance())
+                if QgsApplication.processingRegistry().addProvider(p):
+                    Processing.BASIC_PROVIDERS.append(p)
 
             # And initialize
             ProcessingConfig.initialize()

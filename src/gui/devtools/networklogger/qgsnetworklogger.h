@@ -15,14 +15,15 @@
 #ifndef QGSNETWORKLOGGER_H
 #define QGSNETWORKLOGGER_H
 
-#define SIP_NO_FILE
-
-#include <QAbstractItemModel>
-#include <QSortFilterProxyModel>
-#include <QElapsedTimer>
 
 #include "qgis_gui.h"
 #include "qgsnetworkaccessmanager.h"
+
+#include <QAbstractItemModel>
+#include <QElapsedTimer>
+#include <QSortFilterProxyModel>
+
+#define SIP_NO_FILE
 
 class QgsDevToolsModelNode;
 class QgsNetworkLoggerRequestGroup;

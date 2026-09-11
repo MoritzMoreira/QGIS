@@ -14,17 +14,18 @@
  ***************************************************************************/
 
 #include "qgseditorconfigwidget.h"
-#include "moc_qgseditorconfigwidget.cpp"
-#include "qgspropertyoverridebutton.h"
+
 #include "qgsexpressioncontextutils.h"
+#include "qgspropertyoverridebutton.h"
+
+#include "moc_qgseditorconfigwidget.cpp"
 
 QgsEditorConfigWidget::QgsEditorConfigWidget( QgsVectorLayer *vl, int fieldIdx, QWidget *parent )
   : QWidget( parent )
   , mLayer( vl )
   , mField( fieldIdx )
 
-{
-}
+{}
 
 int QgsEditorConfigWidget::field()
 {

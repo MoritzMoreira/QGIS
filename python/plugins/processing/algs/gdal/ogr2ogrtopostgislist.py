@@ -20,27 +20,25 @@ __date__ = "November 2012"
 __copyright__ = "(C) 2012, Victor Olaya"
 
 from qgis.core import (
+    QgsDataSourceUri,
     QgsProcessing,
-    QgsProcessingParameterFeatureSource,
-    QgsProcessingParameterString,
-    QgsProcessingParameterEnum,
-    QgsProcessingParameterCrs,
-    QgsProcessingParameterField,
-    QgsProcessingParameterExtent,
+    QgsProcessingException,
     QgsProcessingParameterBoolean,
-    QgsProcessingParameterProviderConnection,
+    QgsProcessingParameterCrs,
     QgsProcessingParameterDatabaseSchema,
     QgsProcessingParameterDatabaseTable,
-    QgsProviderRegistry,
-    QgsProcessingException,
+    QgsProcessingParameterEnum,
+    QgsProcessingParameterExtent,
+    QgsProcessingParameterFeatureSource,
+    QgsProcessingParameterField,
+    QgsProcessingParameterProviderConnection,
+    QgsProcessingParameterString,
     QgsProviderConnectionException,
-    QgsDataSourceUri,
+    QgsProviderRegistry,
 )
 
 from processing.algs.gdal.GdalAlgorithm import GdalAlgorithm
 from processing.algs.gdal.GdalUtils import GdalUtils
-
-from processing.tools.system import isWindows
 
 
 class Ogr2OgrToPostGisList(GdalAlgorithm):
@@ -455,7 +453,12 @@ class Ogr2OgrToPostGisList(GdalAlgorithm):
         elif primary_key:
             arguments.append("-lco FID=" + primary_key)
         if len(table) == 0:
-            table = input_details.layer_name.lower()
+            # layer_name may be in the form schema.table, so we need to extract the table name
+            # see issue GH #66228
+            if "." in input_details.layer_name:
+                table = input_details.layer_name.split(".")[-1]
+            else:
+                table = input_details.layer_name.lower()
         if schema:
             table = f"{schema}.{table}"
         arguments.append("-nln")
@@ -525,7 +528,7 @@ class Ogr2OgrToPostGisList(GdalAlgorithm):
         if len(options) > 0:
             arguments.append(options)
 
-        if isWindows():
+        if GdalUtils.is_windows():
             return ["cmd.exe", "/C ", "ogr2ogr.exe", GdalUtils.escapeAndJoin(arguments)]
         else:
             return ["ogr2ogr", GdalUtils.escapeAndJoin(arguments)]

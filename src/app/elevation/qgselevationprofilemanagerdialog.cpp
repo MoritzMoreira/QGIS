@@ -15,14 +15,15 @@
  ***************************************************************************/
 
 #include "qgselevationprofilemanagerdialog.h"
-#include "moc_qgselevationprofilemanagerdialog.cpp"
+
 #include "qgisapp.h"
+#include "qgselevationprofile.h"
 #include "qgselevationprofilemanager.h"
 #include "qgselevationprofilemanagermodel.h"
-#include "qgsproject.h"
 #include "qgsgui.h"
-#include "qgselevationprofile.h"
+#include "qgshelp.h"
 #include "qgsnewnamedialog.h"
+#include "qgsproject.h"
 
 #include <QDesktopServices>
 #include <QDialog>
@@ -31,7 +32,12 @@
 #include <QInputDialog>
 #include <QListWidgetItem>
 #include <QMessageBox>
+#include <QString>
 #include <QUrl>
+
+#include "moc_qgselevationprofilemanagerdialog.cpp"
+
+using namespace Qt::StringLiterals;
 
 QgsElevationProfileManagerDialog::QgsElevationProfileManagerDialog( QWidget *parent, Qt::WindowFlags f )
   : QDialog( parent, f )
@@ -52,6 +58,7 @@ QgsElevationProfileManagerDialog::QgsElevationProfileManagerDialog( QWidget *par
   connect( mSearchLineEdit, &QgsFilterLineEdit::textChanged, mProxyModel, &QgsElevationProfileManagerProxyModel::setFilterString );
 
   connect( mButtonBox, &QDialogButtonBox::rejected, this, &QWidget::close );
+  connect( mButtonBox, &QDialogButtonBox::helpRequested, this, [] { QgsHelp::openHelp( u"map_views/elevation_profile.html"_s ); } );
   connect( mProfileListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &QgsElevationProfileManagerDialog::toggleButtons );
   connect( mProfileListView, &QListView::doubleClicked, this, &QgsElevationProfileManagerDialog::itemDoubleClicked );
 
@@ -133,7 +140,7 @@ bool QgsElevationProfileManagerDialog::uniqueProfileTitle( QWidget *parent, QStr
     dlg.setHintString( titleMsg );
     dlg.setOverwriteEnabled( false );
     dlg.setAllowEmptyName( true );
-    dlg.setConflictingNameWarning( tr( "Title already exists!" ) );
+    dlg.setConflictingNameWarning( tr( "An elevation profile with this name already exists." ) );
 
     if ( dlg.exec() != QDialog::Accepted )
     {

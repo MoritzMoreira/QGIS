@@ -21,19 +21,17 @@ __copyright__ = "(C) 2016, Alexander Bruy"
 
 import os
 
+from qgis.core import (
+    QgsProcessingContext,
+    QgsProcessingException,
+    QgsProcessingOutputRasterLayer,
+    QgsProcessingParameterCrs,
+    QgsProcessingParameterRasterLayer,
+)
 from qgis.PyQt.QtGui import QIcon
 
-from qgis.core import (
-    QgsProcessingException,
-    QgsProcessingParameterRasterLayer,
-    QgsProcessingParameterCrs,
-    QgsProcessingOutputRasterLayer,
-    QgsProcessingContext,
-)
 from processing.algs.gdal.GdalAlgorithm import GdalAlgorithm
 from processing.algs.gdal.GdalUtils import GdalUtils
-
-from processing.tools.system import isWindows
 
 pluginPath = os.path.split(os.path.split(os.path.dirname(__file__))[0])[0]
 
@@ -110,7 +108,7 @@ class AssignProjection(GdalAlgorithm):
         self.setOutputValue(self.OUTPUT, fileName)
 
         return [
-            self.commandName() + (".bat" if isWindows() else ".py"),
+            self.commandName() + (".bat" if GdalUtils.is_windows() else ".py"),
             GdalUtils.escapeAndJoin(arguments),
         ]
 
@@ -122,9 +120,7 @@ class AssignProjection(GdalAlgorithm):
 
         # search in context project's layers
         if context.project():
-
             for l in context.project().mapLayers().values():
-
                 # check the source
                 if l.source() != fileName:
                     continue
@@ -136,7 +132,6 @@ class AssignProjection(GdalAlgorithm):
 
         # search in context temporary layer store
         for l in context.temporaryLayerStore().mapLayers().values():
-
             # check the source
             if l.source() != fileName:
                 continue

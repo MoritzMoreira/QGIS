@@ -21,11 +21,10 @@ __copyright__ = "(C) 2012, Victor Olaya"
 
 import os
 import warnings
+from pathlib import Path
 
 from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QFileDialog
-
-from processing.tools.system import isWindows
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
@@ -37,7 +36,6 @@ with warnings.catch_warnings():
 
 
 class RenderingStyleFilePanel(BASE, WIDGET):
-
     def __init__(self):
         super().__init__(None)
         self.setupUi(self)
@@ -58,7 +56,5 @@ class RenderingStyleFilePanel(BASE, WIDGET):
         self.leText.setText(text)
 
     def getValue(self):
-        s = self.leText.text()
-        if isWindows():
-            s = s.replace("\\", "/")
-        return s
+        path = Path(self.le.text())
+        return path.as_posix()

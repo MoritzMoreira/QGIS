@@ -19,14 +19,14 @@ __author__ = "Médéric Ribreux"
 __date__ = "February 2016"
 __copyright__ = "(C) 2016, Médéric Ribreux"
 
+import os
 import shutil
-from qgis.core import QgsProcessingParameterString
-from processing.tools.system import isWindows, mkdir, getTempFilename
-from grassprovider.grass_utils import GrassUtils
 
+from processing.tools.system import getTempFilename, mkdir
+from qgis.core import QgsProcessingParameterString
 from qgis.PyQt.QtCore import QCoreApplication
 
-import os
+from grassprovider.grass_utils import GrassUtils
 
 # for MS-Windows users who have MBCS chars in their name:
 if os.name == "nt":
@@ -36,7 +36,7 @@ if os.name == "nt":
 def rliPath():
     """Return r.li GRASS user dir"""
     grass_version = GrassUtils.installedVersion().split(".")[0]
-    if isWindows():
+    if GrassUtils.is_windows():
         homeDir = win32api.GetShortPathName(os.path.expanduser("~"))
         return os.path.join(
             homeDir, "AppData", "Roaming", f"GRASS{grass_version}", "r.li"
@@ -48,7 +48,7 @@ def rliPath():
 def removeConfigFile(alg, parameters, context):
     """Remove the r.li user dir config file"""
     configPath = alg.parameterAsString(parameters, "config", context)
-    if isWindows():
+    if GrassUtils.is_windows():
         command = f"DEL {os.path.join(rliPath(), configPath)}"
     else:
         command = f"rm {os.path.join(rliPath(), configPath)}"
@@ -152,7 +152,7 @@ def moveOutputTxtFile(alg, parameters, context):
         user_grass_path, "output", alg.parameterAsString(parameters, "output", context)
     )
     # move the file
-    if isWindows():
+    if GrassUtils.is_windows():
         command = f"MOVE /Y {output} {txtPath}"
     else:
         command = f"mv -f {output} {txtPath}"

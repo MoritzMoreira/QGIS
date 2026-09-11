@@ -43,7 +43,7 @@ class CORE_EXPORT QgsRasterContourRenderer : public QgsRasterRenderer
     Qgis::RasterRendererFlags flags() const override;
 
     //! Creates an instance of the renderer based on definition from XML (used by renderer registry)
-    static QgsRasterRenderer *create( const QDomElement &elem, QgsRasterInterface *input ) SIP_FACTORY;
+    static std::unique_ptr<QgsRasterRenderer> create( const QDomElement &elem, QgsRasterInterface *input );
 
     void writeXml( QDomDocument &doc, QDomElement &parentElem ) const override;
 
@@ -89,14 +89,13 @@ class CORE_EXPORT QgsRasterContourRenderer : public QgsRasterRenderer
     void setDownscale( double scale ) { mDownscale = scale; }
 
   private:
-
 #ifdef SIP_RUN
     QgsRasterContourRenderer( const QgsRasterContourRenderer & );
     const QgsRasterContourRenderer &operator=( const QgsRasterContourRenderer & );
 #endif
 
-    std::unique_ptr<QgsLineSymbol> mContourSymbol;   // should not be null
-    std::unique_ptr<QgsLineSymbol> mContourIndexSymbol;  // may be null
+    std::unique_ptr<QgsLineSymbol> mContourSymbol;      // should not be null
+    std::unique_ptr<QgsLineSymbol> mContourIndexSymbol; // may be null
     double mDownscale = 8.;
     double mContourInterval = 100.;
     double mContourIndexInterval = 0.;

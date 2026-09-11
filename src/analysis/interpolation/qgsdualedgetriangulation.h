@@ -17,25 +17,24 @@
 #ifndef DUALEDGETRIANGULATION_H
 #define DUALEDGETRIANGULATION_H
 
-#include <QVector>
-#include <QList>
-#include <QSet>
-#include <QColor>
-#include <QFile>
-#include <QTextStream>
-#include <QMessageBox>
-#include <QBuffer>
-#include <QStringList>
-#include <QCursor>
-
 #include <cfloat>
 
-#include "qgis_sip.h"
-#include "qgis_analysis.h"
-#include "qgspoint.h"
-
-#include "qgstriangulation.h"
 #include "HalfEdge.h"
+#include "qgis_analysis.h"
+#include "qgis_sip.h"
+#include "qgspoint.h"
+#include "qgstriangulation.h"
+
+#include <QBuffer>
+#include <QColor>
+#include <QCursor>
+#include <QFile>
+#include <QList>
+#include <QMessageBox>
+#include <QSet>
+#include <QStringList>
+#include <QTextStream>
+#include <QVector>
 
 #define SIP_NO_FILE
 
@@ -57,7 +56,7 @@ class ANALYSIS_EXPORT QgsDualEdgeTriangulation : public QgsTriangulation
     //! Constructor with a number of points to reserve
     QgsDualEdgeTriangulation( int nop );
     ~QgsDualEdgeTriangulation() override;
-    void addLine( const QVector<QgsPoint> &points, QgsInterpolator::SourceType lineType ) override;
+    void addLine( const QVector<QgsPoint> &points, Qgis::InterpolationSourceType lineType ) override;
     int addPoint( const QgsPoint &p ) override;
     //! Performs a consistency check, remove this later
     void performConsistencyTest() override;
@@ -99,7 +98,7 @@ class ANALYSIS_EXPORT QgsDualEdgeTriangulation : public QgsTriangulation
 
     bool saveTriangulation( QgsFeatureSink *sink, QgsFeedback *feedback = nullptr ) const override;
 
-    virtual QgsMesh triangulationToMesh( QgsFeedback *feedback = nullptr ) const override;
+    QgsMesh triangulationToMesh( QgsFeedback *feedback = nullptr ) const override;
 
   private:
     //! X-coordinate of the upper right corner of the bounding box
@@ -125,7 +124,7 @@ class ANALYSIS_EXPORT QgsDualEdgeTriangulation : public QgsTriangulation
     //! Inserts an edge and makes sure, everything is OK with the storage of the edge. The number of the HalfEdge is returned
     unsigned int insertEdge( int dual, int next, int point, bool mbreak, bool forced );
     //! Inserts a forced segment between the points with the numbers p1 and p2 into the triangulation and returns the number of a HalfEdge belonging to this forced edge or -100 in case of failure
-    int insertForcedSegment( int p1, int p2, QgsInterpolator::SourceType segmentType );
+    int insertForcedSegment( int p1, int p2, Qgis::InterpolationSourceType segmentType );
     //! Security to prevent endless loops in 'baseEdgeOfTriangle'. It there are more iteration then this number, the point will not be inserted
     static const int MAX_BASE_ITERATIONS = 300000;
     //! Returns the number of an edge which points to the point with number 'point' or -1 if there is an error

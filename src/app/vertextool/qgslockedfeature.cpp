@@ -14,25 +14,29 @@
  ***************************************************************************/
 
 #include "qgslockedfeature.h"
-#include "moc_qgslockedfeature.cpp"
-#include "qgsvertexeditor.h"
 
+#include "qgisapp.h"
 #include "qgsfeatureiterator.h"
-#include "qgspoint.h"
-#include "qgssettingsregistrycore.h"
-#include "qgslogger.h"
-#include "qgsvertexmarker.h"
 #include "qgsgeometryvalidator.h"
 #include "qgsguiutils.h"
-#include "qgsvectorlayer.h"
-#include "qgsrubberband.h"
-#include "qgisapp.h"
 #include "qgslayertreeview.h"
-#include "qgsproject.h"
-#include "qgsstatusbar.h"
+#include "qgslogger.h"
 #include "qgsmapcanvas.h"
+#include "qgspoint.h"
+#include "qgsproject.h"
+#include "qgsrubberband.h"
 #include "qgssettingsentryimpl.h"
+#include "qgssettingsregistrycore.h"
+#include "qgsstatusbar.h"
+#include "qgsvectorlayer.h"
+#include "qgsvertexeditor.h"
+#include "qgsvertexmarker.h"
 
+#include <QString>
+
+#include "moc_qgslockedfeature.cpp"
+
+using namespace Qt::StringLiterals;
 
 QgsLockedFeature::QgsLockedFeature( QgsFeatureId featureId, QgsVectorLayer *layer, QgsMapCanvas *canvas )
   : mFeatureId( featureId )
@@ -147,9 +151,7 @@ void QgsLockedFeature::validateGeometry( QgsGeometry *g )
     delete vm;
   }
 
-  Qgis::GeometryValidationEngine method = Qgis::GeometryValidationEngine::QgisInternal;
-  if ( QgsSettingsRegistryCore::settingsDigitizingValidateGeometries->value() == 2 )
-    method = Qgis::GeometryValidationEngine::Geos;
+  Qgis::GeometryValidationEngine method = QgsGeometryValidator::defaultValidationEngine();
   mValidator = new QgsGeometryValidator( *g, nullptr, method );
   connect( mValidator, &QgsGeometryValidator::errorFound, this, &QgsLockedFeature::addError );
   connect( mValidator, &QThread::finished, this, &QgsLockedFeature::validationFinished );
@@ -230,7 +232,7 @@ void QgsLockedFeature::createVertexMap()
 {
   if ( !mGeometry )
   {
-    QgsDebugMsgLevel( QStringLiteral( "Loading feature" ), 2 );
+    QgsDebugMsgLevel( u"Loading feature"_s, 2 );
     updateGeometry( nullptr );
   }
 

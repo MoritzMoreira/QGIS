@@ -13,7 +13,8 @@
  *                                                                         *
  ***************************************************************************/
 #include "qgs3dmaptoolpointcloudchangeattributepolygon.h"
-#include "moc_qgs3dmaptoolpointcloudchangeattributepolygon.cpp"
+
+#include "qgisapp.h"
 #include "qgs3dutils.h"
 #include "qgscameracontroller.h"
 #include "qgsframegraph.h"
@@ -22,15 +23,16 @@
 #include "qgspoint.h"
 #include "qgsrubberband3d.h"
 #include "qgswindow3dengine.h"
-#include "qgisapp.h"
 
 #include <QApplication>
 #include <QMouseEvent>
 
+#include "moc_qgs3dmaptoolpointcloudchangeattributepolygon.cpp"
+
 Qgs3DMapToolPointCloudChangeAttributePolygon::Qgs3DMapToolPointCloudChangeAttributePolygon( Qgs3DMapCanvas *canvas, const ToolType type = Polygon )
-  : Qgs3DMapToolPointCloudChangeAttribute( canvas ), mToolType( type )
-{
-}
+  : Qgs3DMapToolPointCloudChangeAttribute( canvas )
+  , mToolType( type )
+{}
 
 Qgs3DMapToolPointCloudChangeAttributePolygon::~Qgs3DMapToolPointCloudChangeAttributePolygon() = default;
 
@@ -54,7 +56,9 @@ void Qgs3DMapToolPointCloudChangeAttributePolygon::mouseMoveEvent( QMouseEvent *
     if ( !mPolygonRubberBand->isEmpty() )
     {
       mPolygonRubberBand->removeLastPoint();
-      mPolygonRubberBand->moveLastPoint( Qgs3DUtils::screenPointToMapCoordinates( QPoint( event->x(), mToolType == AboveLine ? 0 : mCanvas->height() ), mCanvas->size(), mCanvas->cameraController(), mCanvas->mapSettings() ) );
+      mPolygonRubberBand->moveLastPoint(
+        Qgs3DUtils::screenPointToMapCoordinates( QPoint( event->x(), mToolType == AboveLine ? 0 : mCanvas->height() ), mCanvas->size(), mCanvas->cameraController(), mCanvas->mapSettings() )
+      );
       mPolygonRubberBand->addPoint( movedPoint );
     }
   }
@@ -111,7 +115,8 @@ void Qgs3DMapToolPointCloudChangeAttributePolygon::mouseReleaseEvent( QMouseEven
     }
     else
     {
-      const QgsPoint screenEdgePoint = Qgs3DUtils::screenPointToMapCoordinates( QPoint( event->x(), mToolType == AboveLine ? 0 : mCanvas->height() ), mCanvas->size(), mCanvas->cameraController(), mCanvas->mapSettings() );
+      const QgsPoint screenEdgePoint
+        = Qgs3DUtils::screenPointToMapCoordinates( QPoint( event->x(), mToolType == AboveLine ? 0 : mCanvas->height() ), mCanvas->size(), mCanvas->cameraController(), mCanvas->mapSettings() );
       if ( mLineRubberBand->isEmpty() )
       {
         mLineRubberBand->addPoint( newPoint );
@@ -145,7 +150,7 @@ void Qgs3DMapToolPointCloudChangeAttributePolygon::activate()
   // cannot move this to the constructor as there are no mapSettings available yet when the tool is created
   if ( !mPolygonRubberBand )
   {
-    mPolygonRubberBand = std::make_unique<QgsRubberBand3D>( *mCanvas->mapSettings(), mCanvas->engine(), mCanvas->engine()->frameGraph()->rubberBandsRootEntity(), Qgis::GeometryType::Polygon );
+    mPolygonRubberBand = std::make_unique<QgsRubberBand3D>( mCanvas->scene(), Qgis::GeometryType::Polygon );
     if ( mToolType == Polygon )
     {
       mPolygonRubberBand->setHideLastMarker( true );
@@ -158,7 +163,7 @@ void Qgs3DMapToolPointCloudChangeAttributePolygon::activate()
   }
   if ( !mLineRubberBand && mToolType != Polygon )
   {
-    mLineRubberBand = std::make_unique<QgsRubberBand3D>( *mCanvas->mapSettings(), mCanvas->engine(), mCanvas->engine()->frameGraph()->rubberBandsRootEntity(), Qgis::GeometryType::Line );
+    mLineRubberBand = std::make_unique<QgsRubberBand3D>( mCanvas->scene(), Qgis::GeometryType::Line );
     mLineRubberBand->setHideLastMarker( true );
   }
 }

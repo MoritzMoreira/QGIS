@@ -19,14 +19,18 @@
 #define QGSLAYOUTELEVATIONPROFILEWIDGET_H
 
 // We don't want to expose this in the public API
-#define SIP_NO_FILE
+
+#include "ui_qgslayoutelevationprofilewidgetbase.h"
+
+#include <functional>
 
 #include "qgis_gui.h"
-#include "ui_qgslayoutelevationprofilewidgetbase.h"
-#include "qgslayoutitemwidget.h"
 #include "qgslayoutitemelevationprofile.h"
-#include <functional>
+#include "qgslayoutitemwidget.h"
+
 #include <QPointer>
+
+#define SIP_NO_FILE
 
 class QgsElevationProfileLayerTreeView;
 class QgsElevationProfileCanvas;

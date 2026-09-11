@@ -14,21 +14,30 @@
  ***************************************************************************/
 
 #include "qgsannotationitemwidget.h"
-#include "moc_qgsannotationitemwidget.cpp"
+
+#include "qgsannotationlayer.h"
 #include "qgsmapcanvas.h"
+#include "qgsrenderedannotationitemdetails.h"
 #include "qgsrendereditemdetails.h"
 #include "qgsrendereditemresults.h"
-#include "qgsrenderedannotationitemdetails.h"
-#include "qgsannotationlayer.h"
+
+#include <QComboBox>
+
+#include "moc_qgsannotationitemwidget.cpp"
 
 QgsAnnotationItemBaseWidget::QgsAnnotationItemBaseWidget( QWidget *parent )
   : QgsPanelWidget( parent )
-{
-}
+{}
 
 bool QgsAnnotationItemBaseWidget::setItem( QgsAnnotationItem *item )
 {
   return setNewItem( item );
+}
+
+void QgsAnnotationItemBaseWidget::populateRotationModeComboBox( QComboBox *comboBox )
+{
+  comboBox->addItem( tr( "Ignore Map Rotation" ), QVariant::fromValue( Qgis::SymbolRotationMode::IgnoreMapRotation ) );
+  comboBox->addItem( tr( "Rotate With Map" ), QVariant::fromValue( Qgis::SymbolRotationMode::RespectMapRotation ) );
 }
 
 void QgsAnnotationItemBaseWidget::setLayer( QgsAnnotationLayer *layer )
@@ -62,8 +71,7 @@ QgsSymbolWidgetContext QgsAnnotationItemBaseWidget::context() const
 }
 
 void QgsAnnotationItemBaseWidget::focusDefaultWidget()
-{
-}
+{}
 
 bool QgsAnnotationItemBaseWidget::setNewItem( QgsAnnotationItem * )
 {

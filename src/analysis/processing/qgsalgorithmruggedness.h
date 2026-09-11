@@ -18,10 +18,11 @@
 #ifndef QGSALGORITHMRUGGEDNESS_H
 #define QGSALGORITHMRUGGEDNESS_H
 
-#define SIP_NO_FILE
 
 #include "qgis_sip.h"
 #include "qgsprocessingalgorithm.h"
+
+#define SIP_NO_FILE
 
 ///@cond PRIVATE
 
@@ -40,10 +41,15 @@ class QgsRuggednessAlgorithm : public QgsProcessingAlgorithm
     QString groupId() const override;
     QString shortHelpString() const override;
     QString shortDescription() const override;
+    QList<QgsAcademicReference> academicReferences() const override;
     QgsRuggednessAlgorithm *createInstance() const override SIP_FACTORY;
 
   protected:
+    bool prepareAlgorithm( const QVariantMap &parameters, QgsProcessingContext &context, QgsProcessingFeedback *feedback ) override;
     QVariantMap processAlgorithm( const QVariantMap &parameters, QgsProcessingContext &context, QgsProcessingFeedback *feedback ) override;
+
+  private:
+    QString mLayerSource;
 };
 
 ///@endcond PRIVATE

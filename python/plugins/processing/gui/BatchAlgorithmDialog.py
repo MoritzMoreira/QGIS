@@ -20,15 +20,17 @@ __date__ = "August 2012"
 __copyright__ = "(C) 2012, Victor Olaya"
 
 import time
+from typing import Optional
 
 from qgis.core import (
+    QgsProcessingOutputBoolean,
     QgsProcessingOutputHtml,
     QgsProcessingOutputNumber,
     QgsProcessingOutputString,
-    QgsProcessingOutputBoolean,
     QgsProject,
 )
 from qgis.gui import QgsProcessingBatchAlgorithmDialogBase
+from qgis.PyQt.QtWidgets import QMainWindow
 from qgis.utils import iface
 
 from processing.core.ProcessingResults import resultsList
@@ -39,9 +41,12 @@ from processing.tools.system import getTempFilename
 
 
 class BatchAlgorithmDialog(QgsProcessingBatchAlgorithmDialogBase):
-
-    def __init__(self, alg, parent=None):
-        super().__init__(parent)
+    def __init__(
+        self,
+        alg,
+        parent: Optional[QMainWindow] = None,
+    ):
+        super().__init__(parent or (iface and iface.mainWindow()))
 
         self.setAlgorithm(alg)
 
@@ -57,14 +62,15 @@ class BatchAlgorithmDialog(QgsProcessingBatchAlgorithmDialogBase):
         self.close()
 
         alg_instance = self.algorithm().create()
-        dlg = alg_instance.createCustomParametersWidget(parent=iface.mainWindow())
-        if not dlg:
-            from processing.gui.AlgorithmDialog import AlgorithmDialog
+        widget = alg_instance.createCustomParametersWidget(parent=iface.mainWindow())
+        if not widget:
+            from processing.gui.algorithm_widget import AlgorithmWidget
 
-            dlg = AlgorithmDialog(alg_instance, parent=iface.mainWindow())
+            widget = AlgorithmWidget(
+                alg_instance, parent=(iface and iface.mainWindow())
+            )
 
-        dlg.show()
-        dlg.exec()
+        widget.exec()
 
     def processingContext(self):
         if self.context is None:
@@ -144,9 +150,7 @@ class BatchAlgorithmDialog(QgsProcessingBatchAlgorithmDialogBase):
                         if not param.isDestination():
                             if param.name() in params:
                                 f.write(
-                                    "<tr><th>{}</th><td>{}</td></tr>\n".format(
-                                        param.description(), params[param.name()]
-                                    )
+                                    f"<tr><th>{param.description()}</th><td>{params[param.name()]}</td></tr>\n"
                                 )
                     f.write("</table>\n")
                     f.write(self.tr("<h3>Results</h3>\n"))

@@ -17,12 +17,13 @@
 #define QGSATTRIBUTESFORMVIEW_H
 
 // We don't want to expose this in the public API
-#define SIP_NO_FILE
 
 #include "qgis_gui.h"
 #include "qgsattributesformmodel.h"
 
 #include <QTreeView>
+
+#define SIP_NO_FILE
 
 class QgsAttributesFormTreeViewIndicator;
 
@@ -33,7 +34,7 @@ class QgsAttributesFormTreeViewIndicator;
  * \ingroup gui
  * \since QGIS 3.44
  */
-class GUI_EXPORT QgsAttributesFormBaseView : public QTreeView, protected QgsExpressionContextGenerator
+class GUI_EXPORT QgsAttributesFormBaseView : public QTreeView, public QgsExpressionContextGenerator
 {
     Q_OBJECT
 
@@ -98,6 +99,7 @@ class GUI_EXPORT QgsAttributesFormBaseView : public QTreeView, protected QgsExpr
     QgsAttributesFormModel *sourceModel() const;
 
   public slots:
+
     /**
      * Selects the first item that matches a \a itemType and a \a itemId.
      *
@@ -178,8 +180,20 @@ class GUI_EXPORT QgsAttributesFormLayoutView : public QgsAttributesFormBaseView
 
   private slots:
     void onItemDoubleClicked( const QModelIndex &index );
-    void handleExternalDroppedItem( QModelIndex &index );
-    void handleInternalDroppedItem( QModelIndex &index );
+    void handleExternalDroppedItems( const QModelIndexList &indexes );
+    void handleInternalDroppedItems( const QModelIndexList &indexes );
+
+  private:
+    //! Selects all the given source model \a indexes, making the last one the current index.
+    void selectDroppedItems( const QModelIndexList &indexes );
+
+    //! Recursively records the expanded state of the subtree rooted at source model \a sourceIndex.
+    void storeExpandedState( const QModelIndex &sourceIndex );
+
+    //! Recursively restores the expanded state of the subtree rooted at source model \a sourceIndex.
+    void restoreExpandedState( const QModelIndex &sourceIndex );
+
+    QHash< QgsAttributesFormItem *, bool > mDraggedExpandedState;
 };
 
 

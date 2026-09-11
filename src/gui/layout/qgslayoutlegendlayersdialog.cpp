@@ -13,17 +13,23 @@
  *                                                                         *
  ***************************************************************************/
 #include "qgslayoutlegendlayersdialog.h"
-#include "moc_qgslayoutlegendlayersdialog.cpp"
 
-#include <QStandardItem>
+#include "qgsgui.h"
+#include "qgshelp.h"
 #include "qgsmaplayer.h"
 #include "qgsmaplayermodel.h"
 #include "qgsmaplayerproxymodel.h"
+#include "qgsproject.h"
 #include "qgssettings.h"
-#include "qgsgui.h"
-#include "qgshelp.h"
 
-QgsLayoutLegendLayersDialog::QgsLayoutLegendLayersDialog( QWidget *parent )
+#include <QStandardItem>
+#include <QString>
+
+#include "moc_qgslayoutlegendlayersdialog.cpp"
+
+using namespace Qt::StringLiterals;
+
+QgsLayoutLegendLayersDialog::QgsLayoutLegendLayersDialog( QWidget *parent, QgsProject *project )
   : QDialog( parent )
 {
   setupUi( this );
@@ -32,7 +38,7 @@ QgsLayoutLegendLayersDialog::QgsLayoutLegendLayersDialog( QWidget *parent )
   mFilterLineEdit->setShowClearButton( true );
   mFilterLineEdit->setShowSearchIcon( true );
 
-  mModel = new QgsMapLayerProxyModel( listMapLayers );
+  mModel = new QgsMapLayerProxyModel( project, listMapLayers );
   listMapLayers->setModel( mModel );
   const QModelIndex firstLayer = mModel->index( 0, 0 );
   listMapLayers->selectionModel()->select( firstLayer, QItemSelectionModel::Select );
@@ -81,5 +87,5 @@ void QgsLayoutLegendLayersDialog::filterVisible( bool enabled )
 
 void QgsLayoutLegendLayersDialog::showHelp()
 {
-  QgsHelp::openHelp( QStringLiteral( "print_composer/composer_items/composer_legend.html#legend-items" ) );
+  QgsHelp::openHelp( u"print_composer/composer_items/composer_legend.html#legend-items"_s );
 }

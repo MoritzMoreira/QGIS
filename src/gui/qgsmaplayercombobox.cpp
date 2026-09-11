@@ -14,17 +14,20 @@
 ***************************************************************************/
 
 #include "qgsmaplayercombobox.h"
-#include "moc_qgsmaplayercombobox.cpp"
+
 #include "qgsmaplayermodel.h"
 #include "qgsmimedatautils.h"
+#include "qgsproject.h"
+
 #include <QDragEnterEvent>
 #include <QPainter>
 
+#include "moc_qgsmaplayercombobox.cpp"
 
 QgsMapLayerComboBox::QgsMapLayerComboBox( QWidget *parent )
   : QComboBox( parent )
 {
-  mProxyModel = new QgsMapLayerProxyModel( this );
+  mProxyModel = new QgsMapLayerProxyModel( QgsProject::instance(), this ); // skip-keyword-check
   setModel( mProxyModel );
 
   connect( this, static_cast<void ( QComboBox::* )( int )>( &QComboBox::activated ), this, &QgsMapLayerComboBox::indexChanged );

@@ -19,8 +19,11 @@
 #ifndef QGS_OFFLINE_EDITING_PLUGIN_H
 #define QGS_OFFLINE_EDITING_PLUGIN_H
 
+#include <memory>
+
 #include "../qgisplugin.h"
 #include "qgsofflineediting.h"
+
 #include <QObject>
 
 class QAction;
@@ -53,11 +56,14 @@ class QgsOfflineEditingPlugin : public QObject, public QgisPlugin
     QAction *mActionConvertProject = nullptr;
     QAction *mActionSynchronize = nullptr;
 
-    QgsOfflineEditing *mOfflineEditing = nullptr;
+    std::unique_ptr<QgsOfflineEditing> mOfflineEditing;
     QgsOfflineEditingProgressDialog *mProgressDialog = nullptr;
 
   private slots:
     void updateActions();
+
+    //! recreates mOfflineEditing bound to the current project
+    void setupOfflineEditing();
 
     //! update progress dialog
     void showProgress();

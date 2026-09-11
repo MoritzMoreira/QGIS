@@ -15,13 +15,14 @@
  ***************************************************************************/
 
 #include "qgsscalebarsettings.h"
-#include "qgsnumericformat.h"
+
 #include "qgsbasicnumericformat.h"
-#include "qgslinesymbollayer.h"
-#include "qgssymbol.h"
+#include "qgsfillsymbol.h"
 #include "qgsfillsymbollayer.h"
 #include "qgslinesymbol.h"
-#include "qgsfillsymbol.h"
+#include "qgslinesymbollayer.h"
+#include "qgsnumericformat.h"
+#include "qgssymbol.h"
 
 QgsScaleBarSettings::QgsScaleBarSettings()
 {
@@ -82,9 +83,7 @@ QgsScaleBarSettings::QgsScaleBarSettings( const QgsScaleBarSettings &other )
   , mAlignment( other.mAlignment )
   , mUnits( other.mUnits )
   , mNumericFormat( other.mNumericFormat->clone() )
-{
-
-}
+{}
 
 QgsScaleBarSettings &QgsScaleBarSettings::operator=( const QgsScaleBarSettings &other )
 {
@@ -335,4 +334,3 @@ void QgsScaleBarSettings::setNumericFormat( QgsNumericFormat *format )
 }
 
 QgsScaleBarSettings::~QgsScaleBarSettings() = default;
-

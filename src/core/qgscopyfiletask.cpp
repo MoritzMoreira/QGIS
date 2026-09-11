@@ -14,17 +14,17 @@
  ***************************************************************************/
 
 #include "qgscopyfiletask.h"
-#include "moc_qgscopyfiletask.cpp"
 
+#include <QDir>
 #include <QFile>
 #include <QFileInfo>
-#include <QDir>
+
+#include "moc_qgscopyfiletask.cpp"
 
 QgsCopyFileTask::QgsCopyFileTask( const QString &source, const QString &destination )
-  : mSource( source ),
-    mDestination( destination )
-{
-}
+  : mSource( source )
+  , mDestination( destination )
+{}
 
 bool QgsCopyFileTask::run()
 {

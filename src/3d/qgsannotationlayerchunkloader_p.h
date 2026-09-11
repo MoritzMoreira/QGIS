@@ -27,11 +27,12 @@
 // version without notice, or even be removed.
 //
 
-#include "qgschunkloader.h"
-#include "qgschunkedentity.h"
 #include "qgs3drendercontext.h"
+#include "qgsabstractfeaturebasedchunkedentity.h"
 #include "qgsbillboardgeometry.h"
+#include "qgschunkloader.h"
 #include "qgstextformat.h"
+
 #include <QImage>
 
 #define SIP_NO_FILE
@@ -59,10 +60,22 @@ class QgsAnnotationLayerChunkLoaderFactory : public QgsQuadtreeChunkLoaderFactor
 
   public:
     //! Constructs the factory
-    QgsAnnotationLayerChunkLoaderFactory( const Qgs3DRenderContext &context, QgsAnnotationLayer *layer, int leafLevel, Qgis::AltitudeClamping clamping, double zOffset, bool showCallouts, const QColor &calloutLineColor, double calloutLineWidth, const QgsTextFormat &textFormat, double zMin, double zMax );
+    QgsAnnotationLayerChunkLoaderFactory(
+      const Qgs3DRenderContext &context,
+      QgsAnnotationLayer *layer,
+      int leafLevel,
+      Qgis::AltitudeClamping clamping,
+      double zOffset,
+      bool showCallouts,
+      const QColor &calloutLineColor,
+      double calloutLineWidth,
+      const QgsTextFormat &textFormat,
+      double zMin,
+      double zMax
+    );
 
     //! Creates loader for the given chunk node. Ownership of the returned is passed to the caller.
-    virtual QgsChunkLoader *createChunkLoader( QgsChunkNode *node ) const override;
+    QgsChunkLoader *createChunkLoader( QgsChunkNode *node ) const override;
 
     Qgs3DRenderContext mRenderContext;
     QgsAnnotationLayer *mLayer = nullptr;
@@ -93,8 +106,8 @@ class QgsAnnotationLayerChunkLoader : public QgsChunkLoader
     ~QgsAnnotationLayerChunkLoader() override;
 
     void start() override;
-    virtual void cancel() override;
-    virtual Qt3DCore::QEntity *createEntity( Qt3DCore::QEntity *parent ) override;
+    void cancel() override;
+    Qt3DCore::QEntity *createEntity( Qt3DCore::QEntity *parent ) override;
 
   private:
     const QgsAnnotationLayerChunkLoaderFactory *mFactory = nullptr;
@@ -108,6 +121,16 @@ class QgsAnnotationLayerChunkLoader : public QgsChunkLoader
 
     QVector< QgsBillboardGeometry::BillboardAtlasData > mBillboardPositions;
     QVector< QgsBillboardGeometry::BillboardAtlasData > mTextBillboardPositions;
+
+    struct PictureBillboards
+    {
+        QImage image;
+        QVector< QVector3D > positions;
+        QVector< QSizeF > sizes;
+        Qgis::BillboardScaleMode scaleMode = Qgis::BillboardScaleMode::ViewIndependent;
+    };
+    QVector< PictureBillboards > mPictureBillboards;
+
     QVector< QgsLineString > mCalloutLines;
     QImage mBillboardAtlas;
     QImage mTextBillboardAtlas;
@@ -126,23 +149,29 @@ class QgsAnnotationLayerChunkLoader : public QgsChunkLoader
  *
  * \since QGIS 4.0
  */
-class QgsAnnotationLayerChunkedEntity : public QgsChunkedEntity
+class QgsAnnotationLayerChunkedEntity : public QgsAbstractFeatureBasedChunkedEntity
 {
     Q_OBJECT
   public:
     //! Constructs the entity.
-    explicit QgsAnnotationLayerChunkedEntity( Qgs3DMapSettings *map, QgsAnnotationLayer *layer, Qgis::AltitudeClamping clamping, double zOffset, bool showCallouts, const QColor &calloutLineColor, double calloutLineWidth, const QgsTextFormat &textFormat, double zMin, double zMax );
-    ~QgsAnnotationLayerChunkedEntity();
+    explicit QgsAnnotationLayerChunkedEntity(
+      Qgs3DMapSettings *map,
+      QgsAnnotationLayer *layer,
+      Qgis::AltitudeClamping clamping,
+      double zOffset,
+      bool showCallouts,
+      const QColor &calloutLineColor,
+      double calloutLineWidth,
+      const QgsTextFormat &textFormat,
+      double zMin,
+      double zMax
+    );
+    ~QgsAnnotationLayerChunkedEntity() override;
 
-  private slots:
-    void onTerrainElevationOffsetChanged();
+    QList<QgsRayCastHit> rayIntersection( const QgsRay3D &ray, const QgsRayCastContext &context ) const override;
 
   private:
-    Qt3DCore::QTransform *mTransform = nullptr;
-
-    bool applyTerrainOffset() const;
-
-    friend class TestQgsChunkedEntity;
+    bool applyTerrainOffset() const override;
 };
 
 /// @endcond

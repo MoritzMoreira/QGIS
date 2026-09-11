@@ -17,19 +17,13 @@ import glob
 import os
 import shutil
 import tempfile
+import unittest
 
-from qgis.PyQt.QtCore import (
-    QDate,
-    QDateTime,
-    Qt,
-    QTemporaryDir,
-    QTime,
-    QTimer,
-    QVariant,
-)
-from qgis.PyQt.QtGui import QColor, QPainter
-from qgis.PyQt.QtTest import QSignalSpy
-from qgis.PyQt.QtXml import QDomDocument
+import geopandas as gpd
+import numpy as np
+import pandas as pd
+import shapely
+from featuresourcetestbase import FeatureSourceTestCase
 from qgis.core import (
     NULL,
     Qgis,
@@ -83,16 +77,20 @@ from qgis.core import (
     QgsWkbTypes,
 )
 from qgis.gui import QgsAttributeTableModel, QgsGui
-import unittest
-from qgis.testing import start_app, QgisTestCase
-
-from featuresourcetestbase import FeatureSourceTestCase
+from qgis.PyQt.QtCore import (
+    QDate,
+    QDateTime,
+    Qt,
+    QTemporaryDir,
+    QTime,
+    QTimer,
+    QVariant,
+)
+from qgis.PyQt.QtGui import QColor, QPainter
+from qgis.PyQt.QtTest import QSignalSpy
+from qgis.PyQt.QtXml import QDomDocument
+from qgis.testing import QgisTestCase, start_app
 from utilities import unitTestDataPath
-
-import geopandas as gpd
-import pandas as pd
-import shapely
-import numpy as np
 
 TEST_DATA_DIR = unitTestDataPath()
 
@@ -223,11 +221,10 @@ def dumpEditBuffer(layer):
 
 
 class TestQgsVectorLayer(QgisTestCase, FeatureSourceTestCase):
-
     @classmethod
     def getSource(cls):
         vl = QgsVectorLayer(
-            "Point?crs=epsg:4326&field=pk:integer&field=cnt:integer&field=name:string(0)&field=name2:string(0)&field=num_char:string&field=dt:datetime&field=date:date&field=time:time&key=pk",
+            "Point?crs=epsg:4326&field=pk:integer&field=cnt:integer&field=name:string(0)&field=name2:string(0)&field=num_char:string&field=dt:datetime&field=date:date&field=time:time",
             "test",
             "memory",
         )
@@ -1176,6 +1173,52 @@ class TestQgsVectorLayer(QgisTestCase, FeatureSourceTestCase):
         self.assertEqual(layer.featureCount(), 0)
         self.assertEqual(joinLayer.featureCount(), 3)  # deleteCascade activated
         self.assertEqual(joinLayer2.featureCount(), 4)  # deleteCascade deactivated
+
+    def test_DeleteAllVertices(self):
+        """Deleting all vertices must leave a null geometry."""
+
+        layer = QgsVectorLayer("LineString?field=f:int", "addfeat", "memory")
+        f = QgsFeature()
+        f.setAttributes([1])
+        f.setGeometry(
+            QgsGeometry.fromPolylineXY(
+                [QgsPointXY(0, 0), QgsPointXY(1, 0), QgsPointXY(2, 0)]
+            )
+        )
+        self.assertTrue(layer.dataProvider().addFeatures([f]))
+        layer.startEditing()
+        res = layer.deleteVertices(1, [0, 1, 2])
+        self.assertEqual(res, Qgis.VectorEditResult.EmptyGeometry)
+        g = layer.getGeometry(1)
+        self.assertTrue(g.isNull())
+        self.assertTrue(g.isEmpty())
+        layer.rollBack()
+
+    def test_DeleteSomeVertices(self):
+        """Deleting some vertices must leave a non empty geometry."""
+
+        layer = QgsVectorLayer("LineString?field=f:int", "addfeat", "memory")
+        f = QgsFeature()
+        f.setAttributes([1])
+        f.setGeometry(
+            QgsGeometry.fromPolylineXY(
+                [QgsPointXY(0, 0), QgsPointXY(1, 0), QgsPointXY(2, 0)]
+            )
+        )
+        self.assertTrue(layer.dataProvider().addFeatures([f]))
+        layer.startEditing()
+        res = layer.deleteVertices(1, [0])
+        self.assertEqual(res, Qgis.VectorEditResult.Success)
+        self.assertFalse(layer.getGeometry(1).isNull())
+        self.assertFalse(layer.getGeometry(1).isEmpty())
+        layer.rollBack()
+
+        layer.startEditing()
+        res = layer.deleteVertex(1, 0)
+        self.assertEqual(res, Qgis.VectorEditResult.Success)
+        self.assertFalse(layer.getGeometry(1).isNull())
+        self.assertFalse(layer.getGeometry(1).isEmpty())
+        layer.rollBack()
 
     # CHANGE ATTRIBUTE
 
@@ -2745,9 +2788,7 @@ class TestQgsVectorLayer(QgisTestCase, FeatureSourceTestCase):
         QgsProject.instance().setEllipsoid("WGS84")
         QgsProject.instance().setAreaUnits(QgsUnitTypes.AreaUnit.AreaSquareMeters)
 
-        idx = temp_layer.addExpressionField(
-            "$area", QgsField("area", QVariant.Double)
-        )  # NOQA
+        idx = temp_layer.addExpressionField("$area", QgsField("area", QVariant.Double))  # NOQA
 
         # check value
         f = next(temp_layer.getFeatures())
@@ -3935,15 +3976,15 @@ class TestQgsVectorLayer(QgisTestCase, FeatureSourceTestCase):
         metadata.setFees("a handful of roos")
         layer.setMetadata(metadata)
 
-        # clone layer
-        clone = layer.clone()
-
-        self.assertEqual(layer.metadata().fees(), "a handful of roos")
-
         # generate xml from layer
         layer_doc = QDomDocument("doc")
         layer_elem = layer_doc.createElement("maplayer")
         layer.writeLayerXml(layer_elem, layer_doc, QgsReadWriteContext())
+
+        # clone layer
+        clone = layer.clone()
+
+        self.assertEqual(clone.metadata().fees(), "a handful of roos")
 
         # generate xml from clone
         clone_doc = QDomDocument("doc")
@@ -4187,11 +4228,10 @@ class TestQgsVectorLayer(QgisTestCase, FeatureSourceTestCase):
 class TestQgsVectorLayerSourceAddedFeaturesInBuffer(
     QgisTestCase, FeatureSourceTestCase
 ):
-
     @classmethod
     def getSource(cls):
         vl = QgsVectorLayer(
-            "Point?crs=epsg:4326&field=pk:integer&field=cnt:integer&field=name:string(0)&field=name2:string(0)&field=num_char:string&field=dt:datetime&field=date:date&field=time:time&key=pk",
+            "Point?crs=epsg:4326&field=pk:integer&field=cnt:integer&field=name:string(0)&field=name2:string(0)&field=num_char:string&field=dt:datetime&field=date:date&field=time:time",
             "test",
             "memory",
         )
@@ -4300,11 +4340,10 @@ class TestQgsVectorLayerSourceAddedFeaturesInBuffer(
 class TestQgsVectorLayerSourceChangedGeometriesInBuffer(
     QgisTestCase, FeatureSourceTestCase
 ):
-
     @classmethod
     def getSource(cls):
         vl = QgsVectorLayer(
-            "Point?crs=epsg:4326&field=pk:integer&field=cnt:integer&field=name:string(0)&field=name2:string(0)&field=num_char:string&field=dt:datetime&field=date:date&field=time:time&key=pk",
+            "Point?crs=epsg:4326&field=pk:integer&field=cnt:integer&field=name:string(0)&field=name2:string(0)&field=num_char:string&field=dt:datetime&field=date:date&field=time:time",
             "test",
             "memory",
         )
@@ -4413,11 +4452,10 @@ class TestQgsVectorLayerSourceChangedGeometriesInBuffer(
 class TestQgsVectorLayerSourceChangedAttributesInBuffer(
     QgisTestCase, FeatureSourceTestCase
 ):
-
     @classmethod
     def getSource(cls):
         vl = QgsVectorLayer(
-            "Point?crs=epsg:4326&field=pk:integer&field=cnt:integer&field=name:string(0)&field=name2:string(0)&field=num_char:string&field=dt:datetime&field=date:date&field=time:time&key=pk",
+            "Point?crs=epsg:4326&field=pk:integer&field=cnt:integer&field=name:string(0)&field=name2:string(0)&field=num_char:string&field=dt:datetime&field=date:date&field=time:time",
             "test",
             "memory",
         )
@@ -4594,11 +4632,10 @@ class TestQgsVectorLayerSourceChangedAttributesInBuffer(
 class TestQgsVectorLayerSourceChangedGeometriesAndAttributesInBuffer(
     QgisTestCase, FeatureSourceTestCase
 ):
-
     @classmethod
     def getSource(cls):
         vl = QgsVectorLayer(
-            "Point?crs=epsg:4326&field=pk:integer&field=cnt:integer&field=name:string(0)&field=name2:string(0)&field=num_char:string&field=dt:datetime&field=date:date&field=time:time&key=pk",
+            "Point?crs=epsg:4326&field=pk:integer&field=cnt:integer&field=name:string(0)&field=name2:string(0)&field=num_char:string&field=dt:datetime&field=date:date&field=time:time",
             "test",
             "memory",
         )
@@ -4779,11 +4816,10 @@ class TestQgsVectorLayerSourceChangedGeometriesAndAttributesInBuffer(
 class TestQgsVectorLayerSourceDeletedFeaturesInBuffer(
     QgisTestCase, FeatureSourceTestCase
 ):
-
     @classmethod
     def getSource(cls):
         vl = QgsVectorLayer(
-            "Point?crs=epsg:4326&field=pk:integer&field=cnt:integer&field=name:string(0)&field=name2:string(0)&field=num_char:string&field=dt:datetime&field=date:date&field=time:time&&key=pk",
+            "Point?crs=epsg:4326&field=pk:integer&field=cnt:integer&field=name:string(0)&field=name2:string(0)&field=num_char:string&field=dt:datetime&field=date:date&field=time:time&",
             "test",
             "memory",
         )
@@ -4978,7 +5014,6 @@ class TestQgsVectorLayerSourceDeletedFeaturesInBuffer(
 
 
 class TestQgsVectorLayerTransformContext(QgisTestCase):
-
     def setUp(self):
         """Prepare tc"""
         super().setUp()
@@ -4993,7 +5028,7 @@ class TestQgsVectorLayerTransformContext(QgisTestCase):
         """Test transform context can be set from ctor"""
 
         vl = QgsVectorLayer(
-            "Point?crs=epsg:4326&field=pk:integer&field=cnt:integer&field=name:string(0)&field=name2:string(0)&field=num_char:string&key=pk",
+            "Point?crs=epsg:4326&field=pk:integer&field=cnt:integer&field=name:string(0)&field=name2:string(0)&field=num_char:string",
             "test",
             "memory",
         )
@@ -5006,7 +5041,7 @@ class TestQgsVectorLayerTransformContext(QgisTestCase):
 
         options = QgsVectorLayer.LayerOptions(self.ctx)
         vl = QgsVectorLayer(
-            "Point?crs=epsg:4326&field=pk:integer&field=cnt:integer&field=name:string(0)&field=name2:string(0)&field=num_char:string&key=pk",
+            "Point?crs=epsg:4326&field=pk:integer&field=cnt:integer&field=name:string(0)&field=name2:string(0)&field=num_char:string",
             "test",
             "memory",
             options,
@@ -5022,7 +5057,7 @@ class TestQgsVectorLayerTransformContext(QgisTestCase):
         """Test that when a layer is added to a project it inherits its context"""
 
         vl = QgsVectorLayer(
-            "Point?crs=epsg:4326&field=pk:integer&field=cnt:integer&field=name:string(0)&field=name2:string(0)&field=num_char:string&key=pk",
+            "Point?crs=epsg:4326&field=pk:integer&field=cnt:integer&field=name:string(0)&field=name2:string(0)&field=num_char:string",
             "test",
             "memory",
         )
@@ -5060,7 +5095,7 @@ class TestQgsVectorLayerTransformContext(QgisTestCase):
         """Test that when a layer is synced when project context changes"""
 
         vl = QgsVectorLayer(
-            "Point?crs=epsg:4326&field=pk:integer&field=cnt:integer&field=name:string(0)&field=name2:string(0)&field=num_char:string&key=pk",
+            "Point?crs=epsg:4326&field=pk:integer&field=cnt:integer&field=name:string(0)&field=name2:string(0)&field=num_char:string",
             "test",
             "memory",
         )

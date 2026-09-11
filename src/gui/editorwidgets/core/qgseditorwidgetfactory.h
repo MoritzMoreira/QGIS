@@ -16,8 +16,8 @@
 #ifndef QGSEDITORWIDGETFACTORY_H
 #define QGSEDITORWIDGETFACTORY_H
 
-#include "qgis_sip.h"
 #include "qgis_gui.h"
+#include "qgis_sip.h"
 
 #include <QDomNode>
 #include <QIcon>
@@ -120,10 +120,7 @@ class GUI_EXPORT QgsEditorWidgetFactory
      * \returns A map of widget type names and weight values
      * \note not available in Python bindings
      */
-    virtual QHash<const char *, int> supportedWidgetTypes() SIP_SKIP
-    {
-      return QHash<const char *, int>();
-    }
+    virtual QHash<const char *, int> supportedWidgetTypes() SIP_SKIP { return QHash<const char *, int>(); }
 
     /**
      * This method allows disabling this editor widget type for a certain field.

@@ -14,16 +14,27 @@
  ***************************************************************************/
 
 #include "qgsphongmaterialwidget.h"
+
+#include "qgis.h"
+#include "qgsphongmaterialsettings.h"
+
+#include <QString>
+
 #include "moc_qgsphongmaterialwidget.cpp"
 
-#include "qgsphongmaterialsettings.h"
-#include "qgis.h"
+using namespace Qt::StringLiterals;
 
 QgsPhongMaterialWidget::QgsPhongMaterialWidget( QWidget *parent, bool hasOpacity )
   : QgsMaterialSettingsWidget( parent )
   , mHasOpacity( hasOpacity )
 {
   setupUi( this );
+  mPreviewWidget->hide();
+  mPreviewWidget->setMaterialType( u"phong"_s );
+
+  // Ensure the widgets expand without widening the label column.
+  mGridLayout->setColumnStretch( 2, 1 );
+
   mOpacityWidget->setVisible( mHasOpacity );
   mLblOpacity->setVisible( mHasOpacity );
   spinShininess->setClearValue( 0, tr( "None" ) );
@@ -54,6 +65,8 @@ QgsPhongMaterialWidget::QgsPhongMaterialWidget( QWidget *parent, bool hasOpacity
   {
     connect( mOpacityWidget, &QgsOpacityWidget::opacityChanged, this, &QgsPhongMaterialWidget::changed );
   }
+
+  connect( this, &QgsPhongMaterialWidget::changed, this, &QgsPhongMaterialWidget::updatePreview );
 }
 
 QgsMaterialSettingsWidget *QgsPhongMaterialWidget::create()
@@ -61,14 +74,14 @@ QgsMaterialSettingsWidget *QgsPhongMaterialWidget::create()
   return new QgsPhongMaterialWidget();
 }
 
-void QgsPhongMaterialWidget::setTechnique( QgsMaterialSettingsRenderingTechnique technique )
+void QgsPhongMaterialWidget::setTechnique( Qgis::MaterialRenderingTechnique technique )
 {
   switch ( technique )
   {
-    case QgsMaterialSettingsRenderingTechnique::Triangles:
-    case QgsMaterialSettingsRenderingTechnique::TrianglesFromModel:
-    case QgsMaterialSettingsRenderingTechnique::InstancedPoints:
-    case QgsMaterialSettingsRenderingTechnique::Points:
+    case Qgis::MaterialRenderingTechnique::Triangles:
+    case Qgis::MaterialRenderingTechnique::TrianglesFromModel:
+    case Qgis::MaterialRenderingTechnique::InstancedPoints:
+    case Qgis::MaterialRenderingTechnique::Points:
     {
       lblDiffuse->setVisible( true );
       btnDiffuse->setVisible( true );
@@ -79,7 +92,7 @@ void QgsPhongMaterialWidget::setTechnique( QgsMaterialSettingsRenderingTechnique
       break;
     }
 
-    case QgsMaterialSettingsRenderingTechnique::TrianglesWithFixedTexture:
+    case Qgis::MaterialRenderingTechnique::TrianglesWithFixedTexture:
     {
       lblDiffuse->setVisible( false );
       btnDiffuse->setVisible( false );
@@ -90,7 +103,7 @@ void QgsPhongMaterialWidget::setTechnique( QgsMaterialSettingsRenderingTechnique
       break;
     }
 
-    case QgsMaterialSettingsRenderingTechnique::TrianglesDataDefined:
+    case Qgis::MaterialRenderingTechnique::TrianglesDataDefined:
     {
       lblDiffuse->setVisible( true );
       btnDiffuse->setVisible( true );
@@ -101,7 +114,8 @@ void QgsPhongMaterialWidget::setTechnique( QgsMaterialSettingsRenderingTechnique
       break;
     }
 
-    case QgsMaterialSettingsRenderingTechnique::Lines:
+    case Qgis::MaterialRenderingTechnique::Lines:
+    case Qgis::MaterialRenderingTechnique::Billboards:
       // not supported
       break;
   }
@@ -131,9 +145,10 @@ void QgsPhongMaterialWidget::setSettings( const QgsAbstractMaterialSettings *set
   mSpecularDataDefinedButton->init( static_cast<int>( QgsAbstractMaterialSettings::Property::Specular ), mPropertyCollection, settings->propertyDefinitions(), layer, true );
 
   updateWidgetState();
+  updatePreview();
 }
 
-QgsAbstractMaterialSettings *QgsPhongMaterialWidget::settings()
+std::unique_ptr<QgsAbstractMaterialSettings> QgsPhongMaterialWidget::settings()
 {
   auto m = std::make_unique<QgsPhongMaterialSettings>();
   m->setDiffuse( btnDiffuse->color() );
@@ -153,7 +168,7 @@ QgsAbstractMaterialSettings *QgsPhongMaterialWidget::settings()
   mPropertyCollection.setProperty( QgsAbstractMaterialSettings::Property::Specular, mSpecularDataDefinedButton->toProperty() );
   m->setDataDefinedProperties( mPropertyCollection );
 
-  return m.release();
+  return m;
 }
 
 void QgsPhongMaterialWidget::setHasOpacity( const bool opacity )
@@ -176,6 +191,12 @@ void QgsPhongMaterialWidget::setHasOpacity( const bool opacity )
   }
 }
 
+void QgsPhongMaterialWidget::setPreviewVisible( bool visible )
+{
+  mPreviewWidget->setVisible( visible );
+  updatePreview();
+}
+
 void QgsPhongMaterialWidget::updateWidgetState()
 {
   if ( spinShininess->value() > 0 )
@@ -188,4 +209,12 @@ void QgsPhongMaterialWidget::updateWidgetState()
     btnSpecular->setEnabled( false );
     btnSpecular->setToolTip( tr( "Specular color is disabled because material has no shininess" ) );
   }
+}
+
+void QgsPhongMaterialWidget::updatePreview()
+{
+  if ( mPreviewWidget->isHidden() )
+    return;
+  const std::unique_ptr<QgsAbstractMaterialSettings> newSettings( settings() );
+  mPreviewWidget->updatePreview( newSettings.get() );
 }

@@ -12,11 +12,11 @@ __author__ = "(C) 2020 by Nyall Dawson"
 __date__ = "29/07/2020"
 __copyright__ = "Copyright 2020, The QGIS Project"
 
-from qgis.PyQt.QtCore import QSize, QTemporaryDir
-from qgis.PyQt.QtGui import QColor, QImage, QPainter
-from qgis.PyQt.QtXml import QDomDocument
+import unittest
+
 from qgis.core import (
     Qgis,
+    QgsAnnotationItemEditContext,
     QgsAnnotationItemEditOperationMoveNode,
     QgsAnnotationLayer,
     QgsAnnotationLineItem,
@@ -39,12 +39,14 @@ from qgis.core import (
     QgsReadWriteContext,
     QgsRectangle,
     QgsRenderContext,
-    QgsVertexId,
     QgsVectorLayer,
+    QgsVertexId,
 )
-import unittest
-from qgis.testing import start_app, QgisTestCase
-
+from qgis.PyQt.QtCore import QSize, QTemporaryDir
+from qgis.PyQt.QtGui import QColor, QImage, QPainter
+from qgis.PyQt.QtTest import QSignalSpy
+from qgis.PyQt.QtXml import QDomDocument
+from qgis.testing import QgisTestCase, start_app
 from utilities import compareWkt, unitTestDataPath
 
 start_app()
@@ -52,7 +54,6 @@ TEST_DATA_DIR = unitTestDataPath()
 
 
 class TestQgsAnnotationLayer(QgisTestCase):
-
     @classmethod
     def control_path_prefix(cls):
         return "annotation_layer"
@@ -565,6 +566,85 @@ class TestQgsAnnotationLayer(QgisTestCase):
         self.assertCountEqual(
             layer.itemsInBounds(QgsRectangle(18, 1, 20, 16), rc), [polygon_item_id]
         )
+
+    def testItemsChangedSignal(self):
+        """
+        Test that the itemsChanged signal is emitted whenever items are added,
+        replaced, edited or removed
+        """
+        layer = QgsAnnotationLayer(
+            "test",
+            QgsAnnotationLayer.LayerOptions(QgsProject.instance().transformContext()),
+        )
+        spy = QSignalSpy(layer.itemsChanged)
+
+        marker_item_id = layer.addItem(QgsAnnotationMarkerItem(QgsPoint(12, 13)))
+        self.assertEqual(len(spy), 1)
+
+        layer.replaceItem(marker_item_id, QgsAnnotationMarkerItem(QgsPoint(14, 15)))
+        self.assertEqual(len(spy), 2)
+
+        # an edit operation on a missing item must not emit the signal
+        self.assertEqual(
+            layer.applyEditV2(
+                QgsAnnotationItemEditOperationMoveNode(
+                    "xxx", QgsVertexId(0, 0, 0), QgsPoint(14, 15), QgsPoint(17, 18)
+                ),
+                QgsAnnotationItemEditContext(),
+            ),
+            Qgis.AnnotationItemEditOperationResult.Invalid,
+        )
+        self.assertEqual(len(spy), 2)
+
+        self.assertEqual(
+            layer.applyEditV2(
+                QgsAnnotationItemEditOperationMoveNode(
+                    marker_item_id,
+                    QgsVertexId(0, 0, 0),
+                    QgsPoint(14, 15),
+                    QgsPoint(17, 18),
+                ),
+                QgsAnnotationItemEditContext(),
+            ),
+            Qgis.AnnotationItemEditOperationResult.Success,
+        )
+        self.assertEqual(len(spy), 3)
+
+        # removing a missing item must not emit the signal
+        self.assertFalse(layer.removeItem("xxx"))
+        self.assertEqual(len(spy), 3)
+
+        self.assertTrue(layer.removeItem(marker_item_id))
+        self.assertEqual(len(spy), 4)
+
+        layer.addItem(QgsAnnotationMarkerItem(QgsPoint(12, 13)))
+        self.assertEqual(len(spy), 5)
+
+        layer.clear()
+        self.assertEqual(len(spy), 6)
+
+    def testItemsChangedSignalOnReadXml(self):
+        """
+        Test that the itemsChanged signal is emitted when items are restored
+        from a project
+        """
+        doc = QDomDocument("testdoc")
+        layer = QgsAnnotationLayer(
+            "test",
+            QgsAnnotationLayer.LayerOptions(QgsProject.instance().transformContext()),
+        )
+        layer.addItem(QgsAnnotationMarkerItem(QgsPoint(12, 13)))
+
+        elem = doc.createElement("maplayer")
+        self.assertTrue(layer.writeLayerXml(elem, doc, QgsReadWriteContext()))
+
+        layer2 = QgsAnnotationLayer(
+            "test2",
+            QgsAnnotationLayer.LayerOptions(QgsProject.instance().transformContext()),
+        )
+        spy = QSignalSpy(layer2.itemsChanged)
+        self.assertTrue(layer2.readLayerXml(elem, QgsReadWriteContext()))
+        self.assertEqual(len(spy), 1)
 
     def testRenderLayer(self):
         layer = QgsAnnotationLayer(

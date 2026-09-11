@@ -17,11 +17,11 @@
 #ifndef QGSEXPRESSIONNODE_H
 #define QGSEXPRESSIONNODE_H
 
+#include "qgis.h"
+
+#include <QCoreApplication>
 #include <QSet>
 #include <QVariant>
-#include <QCoreApplication>
-
-#include "qgis.h"
 
 class QgsExpression;
 class QgsExpressionContext;
@@ -33,7 +33,7 @@ class QgsExpressionContext;
  */
 class CORE_EXPORT QgsExpressionNode SIP_ABSTRACT
 {
-
+    // clang-format off
 #ifdef SIP_RUN
     SIP_CONVERT_TO_SUBCLASS_CODE
     switch ( sipCpp->nodeType() )
@@ -66,26 +66,26 @@ class CORE_EXPORT QgsExpressionNode SIP_ABSTRACT
         sipType = 0;
         break;
     }
-    SIP_END
+  SIP_END
 #endif
 
-    Q_DECLARE_TR_FUNCTIONS( QgsExpressionNode )
+  Q_DECLARE_TR_FUNCTIONS( QgsExpressionNode )
 
   public:
-
     //! Known node types.
     enum NodeType
     {
-      ntUnaryOperator, //!< \see QgsExpression::Node::NodeUnaryOperator
-      ntBinaryOperator, //!< \see QgsExpression::Node::NodeBinaryOperator
-      ntInOperator, //!< \see QgsExpression::Node::NodeInOperator
-      ntFunction,  //!< \see QgsExpression::Node::NodeFunction
-      ntLiteral, //!< \see QgsExpression::Node::NodeLiteral
-      ntColumnRef, //!< \see QgsExpression::Node::NodeColumnRef
-      ntCondition, //!< \see QgsExpression::Node::NodeCondition
-      ntIndexOperator, //!< Index operator
+      ntUnaryOperator,   //!< \see QgsExpression::Node::NodeUnaryOperator
+      ntBinaryOperator,  //!< \see QgsExpression::Node::NodeBinaryOperator
+      ntInOperator,      //!< \see QgsExpression::Node::NodeInOperator
+      ntFunction,        //!< \see QgsExpression::Node::NodeFunction
+      ntLiteral,         //!< \see QgsExpression::Node::NodeLiteral
+      ntColumnRef,       //!< \see QgsExpression::Node::NodeColumnRef
+      ntCondition,       //!< \see QgsExpression::Node::NodeCondition
+      ntIndexOperator,   //!< Index operator
       ntBetweenOperator, //!< Between operator \since QGIS 3.26
     };
+    // clang-format on
 
 
     /**
@@ -95,7 +95,6 @@ class CORE_EXPORT QgsExpressionNode SIP_ABSTRACT
     struct NamedNode
     {
       public:
-
         /**
          * Constructor for NamedNode
          * \param name node name
@@ -122,7 +121,11 @@ class CORE_EXPORT QgsExpressionNode SIP_ABSTRACT
       public:
         virtual ~NodeList();
         //! Takes ownership of the provided node
-        void append( QgsExpressionNode *node SIP_TRANSFER ) { mList.append( node ); mNameList.append( QString() ); }
+        void append( QgsExpressionNode *node SIP_TRANSFER )
+        {
+          mList.append( node );
+          mNameList.append( QString() );
+        }
 
         /**
          * Adds a named node. Takes ownership of the provided node.
@@ -258,7 +261,7 @@ class CORE_EXPORT QgsExpressionNode SIP_ABSTRACT
      * \note not available in Python bindings
      * \since QGIS 3.2
      */
-    virtual QList<const QgsExpressionNode *> nodes( ) const = 0; SIP_SKIP
+    virtual QList<const QgsExpressionNode *> nodes() const SIP_SKIP = 0;
 
     /**
      * Abstract virtual method which returns if the geometry is required to evaluate
@@ -351,12 +354,25 @@ class CORE_EXPORT QgsExpressionNode SIP_ABSTRACT
      *
      * Returns a reference to the current object if no optimizations were applied.
      *
+     * \see simplifiedNode()
      * \since QGIS 3.20
      */
     const QgsExpressionNode *effectiveNode() const { return mCompiledSimplifiedNode ? mCompiledSimplifiedNode.get() : this; }
 
-  protected:
+    /**
+     * Returns a new node, which is the simplest node which represents this node
+     * before any compilation optimizations have been applied.
+     *
+     * Eg. a node like ``1 + 2`` can be effectively replaced by a literal ``3`` node, or a nested function node like
+     * ``coalesce(coalesce("field_a", "field_b"), "field_c")`` could be replaced by a single ``coalesce("field_a", "field_b", "field_c")``
+     * function node.
+     *
+     * \see effectiveNode()
+     * \since QGIS 4.4
+     */
+    virtual QgsExpressionNode *simplifiedNode() const SIP_FACTORY;
 
+  protected:
     QgsExpressionNode() = default;
     QgsExpressionNode( const QgsExpressionNode &other );
     QgsExpressionNode &operator=( const QgsExpressionNode &other );
@@ -401,7 +417,6 @@ class CORE_EXPORT QgsExpressionNode SIP_ABSTRACT
 #endif
 
   private:
-
     /**
      * Abstract virtual preparation method
      * Errors are reported to the parent
@@ -413,7 +428,6 @@ class CORE_EXPORT QgsExpressionNode SIP_ABSTRACT
      * Errors are reported to the parent
      */
     virtual QVariant evalNode( QgsExpression *parent, const QgsExpressionContext *context ) = 0;
-
 };
 
 Q_DECLARE_METATYPE( QgsExpressionNode * )

@@ -12,14 +12,16 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
+#include "qgsapplication.h"
 #include "qgstest.h"
+#include "qgsziputils.h"
+
+#include <QDirIterator>
 #include <QObject>
 #include <QString>
 #include <QStringList>
-#include <QDirIterator>
 
-#include "qgsziputils.h"
-#include "qgsapplication.h"
+using namespace Qt::StringLiterals;
 
 class TestQgsZipUtils : public QObject
 {
@@ -58,12 +60,10 @@ void TestQgsZipUtils::cleanupTestCase()
 }
 
 void TestQgsZipUtils::init()
-{
-}
+{}
 
 void TestQgsZipUtils::cleanup()
-{
-}
+{}
 
 void TestQgsZipUtils::unzipWithSubdirs()
 {
@@ -130,7 +130,7 @@ void TestQgsZipUtils::testZip()
  */
 void TestQgsZipUtils::genericTest( QString zipName, int expectedEntries, bool includeFolders, const QStringList &testFileNames )
 {
-  const QFile zipFile( QString( TEST_DATA_DIR ) + QStringLiteral( "/zip/%1.zip" ).arg( zipName ) );
+  const QFile zipFile( QString( TEST_DATA_DIR ) + u"/zip/%1.zip"_s.arg( zipName ) );
   QVERIFY( zipFile.exists() );
 
   const QFileInfo fileInfo( zipFile );

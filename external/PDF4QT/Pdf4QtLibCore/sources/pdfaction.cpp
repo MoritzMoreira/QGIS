@@ -26,6 +26,8 @@
 #include "pdfencoding.h"
 #include "pdfdbgheap.h"
 
+#include <limits>
+
 namespace pdf
 {
 
@@ -425,13 +427,14 @@ PDFDestination PDFDestination::parse(const PDFObjectStorage* storage, PDFObject 
         QByteArray name = loader.readName(array->getItem(1));
 
         size_t currentIndex = 2;
+        const PDFReal defaultNumber = std::numeric_limits<PDFReal>::quiet_NaN();
         auto readNumber = [&]()
         {
             if (currentIndex < array->getCount())
             {
-                return loader.readNumber(array->getItem(currentIndex++), 0.0);
+                return loader.readNumber(array->getItem(currentIndex++), defaultNumber);
             }
-            return 0.0;
+            return defaultNumber;
         };
 
         if (name == "XYZ")
@@ -622,7 +625,7 @@ bool PDFDestination::hasLeft() const
         case DestinationType::FitV:
         case DestinationType::FitBV:
         case DestinationType::FitR:
-            return true;
+            return !qIsNaN(m_left);
 
         default:
             break;
@@ -639,7 +642,7 @@ bool PDFDestination::hasTop() const
         case DestinationType::FitH:
         case DestinationType::FitBH:
         case DestinationType::FitR:
-            return true;
+            return !qIsNaN(m_top);
 
         default:
             break;
@@ -653,7 +656,7 @@ bool PDFDestination::hasRight() const
     switch (m_destinationType)
     {
         case DestinationType::FitR:
-            return true;
+            return !qIsNaN(m_right);
 
         default:
             break;
@@ -667,7 +670,7 @@ bool PDFDestination::hasBottom() const
     switch (m_destinationType)
     {
         case DestinationType::FitR:
-            return true;
+            return !qIsNaN(m_bottom);
 
         default:
             break;
@@ -681,7 +684,7 @@ bool PDFDestination::hasZoom() const
     switch (m_destinationType)
     {
         case DestinationType::XYZ:
-            return true;
+            return !qIsNaN(m_zoom);
 
         default:
             break;

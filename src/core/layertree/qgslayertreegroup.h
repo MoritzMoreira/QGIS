@@ -18,9 +18,13 @@
 
 #include "qgis_core.h"
 #include "qgis_sip.h"
+#include "qgsgrouplayer.h"
 #include "qgslayertreenode.h"
 #include "qgsmaplayerref.h"
-#include "qgsgrouplayer.h"
+
+#include <QString>
+
+using namespace Qt::StringLiterals;
 
 class QgsMapLayer;
 class QgsLayerTreeLayer;
@@ -41,7 +45,6 @@ class CORE_EXPORT QgsLayerTreeGroup : public QgsLayerTreeNode
 {
     Q_OBJECT
   public:
-
     /**
      * Constructor
      */
@@ -52,22 +55,26 @@ class CORE_EXPORT QgsLayerTreeGroup : public QgsLayerTreeNode
 #endif
 
 #ifdef SIP_RUN
+    // clang-format off
     SIP_PYOBJECT __repr__();
     % MethodCode
-    QString str = QStringLiteral( "<QgsLayerTreeGroup: %1>" ).arg( sipCpp->name() );
+    QString str = u"<QgsLayerTreeGroup: %1>"_s.arg( sipCpp->name() );
     sipRes = PyUnicode_FromString( str.toUtf8().constData() );
     % End
+// clang-format on
 #endif
 
-    /**
+        /**
      * Returns the group's name.
      */
-    QString name() const override;
+        QString name() const override;
 
     /**
      * Sets the group's name.
      */
     void setName( const QString &n ) override;
+
+    QString id() const override { return mId; }
 
     /**
      * Insert a new group node with given name at specified position. The newly created node is owned by this group.
@@ -138,11 +145,9 @@ class CORE_EXPORT QgsLayerTreeGroup : public QgsLayerTreeNode
     /**
      * Remove a custom node from this group. The node will be deleted.
      *
-     * \param id Id of the node to be removed.
-     *
      * \since QGIS 4.0
      */
-    void removeCustomNode( const QString &id );
+    void removeCustomNode( QgsLayerTreeCustomNode *customNode );
 
     /**
      * Remove child nodes from index "from". The nodes will be deleted.
@@ -269,7 +274,7 @@ class CORE_EXPORT QgsLayerTreeGroup : public QgsLayerTreeNode
      * Read group (tree) from XML element <layer-tree-group> and return the newly created group (or NULLPTR on error).
      * Does not resolve textual references to layers. Call resolveReferences() afterwards to do it.
      */
-    static QgsLayerTreeGroup *readXml( const QDomElement &element, const QgsReadWriteContext &context ) SIP_FACTORY;  // cppcheck-suppress duplInheritedMember
+    static QgsLayerTreeGroup *readXml( const QDomElement &element, const QgsReadWriteContext &context ) SIP_FACTORY; // cppcheck-suppress duplInheritedMember
 
     /**
      * Read group (tree) from XML element <layer-tree-group> and return the newly created group (or NULLPTR on error).
@@ -393,18 +398,42 @@ class CORE_EXPORT QgsLayerTreeGroup : public QgsLayerTreeNode
      */
     bool hasWmsTimeDimension() const;
 
+    /**
+     * Returns the request mode of the group.
+     * When it's opaque, WMS treats it as a single opaque layer instead
+     * of a collection of individual layers.
+     * Its child layers are hidden from GetCapabilities requests.
+     * Any direct requests (like GetMap or GetFeatureInfo etc.) for a child layer will result in an error.
+     * Child layers are rendered whenever a request is made for the group itself.
+     *
+     * \see setWmsGroupRequestMode()
+     * \since QGIS 4.2
+     */
+    Qgis::WmsGroupRequestMode wmsGroupRequestMode() const;
+
+    /**
+     * Sets the request mode of the group.
+     * \param groupRequestMode On Opaque, WMS treats it as a single opaque layer instead
+     * of a collection of individual layers. On Normal it behaves as a standard group.
+     *
+     * \see wmsGroupRequestMode()
+     * \since QGIS 4.2
+     */
+    void setWmsGroupRequestMode( Qgis::WmsGroupRequestMode groupRequestMode );
+
   protected slots:
 
     void nodeVisibilityChanged( QgsLayerTreeNode *node );
 
   protected:
-
     /**
      * Set check state of children - if mutually exclusive
      */
     void updateChildVisibilityMutuallyExclusive();
 
     QString mName;
+
+    QString mId;
 
     bool mChangingChildVisibility = false;
 
@@ -420,10 +449,9 @@ class CORE_EXPORT QgsLayerTreeGroup : public QgsLayerTreeNode
     bool mWmsHasTimeDimension = false;
 
     //! Sets parent to NULLPTR and disconnects all external and forwarded signals
-    virtual void makeOrphan() override SIP_SKIP;
+    void makeOrphan() override SIP_SKIP;
 
   private:
-
 #ifdef SIP_RUN
 
     /**
@@ -432,7 +460,11 @@ class CORE_EXPORT QgsLayerTreeGroup : public QgsLayerTreeNode
     QgsLayerTreeGroup( const QgsLayerTreeGroup &other );
 #endif
 
-    QgsLayerTreeGroup &operator= ( const QgsLayerTreeGroup & ) = delete;
+    QgsLayerTreeGroup &operator=( const QgsLayerTreeGroup & ) = delete;
+
+    // only QgsLayerTreeUtils::regenerateGroupIds may assign a new id
+    friend class QgsLayerTreeUtils;
+    void setId( const QString &id );
 
     /**
      * Helper method to migrate project before 3.44 where shortName, title and abstract were
@@ -452,6 +484,8 @@ class CORE_EXPORT QgsLayerTreeGroup : public QgsLayerTreeNode
      * Stores information about server properties
      */
     std::unique_ptr< QgsMapLayerServerProperties > mServerProperties;
+
+    Qgis::WmsGroupRequestMode mWmsGroupRequestMode = Qgis::WmsGroupRequestMode::Normal;
 };
 
 

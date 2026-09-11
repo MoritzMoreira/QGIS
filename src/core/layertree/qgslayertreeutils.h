@@ -16,11 +16,12 @@
 #ifndef QGSLAYERTREEUTILS_H
 #define QGSLAYERTREEUTILS_H
 
-#include <qnamespace.h>
+#include "qgis_core.h"
+
+#include <QDomNodeList>
 #include <QList>
 #include <QPair>
-#include <QDomNodeList>
-#include "qgis_core.h"
+#include <qnamespace.h>
 
 class QDomElement;
 class QDomDocument;
@@ -39,7 +40,6 @@ class QgsProject;
 class CORE_EXPORT QgsLayerTreeUtils
 {
   public:
-
     //! Try to load layer tree from \verbatim <legend> \endverbatim tag from project files from QGIS 2.2 and below
     static bool readOldLegend( QgsLayerTreeGroup *root, const QDomElement &legendElem );
     //! Try to load custom layer order from \verbatim <legend> \endverbatim tag from project files from QGIS 2.2 and below
@@ -65,6 +65,17 @@ class CORE_EXPORT QgsLayerTreeUtils
 
     //! Removes layer nodes that refer to invalid layers
     static void removeInvalidLayers( QgsLayerTreeGroup *group );
+
+    /**
+     * Assigns a new unique id to every group in the sub-tree rooted at \a node.
+     *
+     * Call this on a copied sub-tree before inserting it into a project (paste,
+     * duplicate, QLR import) so duplicated groups do not share an id with their
+     * source. Layer and custom nodes are not changed.
+     *
+     * \since QGIS 4.4
+     */
+    static void regenerateGroupIds( QgsLayerTreeNode *node );
 
     /**
      * Stores in a layer's originalXmlProperties the layer properties information

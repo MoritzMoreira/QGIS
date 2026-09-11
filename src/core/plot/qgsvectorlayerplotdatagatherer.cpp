@@ -15,15 +15,15 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "moc_qgsvectorlayerplotdatagatherer.cpp"
 #include "qgsvectorlayerplotdatagatherer.h"
+
 #include "qgsexpression.h"
 
+#include "moc_qgsvectorlayerplotdatagatherer.cpp"
 
 QgsVectorLayerXyPlotDataGatherer::QgsVectorLayerXyPlotDataGatherer( Qgis::PlotAxisType xAxisType )
   : mXAxisType( xAxisType )
-{
-}
+{}
 
 void QgsVectorLayerXyPlotDataGatherer::setSeriesDetails( const QList<QgsVectorLayerXyPlotDataGatherer::XySeriesDetails> &seriesDetails )
 {
@@ -33,6 +33,11 @@ void QgsVectorLayerXyPlotDataGatherer::setSeriesDetails( const QList<QgsVectorLa
 void QgsVectorLayerXyPlotDataGatherer::setPredefinedCategories( const QStringList &predefinedCategories )
 {
   mPredefinedCategories = predefinedCategories;
+}
+
+void QgsVectorLayerXyPlotDataGatherer::setXAxisType( Qgis::PlotAxisType xAxisType )
+{
+  mXAxisType = xAxisType;
 }
 
 bool QgsVectorLayerXyPlotDataGatherer::run()
@@ -55,9 +60,10 @@ bool QgsVectorLayerXyPlotDataGatherer::run()
   {
     mExpressionContext.setFeature( feature );
 
-    int seriesIndex = 0;
+    int seriesIndex = -1;
     for ( const XySeriesDetails &seriesDetails : mSeriesDetails )
     {
+      seriesIndex++;
       if ( !seriesDetails.filterExpression.isEmpty() )
       {
         auto filterExpressionIt = preparedExpressions.find( seriesDetails.filterExpression );
@@ -147,7 +153,6 @@ bool QgsVectorLayerXyPlotDataGatherer::run()
         }
       }
 
-      seriesIndex++;
       if ( isCanceled() )
         return false;
     }
@@ -157,9 +162,10 @@ bool QgsVectorLayerXyPlotDataGatherer::run()
   {
     case Qgis::PlotAxisType::Categorical:
     {
-      int seriesIndex = 0;
+      int seriesIndex = -1;
       for ( QMap<QString, double> &gatheredCategoriesSum : gatheredSeriesCategoriesSum )
       {
+        seriesIndex++;
         if ( !mPredefinedCategories.isEmpty() )
         {
           for ( int i = 0; i < mPredefinedCategories.size(); i++ )
@@ -182,7 +188,6 @@ bool QgsVectorLayerXyPlotDataGatherer::run()
             }
           }
         }
-        seriesIndex++;
       }
 
       mData.setCategories( !mPredefinedCategories.isEmpty() ? mPredefinedCategories : gatheredCategories );
@@ -193,8 +198,10 @@ bool QgsVectorLayerXyPlotDataGatherer::run()
       break;
   }
 
+  int seriesIndex = 0;
   for ( std::unique_ptr<QgsXyPlotSeries> &series : gatheredSeries )
   {
+    series->setName( mSeriesDetails[seriesIndex++].name );
     mData.addSeries( series.release() );
   }
 

@@ -16,20 +16,19 @@
 #ifndef QGSSYMBOLSELECTORDIALOG_H
 #define QGSSYMBOLSELECTORDIALOG_H
 
-#include <QDialog>
-#include "qgis_sip.h"
-
 #include "ui_qgssymbolselectordialogbase.h"
 
-#include "qgspanelwidget.h"
-#include "qgssymbolwidgetcontext.h"
-#include "qgsproperty.h"
+#include "qgis_gui.h"
+#include "qgis_sip.h"
 #include "qgshelp.h"
+#include "qgspanelwidget.h"
+#include "qgsproperty.h"
+#include "qgssymbolwidgetcontext.h"
 
-#include <QStandardItemModel>
+#include <QDialog>
 #include <QDialogButtonBox>
 #include <QPointer>
-#include "qgis_gui.h"
+#include <QStandardItemModel>
 
 class QgsStyle;
 class QgsSymbol;
@@ -39,11 +38,12 @@ class QgsVectorLayer;
 class QMenu;
 class QWidget;
 
-class SymbolLayerItem;
 class QgsMarkerSymbol;
 class QgsLineSymbol;
 class QgsMarkerSymbolLayer;
 class QgsLineSymbolLayer;
+class QgsSymbolLayerModel;
+class QgsSymbolLayerModelNode;
 
 class QgsMapCanvas;
 
@@ -92,7 +92,7 @@ class GUI_EXPORT QgsSymbolSelectorWidget : public QgsPanelWidget, private Ui::Qg
     friend class QgsSymbolSelectorDialog;
 
   public:
-    // TODO QGIS 4.0 - transfer ownership of symbol to widget!
+    // TODO QGIS 5.0 - transfer ownership of symbol to widget!
 
     /**
      * Symbol selector widget that can be used to select and build a symbol
@@ -104,7 +104,7 @@ class GUI_EXPORT QgsSymbolSelectorWidget : public QgsPanelWidget, private Ui::Qg
      */
     QgsSymbolSelectorWidget( QgsSymbol *symbol, QgsStyle *style, QgsVectorLayer *vl, QWidget *parent SIP_TRANSFERTHIS = nullptr );
 
-    // TODO QGIS 4.0 -- remove when normal constructor takes ownership
+    // TODO QGIS 5.0 -- remove when normal constructor takes ownership
 
     /**
      * Creates a QgsSymbolSelectorWidget which takes ownership of a symbol and maintains
@@ -136,15 +136,14 @@ class GUI_EXPORT QgsSymbolSelectorWidget : public QgsPanelWidget, private Ui::Qg
      */
     QgsSymbol *symbol() { return mSymbol; }
 
-    // TODO QGIS 4.0 - transfer ownership of symbol to widget!
+    // TODO QGIS 5.0 - transfer ownership of symbol to widget!
 
     /**
      * Loads the given symbol into the widget.
      * \param symbol The symbol to load.
-     * \param parent The parent symbol layer item. If the parent parameter is null, the whole symbol and model will be reset.
      * \note The ownership of the symbol is not transferred and must exist for the lifetime of the widget.
      */
-    void loadSymbol( QgsSymbol *symbol, SymbolLayerItem *parent = nullptr ) SIP_SKIP;
+    void loadSymbol( QgsSymbol *symbol ) SIP_SKIP;
 
   public slots:
 
@@ -224,6 +223,10 @@ class GUI_EXPORT QgsSymbolSelectorWidget : public QgsPanelWidget, private Ui::Qg
      */
     void layersAboutToBeRemoved( const QList<QgsMapLayer *> &layers );
 
+    void emitSymbolModified();
+
+    void updateListIcons();
+
   private:
     /**
      * Reload the current symbol in the view.
@@ -242,13 +245,19 @@ class GUI_EXPORT QgsSymbolSelectorWidget : public QgsPanelWidget, private Ui::Qg
 
     void updateLockButtonIcon();
 
-    SymbolLayerItem *currentLayerItem();
+    QgsSymbolLayerModelNode *currentLayerNode();
 
     /**
      * The current symbol layer that is active in the interface.
      * \returns The active symbol layer.
      */
     QgsSymbolLayer *currentLayer();
+
+    /**
+     * The node which is current in the symbol layers tree, or NULLPTR if there
+     * is none. Both a symbol node and a symbol layer node can be current.
+     */
+    QgsSymbolLayerModelNode *currentNode();
 
     /**
      * Move the current active layer by a set offset in the list.
@@ -270,7 +279,7 @@ class GUI_EXPORT QgsSymbolSelectorWidget : public QgsPanelWidget, private Ui::Qg
     QAction *mLockSelectionColorAction = nullptr;
     QPointer<QgsVectorLayer> mVectorLayer;
 
-    QStandardItemModel *mSymbolLayersModel = nullptr;
+    QgsSymbolLayerModel *mSymbolLayersModel = nullptr;
     QWidget *mPresentWidget = nullptr;
 
     std::unique_ptr<DataDefinedRestorer> mDataDefineRestorer;
@@ -326,9 +335,8 @@ class GUI_EXPORT QgsSymbolSelectorDialog : public QDialog
     /**
      * Loads the given symbol into the widget.
      * \param symbol The symbol to load.
-     * \param parent The parent symbol layer item. If the parent parameter is null, the whole symbol and model will be reset.
      */
-    void loadSymbol( QgsSymbol *symbol, SymbolLayerItem *parent = nullptr ) SIP_SKIP;
+    void loadSymbol( QgsSymbol *symbol ) SIP_SKIP;
 
     /**
      * Returns a reference to the dialog's button box.
@@ -388,7 +396,7 @@ class GUI_EXPORT QgsSymbolSelectorDialog : public QDialog
 
     void updateLockButton();
 
-    SymbolLayerItem *currentLayerItem();
+    QgsSymbolLayerModelNode *currentLayerNode();
 
     QgsSymbolLayer *currentLayer();
 

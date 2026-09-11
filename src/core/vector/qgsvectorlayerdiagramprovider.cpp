@@ -15,19 +15,18 @@
 
 #include "qgsvectorlayerdiagramprovider.h"
 
-#include "qgsgeometry.h"
-#include "qgslabelsearchtree.h"
-#include "qgsvectorlayer.h"
-#include "qgsvectorlayerfeatureiterator.h"
 #include "diagram/qgsdiagram.h"
-#include "qgsgeos.h"
-#include "qgslabelingresults.h"
-#include "qgsrendercontext.h"
-#include "qgsexpressioncontextutils.h"
-#include "qgsscaleutils.h"
-
 #include "feature.h"
 #include "labelposition.h"
+#include "qgsexpressioncontextutils.h"
+#include "qgsgeometry.h"
+#include "qgsgeos.h"
+#include "qgslabelingresults.h"
+#include "qgslabelsearchtree.h"
+#include "qgsrendercontext.h"
+#include "qgsscaleutils.h"
+#include "qgsvectorlayer.h"
+#include "qgsvectorlayerfeatureiterator.h"
 
 QgsVectorLayerDiagramProvider::QgsVectorLayerDiagramProvider( QgsVectorLayer *layer, bool ownFeatureLoop )
   : QgsAbstractLabelProvider( layer )
@@ -151,13 +150,12 @@ void QgsVectorLayerDiagramProvider::drawLabel( QgsRenderContext &context, pal::L
   }
   QgsPointXY outPt( centerX / 4.0, centerY / 4.0 );
   //then, calculate the top left point for the diagram with this center position
-  QgsPointXY centerPt = xform.transform( outPt.x() - label->getWidth() / 2,
-                                         outPt.y() - label->getHeight() / 2 );
+  QgsPointXY centerPt = xform.transform( outPt.x() - label->getWidth() / 2, outPt.y() - label->getHeight() / 2 );
 
   mSettings.renderer()->renderDiagram( feature, context, centerPt.toQPointF(), mSettings.dataDefinedProperties() );
 
   //insert into label search tree to manipulate position interactively
-  mEngine->results()->mLabelSearchTree->insertLabel( label, label->getFeaturePart()->featureId(), mLayerId, QString(), QFont(), true, false );
+  mEngine->results()->insertLabel( label, label->getFeaturePart()->featureId(), mLayerId, QString(), QFont(), true, false );
 }
 
 bool QgsVectorLayerDiagramProvider::prepare( const QgsRenderContext &context, QSet<QString> &attributeNames )
@@ -253,7 +251,7 @@ QgsLabelFeature *QgsVectorLayerDiagramProvider::registerDiagram( const QgsFeatur
   if ( !clipGeometry.isEmpty() )
   {
     const Qgis::GeometryType expectedType = geom.type();
-    geom = geom.intersection( clipGeometry );
+    geom = geom.intersection( clipGeometry, QgsGeometryParameters(), context.feedback() );
     geom.convertGeometryCollectionToSubclass( expectedType );
   }
   if ( geom.isEmpty() )
@@ -338,8 +336,7 @@ QgsLabelFeature *QgsVectorLayerDiagramProvider::registerDiagram( const QgsFeatur
 
   // z-Index
   double zIndex = mSettings.zIndex();
-  if ( mSettings.dataDefinedProperties().hasProperty( QgsDiagramLayerSettings::Property::ZIndex )
-       && mSettings.dataDefinedProperties().property( QgsDiagramLayerSettings::Property::ZIndex ).isActive() )
+  if ( mSettings.dataDefinedProperties().hasProperty( QgsDiagramLayerSettings::Property::ZIndex ) && mSettings.dataDefinedProperties().property( QgsDiagramLayerSettings::Property::ZIndex ).isActive() )
   {
     context.expressionContext().setOriginalValueVariable( zIndex );
     zIndex = mSettings.dataDefinedProperties().valueAsDouble( QgsDiagramLayerSettings::Property::ZIndex, context.expressionContext(), zIndex );
@@ -363,4 +360,3 @@ QgsLabelFeature *QgsVectorLayerDiagramProvider::registerDiagram( const QgsFeatur
   lf->setDistLabel( dist );
   return lf;
 }
-

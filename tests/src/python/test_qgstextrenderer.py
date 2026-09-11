@@ -11,11 +11,9 @@ __date__ = "2016-09"
 __copyright__ = "Copyright 2016, The QGIS Project"
 
 import os
+import unittest
 from typing import Optional
 
-from qgis.PyQt.QtSvg import QSvgGenerator
-from qgis.PyQt.QtCore import QT_VERSION_STR, QDir, QPointF, QRectF, QSize, QSizeF, Qt
-from qgis.PyQt.QtGui import QBrush, QColor, QImage, QPainter, QPen, QPolygonF
 from qgis.core import (
     Qgis,
     QgsBlurEffect,
@@ -36,16 +34,16 @@ from qgis.core import (
     QgsTextShadowSettings,
     QgsUnitTypes,
 )
-import unittest
-from qgis.testing import start_app, QgisTestCase
-
+from qgis.PyQt.QtCore import QT_VERSION_STR, QDir, QPointF, QRectF, QSize, QSizeF, Qt
+from qgis.PyQt.QtGui import QBrush, QColor, QImage, QPainter, QPen, QPolygonF
+from qgis.PyQt.QtSvg import QSvgGenerator
+from qgis.testing import QgisTestCase, start_app
 from utilities import getTestFont, svgSymbolsPath, unitTestDataPath
 
 start_app()
 
 
 class PyQgsTextRenderer(QgisTestCase):
-
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -159,7 +157,6 @@ class PyQgsTextRenderer(QgisTestCase):
             Qgis.TextRenderFormat.AlwaysOutlines,
             Qgis.TextRenderFormat.PreferText,
         ):
-
             context.setTextRenderFormat(render_format)
             painter.begin(image)
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -5393,6 +5390,364 @@ class PyQgsTextRenderer(QgisTestCase):
             )
         )
 
+    def testDrawTextOnCurvedLineAnchorEndShortText(self):
+        format = QgsTextFormat()
+        format.setFont(getTestFont("bold"))
+        format.setSize(16)
+        format.setSizeUnit(QgsUnitTypes.RenderUnit.RenderPoints)
+        format.buffer().setEnabled(True)
+        format.buffer().setSize(2)
+        format.buffer().setSizeUnit(QgsUnitTypes.RenderUnit.RenderMillimeters)
+
+        image = QImage(400, 400, QImage.Format.Format_RGB32)
+
+        painter = QPainter()
+        ms = QgsMapSettings()
+        ms.setExtent(QgsRectangle(0, 0, 50, 50))
+        ms.setOutputSize(image.size())
+        context = QgsRenderContext.fromMapSettings(ms)
+        context.setPainter(painter)
+        context.setScaleFactor(96 / 25.4)  # 96 DPI
+        context.setFlag(
+            QgsRenderContext.Flag.ApplyScalingWorkaroundForTextRendering, True
+        )
+
+        painter.begin(image)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        image.fill(QColor(152, 219, 249))
+
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.setPen(QPen(QColor(0, 0, 0)))
+
+        line = QPolygonF(
+            [QPointF(50, 200), QPointF(100, 230), QPointF(150, 235), QPointF(350, 200)]
+        )
+        painter.drawPolyline(line)
+
+        painter.setBrush(QBrush(QColor(182, 239, 255)))
+        painter.setPen(Qt.PenStyle.NoPen)
+
+        format.setAllowHtmlFormatting(True)
+        QgsTextRenderer.drawTextOnLine(
+            line,
+            'm<sup>y</sup> <span style="font-size: 29pt; color: red;">curv<sup style="font-size: 10pt">ed</sup></span> te<sub>xt</sub>',
+            context,
+            format,
+            0,
+            0,
+            Qgis.CurvedTextFlag.UseBaselinePlacement,
+            Qgis.TextAnchorPoint.EndOfText,
+        )
+
+        painter.end()
+        self.assertTrue(
+            self.image_check(
+                "text_on_curved_line_anchor_end_short_text",
+                "text_on_curved_line_anchor_end_short_text",
+                image,
+                "text_on_curved_line_anchor_end_short_text",
+            )
+        )
+
+    def testDrawTextOnCurvedLineAnchorEndShortTextExtend(self):
+        format = QgsTextFormat()
+        format.setFont(getTestFont("bold"))
+        format.setSize(16)
+        format.setSizeUnit(QgsUnitTypes.RenderUnit.RenderPoints)
+        format.buffer().setEnabled(True)
+        format.buffer().setSize(2)
+        format.buffer().setSizeUnit(QgsUnitTypes.RenderUnit.RenderMillimeters)
+
+        image = QImage(400, 400, QImage.Format.Format_RGB32)
+
+        painter = QPainter()
+        ms = QgsMapSettings()
+        ms.setExtent(QgsRectangle(0, 0, 50, 50))
+        ms.setOutputSize(image.size())
+        context = QgsRenderContext.fromMapSettings(ms)
+        context.setPainter(painter)
+        context.setScaleFactor(96 / 25.4)  # 96 DPI
+        context.setFlag(
+            QgsRenderContext.Flag.ApplyScalingWorkaroundForTextRendering, True
+        )
+
+        painter.begin(image)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        image.fill(QColor(152, 219, 249))
+
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.setPen(QPen(QColor(0, 0, 0)))
+
+        line = QPolygonF(
+            [QPointF(50, 200), QPointF(100, 230), QPointF(150, 235), QPointF(350, 200)]
+        )
+        painter.drawPolyline(line)
+
+        painter.setBrush(QBrush(QColor(182, 239, 255)))
+        painter.setPen(Qt.PenStyle.NoPen)
+
+        format.setAllowHtmlFormatting(True)
+        QgsTextRenderer.drawTextOnLine(
+            line,
+            'm<sup>y</sup> <span style="font-size: 29pt; color: red;">curv<sup style="font-size: 10pt">ed</sup></span> te<sub>xt</sub>',
+            context,
+            format,
+            0,
+            0,
+            Qgis.CurvedTextFlag.UseBaselinePlacement
+            | Qgis.CurvedTextFlag.ExtendLineToFitText,
+            Qgis.TextAnchorPoint.EndOfText,
+        )
+
+        painter.end()
+        self.assertTrue(
+            self.image_check(
+                "text_on_curved_line_anchor_end_short_text",
+                "text_on_curved_line_anchor_end_short_text",
+                image,
+                "text_on_curved_line_anchor_end_short_text",
+            )
+        )
+
+    def testDrawTextOnCurvedLineAnchorEndLongTextExtend(self):
+        format = QgsTextFormat()
+        format.setFont(getTestFont("bold"))
+        format.setSize(16)
+        format.setSizeUnit(QgsUnitTypes.RenderUnit.RenderPoints)
+        format.buffer().setEnabled(True)
+        format.buffer().setSize(2)
+        format.buffer().setSizeUnit(QgsUnitTypes.RenderUnit.RenderMillimeters)
+
+        image = QImage(400, 400, QImage.Format.Format_RGB32)
+
+        painter = QPainter()
+        ms = QgsMapSettings()
+        ms.setExtent(QgsRectangle(0, 0, 50, 50))
+        ms.setOutputSize(image.size())
+        context = QgsRenderContext.fromMapSettings(ms)
+        context.setPainter(painter)
+        context.setScaleFactor(96 / 25.4)  # 96 DPI
+        context.setFlag(
+            QgsRenderContext.Flag.ApplyScalingWorkaroundForTextRendering, True
+        )
+
+        painter.begin(image)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        image.fill(QColor(152, 219, 249))
+
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.setPen(QPen(QColor(0, 0, 0)))
+
+        line = QPolygonF(
+            [QPointF(50, 200), QPointF(100, 230), QPointF(150, 235), QPointF(350, 200)]
+        )
+        painter.drawPolyline(line)
+
+        painter.setBrush(QBrush(QColor(182, 239, 255)))
+        painter.setPen(Qt.PenStyle.NoPen)
+
+        format.setAllowHtmlFormatting(True)
+        QgsTextRenderer.drawTextOnLine(
+            line,
+            'm<sup>y</sup> <span style="font-size: 29pt; color: red;">curv<sup style="font-size: 10pt">ed</sup></span> te<sub>xt</sub>sdg sdfg sdfg',
+            context,
+            format,
+            0,
+            0,
+            Qgis.CurvedTextFlag.UseBaselinePlacement
+            | Qgis.CurvedTextFlag.ExtendLineToFitText,
+            Qgis.TextAnchorPoint.EndOfText,
+        )
+
+        painter.end()
+        self.assertTrue(
+            self.image_check(
+                "text_on_curved_line_anchor_end_long_text",
+                "text_on_curved_line_anchor_end_long_text",
+                image,
+                "text_on_curved_line_anchor_end_long_text",
+            )
+        )
+
+    def testDrawTextOnCurvedLineAnchorCenterShortText(self):
+        format = QgsTextFormat()
+        format.setFont(getTestFont("bold"))
+        format.setSize(16)
+        format.setSizeUnit(QgsUnitTypes.RenderUnit.RenderPoints)
+        format.buffer().setEnabled(True)
+        format.buffer().setSize(2)
+        format.buffer().setSizeUnit(QgsUnitTypes.RenderUnit.RenderMillimeters)
+
+        image = QImage(400, 400, QImage.Format.Format_RGB32)
+
+        painter = QPainter()
+        ms = QgsMapSettings()
+        ms.setExtent(QgsRectangle(0, 0, 50, 50))
+        ms.setOutputSize(image.size())
+        context = QgsRenderContext.fromMapSettings(ms)
+        context.setPainter(painter)
+        context.setScaleFactor(96 / 25.4)  # 96 DPI
+        context.setFlag(
+            QgsRenderContext.Flag.ApplyScalingWorkaroundForTextRendering, True
+        )
+
+        painter.begin(image)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        image.fill(QColor(152, 219, 249))
+
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.setPen(QPen(QColor(0, 0, 0)))
+
+        line = QPolygonF(
+            [QPointF(50, 200), QPointF(100, 230), QPointF(150, 235), QPointF(350, 200)]
+        )
+        painter.drawPolyline(line)
+
+        painter.setBrush(QBrush(QColor(182, 239, 255)))
+        painter.setPen(Qt.PenStyle.NoPen)
+
+        format.setAllowHtmlFormatting(True)
+        QgsTextRenderer.drawTextOnLine(
+            line,
+            'm<sup>y</sup> <span style="font-size: 29pt; color: red;">curv<sup style="font-size: 10pt">ed</sup></span> te<sub>xt</sub>',
+            context,
+            format,
+            0,
+            0,
+            Qgis.CurvedTextFlag.UseBaselinePlacement,
+            Qgis.TextAnchorPoint.CenterOfText,
+        )
+
+        painter.end()
+        self.assertTrue(
+            self.image_check(
+                "text_on_curved_line_anchor_center_short_text",
+                "text_on_curved_line_anchor_center_short_text",
+                image,
+                "text_on_curved_line_anchor_center_short_text",
+            )
+        )
+
+    def testDrawTextOnCurvedLineAnchorCenterShortTextExtend(self):
+        format = QgsTextFormat()
+        format.setFont(getTestFont("bold"))
+        format.setSize(16)
+        format.setSizeUnit(QgsUnitTypes.RenderUnit.RenderPoints)
+        format.buffer().setEnabled(True)
+        format.buffer().setSize(2)
+        format.buffer().setSizeUnit(QgsUnitTypes.RenderUnit.RenderMillimeters)
+
+        image = QImage(400, 400, QImage.Format.Format_RGB32)
+
+        painter = QPainter()
+        ms = QgsMapSettings()
+        ms.setExtent(QgsRectangle(0, 0, 50, 50))
+        ms.setOutputSize(image.size())
+        context = QgsRenderContext.fromMapSettings(ms)
+        context.setPainter(painter)
+        context.setScaleFactor(96 / 25.4)  # 96 DPI
+        context.setFlag(
+            QgsRenderContext.Flag.ApplyScalingWorkaroundForTextRendering, True
+        )
+
+        painter.begin(image)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        image.fill(QColor(152, 219, 249))
+
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.setPen(QPen(QColor(0, 0, 0)))
+
+        line = QPolygonF(
+            [QPointF(50, 200), QPointF(100, 230), QPointF(150, 235), QPointF(350, 200)]
+        )
+        painter.drawPolyline(line)
+
+        painter.setBrush(QBrush(QColor(182, 239, 255)))
+        painter.setPen(Qt.PenStyle.NoPen)
+
+        format.setAllowHtmlFormatting(True)
+        QgsTextRenderer.drawTextOnLine(
+            line,
+            'm<sup>y</sup> <span style="font-size: 29pt; color: red;">curv<sup style="font-size: 10pt">ed</sup></span> te<sub>xt</sub>',
+            context,
+            format,
+            0,
+            0,
+            Qgis.CurvedTextFlag.UseBaselinePlacement
+            | Qgis.CurvedTextFlag.ExtendLineToFitText,
+            Qgis.TextAnchorPoint.CenterOfText,
+        )
+
+        painter.end()
+        self.assertTrue(
+            self.image_check(
+                "text_on_curved_line_anchor_center_short_text",
+                "text_on_curved_line_anchor_center_short_text",
+                image,
+                "text_on_curved_line_anchor_center_short_text",
+            )
+        )
+
+    def testDrawTextOnCurvedLineAnchorCenterLongTextExtend(self):
+        format = QgsTextFormat()
+        format.setFont(getTestFont("bold"))
+        format.setSize(16)
+        format.setSizeUnit(QgsUnitTypes.RenderUnit.RenderPoints)
+        format.buffer().setEnabled(True)
+        format.buffer().setSize(2)
+        format.buffer().setSizeUnit(QgsUnitTypes.RenderUnit.RenderMillimeters)
+
+        image = QImage(400, 400, QImage.Format.Format_RGB32)
+
+        painter = QPainter()
+        ms = QgsMapSettings()
+        ms.setExtent(QgsRectangle(0, 0, 50, 50))
+        ms.setOutputSize(image.size())
+        context = QgsRenderContext.fromMapSettings(ms)
+        context.setPainter(painter)
+        context.setScaleFactor(96 / 25.4)  # 96 DPI
+        context.setFlag(
+            QgsRenderContext.Flag.ApplyScalingWorkaroundForTextRendering, True
+        )
+
+        painter.begin(image)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        image.fill(QColor(152, 219, 249))
+
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.setPen(QPen(QColor(0, 0, 0)))
+
+        line = QPolygonF(
+            [QPointF(50, 200), QPointF(100, 230), QPointF(150, 235), QPointF(350, 200)]
+        )
+        painter.drawPolyline(line)
+
+        painter.setBrush(QBrush(QColor(182, 239, 255)))
+        painter.setPen(Qt.PenStyle.NoPen)
+
+        format.setAllowHtmlFormatting(True)
+        QgsTextRenderer.drawTextOnLine(
+            line,
+            'm<sup>y</sup> <span style="font-size: 29pt; color: red;">curv<sup style="font-size: 10pt">ed</sup></span> te<sub>xt</sub>sdg sdfg sdfg',
+            context,
+            format,
+            0,
+            0,
+            Qgis.CurvedTextFlag.UseBaselinePlacement
+            | Qgis.CurvedTextFlag.ExtendLineToFitText,
+            Qgis.TextAnchorPoint.CenterOfText,
+        )
+
+        painter.end()
+        self.assertTrue(
+            self.image_check(
+                "text_on_curved_line_anchor_center_long_text",
+                "text_on_curved_line_anchor_center_long_text",
+                image,
+                "text_on_curved_line_anchor_center_long_text",
+            )
+        )
+
     def testDrawTextDataDefinedProperties(self):
         format = QgsTextFormat()
         format.setFont(getTestFont("bold"))
@@ -5435,6 +5790,69 @@ class PyQgsTextRenderer(QgisTestCase):
                 ],
                 rect=QRectF(40, 20, 10, 5),
                 flags=Qgis.TextRendererFlag.WrapLines,
+            )
+        )
+
+    def testDrawRectBackgroundVAlignTop(self):
+        """
+        Test drawing text with a background enabled, top aligned.
+        (https://github.com/qgis/QGIS/issues/62870)
+        """
+        format = QgsTextFormat()
+        format.setFont(getTestFont("bold"))
+        format.setSize(30)
+        format.background().setEnabled(True)
+        format.background().setType(QgsTextBackgroundSettings.ShapeType.ShapeRectangle)
+        format.background().setFillColor(QColor(0, 255, 0))
+        self.assertTrue(
+            self.checkRender(
+                format,
+                "rect_background_valign_top",
+                rect=QRectF(100, 100, 200, 200),
+                text=["first line", "second line"],
+                vAlignment=QgsTextRenderer.VAlignment.AlignTop,
+            )
+        )
+
+    def testDrawRectBackgroundVAlignCenter(self):
+        """
+        Test drawing text with a background enabled, vertically centered.
+        (https://github.com/qgis/QGIS/issues/62870)
+        """
+        format = QgsTextFormat()
+        format.setFont(getTestFont("bold"))
+        format.setSize(30)
+        format.background().setEnabled(True)
+        format.background().setType(QgsTextBackgroundSettings.ShapeType.ShapeRectangle)
+        format.background().setFillColor(QColor(0, 255, 0))
+        self.assertTrue(
+            self.checkRender(
+                format,
+                "rect_background_valign_center",
+                rect=QRectF(100, 100, 200, 200),
+                text=["first line", "second line"],
+                vAlignment=QgsTextRenderer.VAlignment.AlignVCenter,
+            )
+        )
+
+    def testDrawRectBackgroundVAlignBottom(self):
+        """
+        Test drawing text with a background enabled, bottom aligned.
+        (https://github.com/qgis/QGIS/issues/62870)
+        """
+        format = QgsTextFormat()
+        format.setFont(getTestFont("bold"))
+        format.setSize(30)
+        format.background().setEnabled(True)
+        format.background().setType(QgsTextBackgroundSettings.ShapeType.ShapeRectangle)
+        format.background().setFillColor(QColor(0, 255, 0))
+        self.assertTrue(
+            self.checkRender(
+                format,
+                "rect_background_valign_bottom",
+                rect=QRectF(100, 100, 200, 200),
+                text=["first line", "second line"],
+                vAlignment=QgsTextRenderer.VAlignment.AlignBottom,
             )
         )
 

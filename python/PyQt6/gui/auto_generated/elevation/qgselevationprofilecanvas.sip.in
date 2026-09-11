@@ -10,6 +10,7 @@
 
 
 
+
 class QgsElevationProfileCanvas : QgsPlotCanvas
 {
 %Docstring(signature="appended")
@@ -203,6 +204,17 @@ Returns the elevation range currently visible in the plot.
 .. seealso:: :py:func:`visibleDistanceRange`
 
 .. seealso:: :py:func:`setVisiblePlotRange`
+%End
+
+    QgsDoubleRange dataElevationRange() const;
+%Docstring
+Returns elevation range of the computed profile results.
+
+Calculated from data, not from visible extent.
+
+.. seealso:: :py:func:`visibleElevationRange`
+
+.. versionadded:: 4.2
 %End
 
 

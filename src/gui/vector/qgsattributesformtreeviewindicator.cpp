@@ -14,12 +14,12 @@
  ***************************************************************************/
 
 #include "qgsattributesformtreeviewindicator.h"
+
 #include "moc_qgsattributesformtreeviewindicator.cpp"
 
 QgsAttributesFormTreeViewIndicator::QgsAttributesFormTreeViewIndicator( QObject *parent )
   : QObject { parent }
-{
-}
+{}
 
 QIcon QgsAttributesFormTreeViewIndicator::icon() const
 {

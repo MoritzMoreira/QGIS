@@ -9,6 +9,7 @@
 
 
 
+
 class QgsMapCanvasItem : QGraphicsItem
 {
 %Docstring(signature="appended")
@@ -76,6 +77,13 @@ transformation from screen coordinates to map coordinates
     QPointF toCanvasCoordinates( const QgsPointXY &point ) const;
 %Docstring
 transformation from map coordinates to screen coordinates
+%End
+
+    QgsMapCanvas *canvas() const;
+%Docstring
+Returns the item's associated canvas.
+
+.. versionadded:: 4.4
 %End
 
   protected:

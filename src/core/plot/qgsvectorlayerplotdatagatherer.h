@@ -22,8 +22,7 @@
 #include "qgis_sip.h"
 #include "qgsplot.h"
 #include "qgstaskmanager.h"
-#include <qgsvectorlayerfeatureiterator.h>
-
+#include "qgsvectorlayerfeatureiterator.h"
 
 /**
  * \ingroup core
@@ -54,13 +53,13 @@ class CORE_EXPORT QgsVectorLayerAbstractPlotDataGatherer : public QgsTask
     {
       sipType = NULL;
     }
-    SIP_END
+  SIP_END
 #endif
 
   public:
 
     QgsVectorLayerAbstractPlotDataGatherer() = default;
-    virtual ~QgsVectorLayerAbstractPlotDataGatherer() = default;
+    ~QgsVectorLayerAbstractPlotDataGatherer() override = default;
 
     //! Returns the plot data.
     virtual QgsPlotData data() const = 0;
@@ -72,10 +71,8 @@ class CORE_EXPORT QgsVectorLayerAbstractPlotDataGatherer : public QgsTask
     void setExpressionContext( const QgsExpressionContext &context ) { mExpressionContext = context; }
 
   protected:
-
     QgsFeatureIterator mIterator;
     QgsExpressionContext mExpressionContext;
-
 };
 
 
@@ -92,21 +89,22 @@ class CORE_EXPORT QgsVectorLayerXyPlotDataGatherer : public QgsVectorLayerAbstra
     Q_OBJECT
 
   public:
-
     /**
      * XY series details
      */
     struct XySeriesDetails
     {
-      explicit XySeriesDetails( const QString &xExpression, const QString &yExpression, const QString &filterExpression = QString() )
-        : xExpression( xExpression )
-        , yExpression( yExpression )
-        , filterExpression( filterExpression )
-      {}
+        explicit XySeriesDetails( const QString &name, const QString &xExpression, const QString &yExpression, const QString &filterExpression = QString() )
+          : name( name )
+          , xExpression( xExpression )
+          , yExpression( yExpression )
+          , filterExpression( filterExpression )
+        {}
 
-      QString xExpression;
-      QString yExpression;
-      QString filterExpression;
+        QString name;
+        QString xExpression;
+        QString yExpression;
+        QString filterExpression;
     };
 
     /**
@@ -125,16 +123,21 @@ class CORE_EXPORT QgsVectorLayerXyPlotDataGatherer : public QgsVectorLayerAbstra
      */
     void setPredefinedCategories( const QStringList &categories );
 
+    /**
+     * Sets the X-axis type that will defined what type of X values to gather.
+     * \param xAxisType The X-axis type
+     * \since QGIS 4.2
+     */
+    void setXAxisType( Qgis::PlotAxisType xAxisType );
+
     bool run() override;
 
     QgsPlotData data() const override;
 
   protected:
-
     QgsPlotData mData;
 
   private:
-
     Qgis::PlotAxisType mXAxisType = Qgis::PlotAxisType::Interval;
     QList<QgsVectorLayerXyPlotDataGatherer::XySeriesDetails> mSeriesDetails;
     QStringList mPredefinedCategories;

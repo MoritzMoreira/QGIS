@@ -16,16 +16,21 @@
  ***************************************************************************/
 
 #include "qgsalgorithmpolygonstolines.h"
-#include "qgsgeometrycollection.h"
-#include "qgscurvepolygon.h"
+
 #include "qgscurve.h"
+#include "qgscurvepolygon.h"
+#include "qgsgeometrycollection.h"
 #include "qgsmultilinestring.h"
+
+#include <QString>
+
+using namespace Qt::StringLiterals;
 
 ///@cond PRIVATE
 
 QString QgsPolygonsToLinesAlgorithm::name() const
 {
-  return QStringLiteral( "polygonstolines" );
+  return u"polygonstolines"_s;
 }
 
 QString QgsPolygonsToLinesAlgorithm::displayName() const
@@ -45,7 +50,7 @@ QString QgsPolygonsToLinesAlgorithm::group() const
 
 QString QgsPolygonsToLinesAlgorithm::groupId() const
 {
-  return QStringLiteral( "vectorgeometry" );
+  return u"vectorgeometry"_s;
 }
 
 QString QgsPolygonsToLinesAlgorithm::outputName() const
@@ -97,6 +102,8 @@ QList<int> QgsPolygonsToLinesAlgorithm::inputLayerTypes() const
 
 QgsFeatureList QgsPolygonsToLinesAlgorithm::processFeature( const QgsFeature &feature, QgsProcessingContext &context, QgsProcessingFeedback * )
 {
+  QGS_MARK_ALGORITHM_SOURCE
+
   Q_UNUSED( context )
 
   QgsFeatureList result;

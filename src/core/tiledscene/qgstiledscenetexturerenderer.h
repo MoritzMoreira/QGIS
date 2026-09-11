@@ -18,9 +18,9 @@
 #ifndef QGSTILEDSCENETEXTURERENDERER_H
 #define QGSTILEDSCENETEXTURERENDERER_H
 
-#include "qgstiledscenerenderer.h"
 #include "qgis_core.h"
 #include "qgis_sip.h"
+#include "qgstiledscenerenderer.h"
 
 class QgsFillSymbol;
 
@@ -33,7 +33,6 @@ class QgsFillSymbol;
 class CORE_EXPORT QgsTiledSceneTextureRenderer : public QgsTiledSceneRenderer
 {
   public:
-
     /**
      * Constructor for QgsTiledSceneTextureRenderer.
      */
@@ -59,7 +58,7 @@ class CORE_EXPORT QgsTiledSceneTextureRenderer : public QgsTiledSceneRenderer
      *
      * \see setFillSymbol()
      */
-    static std::unique_ptr< QgsFillSymbol > createDefaultFillSymbol() SIP_FACTORY;
+    static std::unique_ptr< QgsFillSymbol > createDefaultFillSymbol();
 
     /**
      * Returns the fill symbol used to render triangles without textures.

@@ -9,6 +9,8 @@
 
 
 
+
+
 class QgsLayerTreeCustomNode : QgsLayerTreeNode
 {
 %Docstring(signature="appended")
@@ -25,7 +27,6 @@ unique in the whole layer tree.
 #include "qgslayertreecustomnode.h"
 %End
   public:
-
     explicit QgsLayerTreeCustomNode( const QString &nodeId, const QString &nodeName = QString(), bool checked = true );
 %Docstring
 Constructor to create custom nodes that represent application objects
@@ -44,10 +45,17 @@ other than layers and groups.
     sipRes = PyUnicode_FromString( str.toUtf8().constData() );
 %End
 
-    QString nodeId() const;
+        virtual QString id() const;
+
+ QString nodeId() const /Deprecated="Since 4.4. Use id() instead."/;
 %Docstring
 Returns the node's unique identifier.
+
+.. deprecated:: 4.4
+
+   Use :py:func:`~QgsLayerTreeCustomNode.id` instead.
 %End
+
     virtual QString name() const;
 
 %Docstring

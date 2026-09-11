@@ -18,9 +18,9 @@ email                : jef at norbit dot de
 
 #include "qgis_core.h"
 #include "qgis_sip.h"
-#include <QThread>
-
 #include "qgsgeometry.h"
+
+#include <QThread>
 
 class QgsCurvePolygon;
 
@@ -34,7 +34,6 @@ class CORE_EXPORT QgsGeometryValidator : public QThread
     Q_OBJECT
 
   public:
-
     /**
      * Constructor for QgsGeometryValidator.
      */
@@ -49,6 +48,14 @@ class CORE_EXPORT QgsGeometryValidator : public QThread
      * This method blocks the thread until the validation is finished.
      */
     static void validateGeometry( const QgsGeometry &geometry, QVector<QgsGeometry::Error> &errors SIP_OUT, Qgis::GeometryValidationEngine method = Qgis::GeometryValidationEngine::QgisInternal );
+
+    /**
+     * Returns the geometry validation engine configured in the application settings.
+     *
+     * \returns The geometry validation engine to use.
+     * \since QGIS 4.4
+     */
+    static Qgis::GeometryValidationEngine defaultValidationEngine();
 
   signals:
 
@@ -84,8 +91,8 @@ class CORE_EXPORT QgsGeometryValidator : public QThread
 
     QgsGeometry mGeometry;
     QVector<QgsGeometry::Error> *mErrors;
-    bool mStop;
-    int mErrorCount;
+    bool mStop = false;
+    int mErrorCount = 0;
     Qgis::GeometryValidationEngine mMethod = Qgis::GeometryValidationEngine::QgisInternal;
 };
 

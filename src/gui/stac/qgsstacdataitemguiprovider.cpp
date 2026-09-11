@@ -14,19 +14,19 @@
  ***************************************************************************/
 
 #include "qgsstacdataitemguiprovider.h"
-#include "moc_qgsstacdataitemguiprovider.cpp"
 
 #include "qgsapplication.h"
-#include "qgsstaccontroller.h"
-#include "qgsstacdataitems.h"
+#include "qgsdataitemguiproviderutils.h"
+#include "qgsmanageconnectionsdialog.h"
 #include "qgsstacconnection.h"
 #include "qgsstacconnectiondialog.h"
-#include "qgsmanageconnectionsdialog.h"
-#include "qgsdataitemguiproviderutils.h"
-#include "qgsstacitem.h"
+#include "qgsstaccontroller.h"
+#include "qgsstacdataitems.h"
 #include "qgsstacdownloadassetsdialog.h"
+#include "qgsstacitem.h"
 #include "qgsstacobjectdetailsdialog.h"
 
+#include "moc_qgsstacdataitemguiprovider.cpp"
 
 ///@cond PRIVATE
 
@@ -125,6 +125,37 @@ void QgsStacDataItemGuiProvider::populateContextMenu( QgsDataItem *item, QMenu *
     connect( actionDetails, &QAction::triggered, this, [assetItem] { showDetails( assetItem ); } );
     menu->addAction( actionDetails );
   }
+  else if ( QgsStacAssetLayerItem *layerItem = qobject_cast<QgsStacAssetLayerItem *>( item ) )
+  {
+    if ( layerItem->stacAsset()->isDownloadable() )
+    {
+      QAction *actionDownload = new QAction( tr( "Download Asset…" ), menu );
+      connect( actionDownload, &QAction::triggered, this, [layerItem, context] { downloadAssets( layerItem, context ); } );
+      menu->addAction( actionDownload );
+    }
+
+    QAction *actionDetails = new QAction( tr( "Details…" ), menu );
+    connect( actionDetails, &QAction::triggered, this, [layerItem] { showDetails( layerItem ); } );
+    menu->addAction( actionDetails );
+  }
+}
+
+bool QgsStacDataItemGuiProvider::handleDoubleClick( QgsDataItem *item, QgsDataItemGuiContext context )
+{
+  if ( QgsStacAssetItem *assetItem = qobject_cast<QgsStacAssetItem *>( item ) )
+  {
+    if ( assetItem->stacAsset()->isDownloadable() )
+    {
+      // only handle double clicks when item doesn't represent an asset loadable as a map layer
+      const QgsMimeDataUtils::UriList mimeUris = assetItem->mimeUris();
+      if ( mimeUris.isEmpty() || !mimeUris.at( 0 ).isValid() )
+      {
+        downloadAssets( assetItem, context );
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 void QgsStacDataItemGuiProvider::editConnection( QgsDataItem *item )
@@ -194,8 +225,9 @@ void QgsStacDataItemGuiProvider::showDetails( QgsDataItem *item )
   QgsStacItemItem *itemItem = qobject_cast<QgsStacItemItem *>( item );
   QgsStacCatalogItem *catalogItem = qobject_cast<QgsStacCatalogItem *>( item );
   QgsStacAssetItem *assetItem = qobject_cast<QgsStacAssetItem *>( item );
+  QgsStacAssetLayerItem *layerItem = qobject_cast<QgsStacAssetLayerItem *>( item );
 
-  if ( !( itemItem || catalogItem || assetItem ) )
+  if ( !( itemItem || catalogItem || assetItem || layerItem ) )
   {
     return;
   }
@@ -212,9 +244,13 @@ void QgsStacDataItemGuiProvider::showDetails( QgsDataItem *item )
   }
   else if ( assetItem )
   {
-    QgsStacItemItem *itemItem = qobject_cast<QgsStacItemItem *>( assetItem->parent() );
-    authcfg = itemItem->stacController()->authCfg();
+    authcfg = assetItem->stacController()->authCfg();
     d.setContentFromStacAsset( assetItem->name(), assetItem->stacAsset() );
+  }
+  else if ( layerItem )
+  {
+    authcfg = layerItem->stacController()->authCfg();
+    d.setContentFromStacAsset( layerItem->name(), layerItem->stacAsset() );
   }
   d.setAuthcfg( authcfg );
   d.exec();
@@ -223,24 +259,33 @@ void QgsStacDataItemGuiProvider::showDetails( QgsDataItem *item )
 
 void QgsStacDataItemGuiProvider::downloadAssets( QgsDataItem *item, QgsDataItemGuiContext context )
 {
+  QString authcfg;
+
   QgsStacItemItem *itemItem = qobject_cast<QgsStacItemItem *>( item );
   QgsStacAssetItem *assetItem = qobject_cast<QgsStacAssetItem *>( item );
+  QgsStacAssetLayerItem *layerItem = qobject_cast<QgsStacAssetLayerItem *>( item );
 
-  if ( !( itemItem || assetItem ) )
+  if ( !( itemItem || assetItem || layerItem ) )
     return;
 
   QgsStacDownloadAssetsDialog dialog;
   if ( itemItem )
   {
     dialog.setStacItem( itemItem->stacItem() );
+    authcfg = itemItem->stacController()->authCfg();
   }
   else if ( assetItem )
   {
-    itemItem = qobject_cast<QgsStacItemItem *>( assetItem->parent() );
+    authcfg = assetItem->stacController()->authCfg();
     dialog.addStacAsset( assetItem->name(), assetItem->stacAsset() );
   }
+  else if ( layerItem )
+  {
+    authcfg = layerItem->stacController()->authCfg();
+    dialog.addStacAsset( layerItem->name(), layerItem->stacAsset() );
+  }
   dialog.setMessageBar( context.messageBar() );
-  dialog.setAuthCfg( itemItem->stacController()->authCfg() );
+  dialog.setAuthCfg( authcfg );
   dialog.exec();
 }
 

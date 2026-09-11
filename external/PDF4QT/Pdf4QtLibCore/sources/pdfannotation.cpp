@@ -1144,6 +1144,27 @@ bool PDFAnnotation::isTypeEditable(AnnotationType type)
     return false;
 }
 
+bool PDFAnnotation::isExternalLinkAnnotation(const PDFAnnotation* annotation)
+{
+    if (!annotation || annotation->getType() != AnnotationType::Link)
+    {
+        return false;
+    }
+
+    const auto* linkAnnotation = dynamic_cast<const PDFLinkAnnotation*>(annotation);
+    if (!linkAnnotation)
+    {
+        return false;
+    }
+
+    auto isURIAction = [](const PDFAction* action)
+    {
+        return action && action->getType() == ActionType::URI;
+    };
+
+    return isURIAction(linkAnnotation->getAction()) || isURIAction(linkAnnotation->getURIAction());
+}
+
 QPen PDFAnnotation::getPen() const
 {
     QColor strokeColor = getStrokeColor();
@@ -2495,7 +2516,6 @@ void PDFHighlightAnnotation::draw(AnnotationDrawParameters& parameters) const
     {
         case AnnotationType::Highlight:
         {
-            painter.setCompositionMode(QPainter::CompositionMode_Multiply);
             painter.fillPath(m_highlightArea.getPath(), QBrush(getStrokeColor(), Qt::SolidPattern));
             break;
         }
@@ -2762,6 +2782,7 @@ void PDFFreeTextAnnotation::draw(AnnotationDrawParameters& parameters) const
 
     QFont font(defaultAppearance.getFontName());
     font.setPixelSize(defaultAppearance.getFontSize());
+    painter.setFont(font);
     painter.setPen(defaultAppearance.getFontColor());
 
     Qt::Alignment alignment = Qt::AlignTop;

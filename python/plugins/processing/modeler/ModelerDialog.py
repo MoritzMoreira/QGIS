@@ -20,50 +20,41 @@ __date__ = "August 2012"
 __copyright__ = "(C) 2012, Victor Olaya"
 
 import os
-import re
 import sys
 from pathlib import Path
 
-from qgis.PyQt.QtCore import (
-    QCoreApplication,
-    QDir,
-    QRectF,
-    QPoint,
-    QPointF,
-    pyqtSignal,
-    QUrl,
-    QFileInfo,
-)
-from qgis.PyQt.QtWidgets import QMessageBox, QFileDialog
 from qgis.core import (
     Qgis,
     QgsApplication,
-    QgsProcessing,
-    QgsProject,
-    QgsProcessingModelParameter,
-    QgsProcessingModelAlgorithm,
-    QgsSettings,
-    QgsProcessingContext,
     QgsFileUtils,
+    QgsProcessing,
+    QgsProcessingModelAlgorithm,
+    QgsProcessingModelChildAlgorithm,
+    QgsProcessingModelParameter,
+    QgsProject,
+    QgsSettings,
 )
 from qgis.gui import (
-    QgsProcessingParameterDefinitionDialog,
-    QgsProcessingParameterWidgetContext,
-    QgsModelGraphicsScene,
+    QgsGui,
     QgsModelDesignerDialog,
+    QgsModelGraphicsScene,
     QgsProcessingContextGenerator,
-    QgsProcessingParametersGenerator,
+    QgsProcessingParameterDefinitionDialog,
 )
+from qgis.PyQt.QtCore import (
+    QDir,
+    QFileInfo,
+    QPoint,
+    QPointF,
+    QUrl,
+    pyqtSignal,
+)
+from qgis.PyQt.QtWidgets import QFileDialog, QMessageBox
 from qgis.utils import iface
 
-from processing.gui.AlgorithmDialog import AlgorithmDialog
-from processing.modeler.ModelerParameterDefinitionDialog import (
-    ModelerParameterDefinitionDialog,
-)
-from processing.modeler.ModelerParametersDialog import ModelerParametersDialog
+from processing.gui.algorithm_widget import AlgorithmWidget
 from processing.modeler.ModelerScene import ModelerScene
 from processing.modeler.ModelerUtils import ModelerUtils
-from processing.modeler.ProjectProvider import PROJECT_PROVIDER_ID
 from processing.script.ScriptEditorDialog import ScriptEditorDialog
 from processing.tools.dataobjects import createContext
 
@@ -71,7 +62,6 @@ pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
 
 class ModelerDialog(QgsModelDesignerDialog):
-
     update_model = pyqtSignal()
 
     dlgs = []
@@ -91,15 +81,12 @@ class ModelerDialog(QgsModelDesignerDialog):
     def __init__(self, model=None, parent=None):
         super().__init__(parent)
 
-        if iface is not None:
-            self.toolbar().setIconSize(iface.iconSize())
-            self.setStyleSheet(iface.mainWindow().styleSheet())
+        self.toolbar().setIconSize(
+            QgsGui.iconSize(Qgis.UserInterfaceIconType.DockedToolbar)
+        )
 
-        scene = ModelerScene(self)
-        self.setModelScene(scene)
-
-        self.view().ensureVisible(0, 0, 10, 10)
-        self.view().scale(self.logicalDpiX() / 96, self.logicalDpiY() / 96)
+        self.setStyleSheet(QgsGui.applicationStyleSheet())
+        QgsGui.instance().applicationStyleSheetChanged.connect(self.setStyleSheet)
 
         self.actionOpen().triggered.connect(self.openModel)
         self.actionSaveInProject().triggered.connect(self.saveInProject)
@@ -109,12 +96,9 @@ class ModelerDialog(QgsModelDesignerDialog):
             _model.setSourceFilePath(model.sourceFilePath())
             self.setModel(_model)
 
-        self.view().centerOn(0, 0)
-
         self.processing_context = createContext()
 
         class ContextGenerator(QgsProcessingContextGenerator):
-
             def __init__(self, context):
                 super().__init__()
                 self.processing_context = context
@@ -123,10 +107,16 @@ class ModelerDialog(QgsModelDesignerDialog):
                 return self.processing_context
 
         self.context_generator = ContextGenerator(self.processing_context)
+        self.registerProcessingContextGenerator(self.context_generator)
 
-    def createExecutionDialog(self):
-        dlg = AlgorithmDialog(self.model().create(), parent=self)
-        return dlg
+    def createExecutionWidget(self):
+        widget = AlgorithmWidget(
+            self.model().create(),
+            parent=self,
+            initialState=Qgis.DockableWidgetInitialState.ForceDocked,
+        )
+        widget.registerProcessingFeedbackGenerator(self)
+        return widget
 
     def saveInProject(self):
         if not self.validateSave(QgsModelDesignerDialog.SaveAction.SaveInProject):
@@ -135,9 +125,9 @@ class ModelerDialog(QgsModelDesignerDialog):
         self.model().setSourceFilePath(None)
 
         project_provider = QgsApplication.processingRegistry().providerById(
-            PROJECT_PROVIDER_ID
+            QgsProcessing.PROJECT_PROVIDER_ID
         )
-        project_provider.add_model(self.model())
+        project_provider.addModel(self.model())
 
         self.update_model.emit()
         self.messageBar().pushMessage(
@@ -257,18 +247,6 @@ class ModelerDialog(QgsModelDesignerDialog):
         scene.createItems(self.model(), context)
         scene.updateBounds()
 
-    def create_widget_context(self):
-        """
-        Returns a new widget context for use in the model editor
-        """
-        widget_context = QgsProcessingParameterWidgetContext()
-        widget_context.setProject(QgsProject.instance())
-        if iface is not None:
-            widget_context.setMapCanvas(iface.mapCanvas())
-            widget_context.setActiveLayer(iface.activeLayer())
-        widget_context.setModel(self.model())
-        return widget_context
-
     def autogenerate_parameter_name(self, parameter):
         """
         Automatically generates and sets a new parameter's name, based on the parameter's
@@ -291,26 +269,19 @@ class ModelerDialog(QgsModelDesignerDialog):
 
         new_param = None
         comment = None
-        if ModelerParameterDefinitionDialog.use_legacy_dialog(paramType=paramType):
-            dlg = ModelerParameterDefinitionDialog(self.model(), paramType)
-            if dlg.exec():
-                new_param = dlg.param
-                comment = dlg.comments()
-        else:
-            # yay, use new API!
-            context = createContext()
-            widget_context = self.create_widget_context()
-            dlg = QgsProcessingParameterDefinitionDialog(
-                type=paramType,
-                context=context,
-                widgetContext=widget_context,
-                algorithm=self.model(),
-            )
-            dlg.registerProcessingContextGenerator(self.context_generator)
-            if dlg.exec():
-                new_param = dlg.createParameter()
-                self.autogenerate_parameter_name(new_param)
-                comment = dlg.comments()
+        context = createContext()
+        widget_context = self.createWidgetContext()
+        dlg = QgsProcessingParameterDefinitionDialog(
+            type=paramType,
+            context=context,
+            widgetContext=widget_context,
+            algorithm=self.model(),
+        )
+        dlg.registerProcessingContextGenerator(self.context_generator)
+        if dlg.exec():
+            new_param = dlg.createParameter()
+            self.autogenerate_parameter_name(new_param)
+            comment = dlg.comments()
 
         if new_param is not None:
             if pos is None or not pos:
@@ -354,46 +325,31 @@ class ModelerDialog(QgsModelDesignerDialog):
         if not alg:
             return
 
-        dlg = ModelerParametersDialog(alg, self.model())
-        if dlg.exec():
-            alg = dlg.createAlgorithm()
-            if pos is None or not pos:
-                alg.setPosition(self.getPositionForAlgorithmItem())
-            else:
-                alg.setPosition(pos)
+        child_alg = QgsProcessingModelChildAlgorithm(alg_id)
+        child_alg.setDescription(alg.displayName())
 
-            alg.comment().setPosition(
-                alg.position() + QPointF(alg.size().width(), -1.5 * alg.size().height())
+        if pos is None or not pos:
+            child_alg.setPosition(self.getPositionForAlgorithmItem())
+        else:
+            child_alg.setPosition(pos)
+
+        child_alg.comment().setPosition(
+            child_alg.position()
+            + QPointF(child_alg.size().width(), -1.5 * child_alg.size().height())
+        )
+
+        output_offset_x = child_alg.size().width()
+        output_offset_y = 1.5 * child_alg.size().height()
+        for out in child_alg.modelOutputs():
+            child_alg.modelOutput(out).setPosition(
+                child_alg.position() + QPointF(output_offset_x, output_offset_y)
             )
+            output_offset_y += 1.5 * child_alg.modelOutput(out).size().height()
 
-            output_offset_x = alg.size().width()
-            output_offset_y = 1.5 * alg.size().height()
-            for out in alg.modelOutputs():
-                alg.modelOutput(out).setPosition(
-                    alg.position() + QPointF(output_offset_x, output_offset_y)
-                )
-                output_offset_y += 1.5 * alg.modelOutput(out).size().height()
-
-            self.beginUndoCommand(self.tr("Add Algorithm"))
-            id = self.model().addChildAlgorithm(alg)
-            self.repaintModel()
-            self.endUndoCommand()
-
-            res, errors = self.model().validateChildAlgorithm(id)
-            if not res:
-                self.view().scene().showWarning(
-                    QCoreApplication.translate(
-                        "ModelerDialog", "Algorithm “{}” is invalid"
-                    ).format(alg.description()),
-                    self.tr("Algorithm is Invalid"),
-                    QCoreApplication.translate(
-                        "ModelerDialog",
-                        '<div style="color:palette(window-text);"><p>The “{}” algorithm is invalid, because:</p><ul><li>{}</li></ul></div>',
-                    ).format(alg.description(), "</li><li>".join(errors)),
-                    level=Qgis.MessageLevel.Warning,
-                )
-            else:
-                self.view().scene().messageBar().clearWidgets()
+        self.beginUndoCommand(self.tr("Add Algorithm"))
+        self.model().addChildAlgorithm(child_alg)
+        self.repaintModel()
+        self.endUndoCommand()
 
     def getPositionForAlgorithmItem(self):
         MARGIN = 20

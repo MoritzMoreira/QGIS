@@ -19,68 +19,66 @@ __author__ = "Victor Olaya"
 __date__ = "February 2015"
 __copyright__ = "(C) 2012-2015, Victor Olaya"
 
-from typing import Dict, Optional
-import sys
-import os
-import uuid
-import math
 import importlib
+import math
+import os
+import sys
+import uuid
+import warnings
 from pathlib import Path
-
-from qgis.PyQt.QtCore import QCoreApplication, QUrl
+from typing import Optional
 
 from qgis.core import (
     Qgis,
-    QgsMapLayer,
-    QgsRasterLayer,
     QgsApplication,
-    QgsMapLayerType,
     QgsCoordinateReferenceSystem,
-    QgsProcessingUtils,
-    QgsProcessing,
+    QgsMapLayer,
+    QgsMapLayerType,
     QgsMessageLog,
-    QgsVectorFileWriter,
-    QgsProcessingContext,
+    QgsProcessing,
     QgsProcessingAlgorithm,
-    QgsProcessingParameterDefinition,
+    QgsProcessingContext,
     QgsProcessingException,
-    QgsProcessingParameterCrs,
-    QgsProcessingParameterExtent,
-    QgsProcessingParameterEnum,
-    QgsProcessingParameterNumber,
-    QgsProcessingParameterString,
-    QgsProcessingParameterField,
-    QgsProcessingParameterPoint,
-    QgsProcessingParameterBoolean,
-    QgsProcessingParameterRange,
-    QgsProcessingParameterFeatureSource,
-    QgsProcessingParameterVectorLayer,
-    QgsProcessingParameterRasterLayer,
-    QgsProcessingParameterMultipleLayers,
-    QgsProcessingParameterVectorDestination,
-    QgsProcessingParameterRasterDestination,
-    QgsProcessingParameterFileDestination,
-    QgsProcessingParameterFile,
-    QgsProcessingParameterFolderDestination,
     QgsProcessingOutputHtml,
-    QgsVectorLayer,
+    QgsProcessingParameterBoolean,
+    QgsProcessingParameterCrs,
+    QgsProcessingParameterDefinition,
+    QgsProcessingParameterEnum,
+    QgsProcessingParameterExtent,
+    QgsProcessingParameterFeatureSource,
+    QgsProcessingParameterField,
+    QgsProcessingParameterFile,
+    QgsProcessingParameterFileDestination,
+    QgsProcessingParameterFolderDestination,
+    QgsProcessingParameterMultipleLayers,
+    QgsProcessingParameterNumber,
+    QgsProcessingParameterPoint,
+    QgsProcessingParameterRange,
+    QgsProcessingParameterRasterDestination,
+    QgsProcessingParameterRasterLayer,
+    QgsProcessingParameterString,
+    QgsProcessingParameterVectorDestination,
+    QgsProcessingParameterVectorLayer,
+    QgsProcessingUtils,
     QgsProviderRegistry,
+    QgsRasterLayer,
+    QgsVectorFileWriter,
+    QgsVectorLayer,
 )
+from qgis.PyQt.QtCore import QCoreApplication, QUrl
 from qgis.utils import iface
-
-import warnings
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     from osgeo import ogr
 
 from processing.core.ProcessingConfig import ProcessingConfig
-from processing.core.parameters import getParameterFromString
+from processing.tools.system import getTempFilename
 
-from grassprovider.parsed_description import ParsedDescription
 from grassprovider.grass_utils import GrassUtils
+from grassprovider.parsed_description import ParsedDescription
 
-from processing.tools.system import isWindows, getTempFilename
+from .parameters import getParameterFromString
 
 pluginPath = os.path.normpath(
     os.path.join(os.path.split(os.path.dirname(__file__))[0], os.pardir)
@@ -285,9 +283,7 @@ class GrassAlgorithm(QgsProcessingAlgorithm):
                 parameter = getParameterFromString(param_string, "GrassAlgorithm")
             except Exception as e:
                 QgsMessageLog.logMessage(
-                    self.tr("Could not open GRASS GIS algorithm: {0}").format(
-                        self._name
-                    ),
+                    self.tr("Could not open GRASS algorithm: {0}").format(self._name),
                     self.tr("Processing"),
                     Qgis.MessageLevel.Critical,
                 )
@@ -319,7 +315,7 @@ class GrassAlgorithm(QgsProcessingAlgorithm):
 
         param = QgsProcessingParameterExtent(
             self.GRASS_REGION_EXTENT_PARAMETER,
-            self.tr("GRASS GIS region extent"),
+            self.tr("GRASS region extent"),
             optional=True,
         )
         param.setFlags(
@@ -331,7 +327,7 @@ class GrassAlgorithm(QgsProcessingAlgorithm):
             # Add a cellsize parameter
             param = QgsProcessingParameterNumber(
                 self.GRASS_REGION_CELLSIZE_PARAMETER,
-                self.tr("GRASS GIS region cellsize (leave 0 for default)"),
+                self.tr("GRASS region cellsize (leave 0 for default)"),
                 type=QgsProcessingParameterNumber.Type.Double,
                 minValue=0.0,
                 maxValue=sys.float_info.max + 1,
@@ -492,13 +488,13 @@ class GrassAlgorithm(QgsProcessingAlgorithm):
         )
 
     def processAlgorithm(self, original_parameters, context, feedback):
-        if isWindows():
+        if GrassUtils.is_windows():
             path = GrassUtils.grassPath()
             if path == "":
                 raise QgsProcessingException(
                     self.tr(
-                        "GRASS GIS folder is not configured. Please "
-                        "configure it before running GRASS GIS algorithms."
+                        "GRASS folder is not configured. Please "
+                        "configure it before running GRASS algorithms."
                     )
                 )
 
@@ -540,7 +536,7 @@ class GrassAlgorithm(QgsProcessingAlgorithm):
                 getattr(self, fullName)(parameters, context, feedback)
 
         # Run GRASS
-        loglines = [self.tr("GRASS GIS execution commands")]
+        loglines = [self.tr("GRASS execution commands")]
         for line in self.commands:
             feedback.pushCommandInfo(line)
             loglines.append(line)
@@ -552,7 +548,7 @@ class GrassAlgorithm(QgsProcessingAlgorithm):
         GrassUtils.executeGrass(self.commands, feedback, self.outputCommands)
 
         # If the session has been created outside of this algorithm, add
-        # the new GRASS GIS layers to it otherwise finish the session
+        # the new GRASS layers to it otherwise finish the session
         if existingSession:
             GrassUtils.addSessionLayers(self.exportedLayers)
         else:
@@ -657,12 +653,7 @@ class GrassAlgorithm(QgsProcessingAlgorithm):
             self.region = QgsProcessingUtils.combineLayerExtents(
                 self.inputLayers, self.destination_crs, context
             )
-        command = "g.region n={} s={} e={} w={}".format(
-            self.region.yMaximum(),
-            self.region.yMinimum(),
-            self.region.xMaximum(),
-            self.region.xMinimum(),
-        )
+        command = f"g.region n={self.region.yMaximum()} s={self.region.yMinimum()} e={self.region.xMaximum()} w={self.region.xMinimum()}"
         # Handle cell size
         if self.parameterDefinition(self.GRASS_REGION_CELLSIZE_PARAMETER):
             if self.cellSize:
@@ -770,16 +761,16 @@ class GrassAlgorithm(QgsProcessingAlgorithm):
                 data = self.parameterAsString(parameters, paramName, context)
                 # if string is empty, we don't add it
                 if len(data) > 0:
-                    value = '"{}"'.format(
-                        self.parameterAsString(parameters, paramName, context)
+                    value = (
+                        f'"{self.parameterAsString(parameters, paramName, context)}"'
                     )
             # For fields, we just translate as string
             elif isinstance(param, QgsProcessingParameterField):
                 value = ",".join(self.parameterAsFields(parameters, paramName, context))
             elif isinstance(param, QgsProcessingParameterFile):
                 if self.parameterAsString(parameters, paramName, context):
-                    value = '"{}"'.format(
-                        self.parameterAsString(parameters, paramName, context)
+                    value = (
+                        f'"{self.parameterAsString(parameters, paramName, context)}"'
                     )
             elif isinstance(param, QgsProcessingParameterPoint):
                 if self.parameterAsString(parameters, paramName, context):
@@ -807,9 +798,7 @@ class GrassAlgorithm(QgsProcessingAlgorithm):
                     value = f'"{self.parameterAsCrs(parameters, paramName, context).toProj()}"'
             # For everything else, we assume that it is a string
             else:
-                value = '"{}"'.format(
-                    self.parameterAsString(parameters, paramName, context)
-                )
+                value = f'"{self.parameterAsString(parameters, paramName, context)}"'
             if value:
                 command += " {}={}".format(paramName.replace("~", ""), value)
 
@@ -1051,8 +1040,8 @@ class GrassAlgorithm(QgsProcessingAlgorithm):
         # Add a loop export from the basename
         for cmd in [self.commands, self.outputCommands]:
             # TODO Format/options support
-            if isWindows():
-                cmd.append("if not exist {0} mkdir {0}".format(outDir))
+            if GrassUtils.is_windows():
+                cmd.append(f"if not exist {outDir} mkdir {outDir}")
                 cmd.append(
                     "for /F %%r IN ('g.list type^=rast pattern^=\"{}*\"') do r.out.gdal -m{} input=%%r output={}/%%r.tif {}".format(
                         basename,
@@ -1299,9 +1288,7 @@ class GrassAlgorithm(QgsProcessingAlgorithm):
         if not destName:
             destName = f"table_{os.path.basename(getTempFilename(context=context))}"
         self.exportedLayers[name] = destName
-        command = 'db.in.ogr --overwrite input="{}" output="{}"'.format(
-            os.path.normpath(layer.source()), destName
-        )
+        command = f'db.in.ogr --overwrite input="{os.path.normpath(layer.source())}" output="{destName}"'
         self.commands.append(command)
 
     def exportAttributeTable(self, grassName, fileName, outFormat="CSV", layer=1):
@@ -1315,9 +1302,7 @@ class GrassAlgorithm(QgsProcessingAlgorithm):
         """
         for cmd in [self.commands, self.outputCommands]:
             cmd.append(
-                'db.out.ogr input="{}" output="{}" layer={} format={} --overwrite'.format(
-                    grassName, fileName, layer, outFormat
-                )
+                f'db.out.ogr input="{grassName}" output="{fileName}" layer={layer} format={outFormat} --overwrite'
             )
 
     def setSessionProjectionFromProject(self, context: QgsProcessingContext):

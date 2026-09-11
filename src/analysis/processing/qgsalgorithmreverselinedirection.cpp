@@ -16,14 +16,19 @@
  ***************************************************************************/
 
 #include "qgsalgorithmreverselinedirection.h"
+
 #include "qgscurve.h"
 #include "qgsgeometrycollection.h"
+
+#include <QString>
+
+using namespace Qt::StringLiterals;
 
 ///@cond PRIVATE
 
 QString QgsReverseLineDirectionAlgorithm ::name() const
 {
-  return QStringLiteral( "reverselinedirection" );
+  return u"reverselinedirection"_s;
 }
 
 QString QgsReverseLineDirectionAlgorithm ::displayName() const
@@ -43,7 +48,7 @@ QString QgsReverseLineDirectionAlgorithm ::group() const
 
 QString QgsReverseLineDirectionAlgorithm ::groupId() const
 {
-  return QStringLiteral( "vectorgeometry" );
+  return u"vectorgeometry"_s;
 }
 
 QString QgsReverseLineDirectionAlgorithm ::outputName() const
@@ -84,6 +89,8 @@ Qgis::ProcessingFeatureSourceFlags QgsReverseLineDirectionAlgorithm ::sourceFlag
 
 QgsFeatureList QgsReverseLineDirectionAlgorithm ::processFeature( const QgsFeature &f, QgsProcessingContext &, QgsProcessingFeedback * )
 {
+  QGS_MARK_ALGORITHM_SOURCE
+
   QgsFeature feature = f;
   if ( feature.hasGeometry() )
   {

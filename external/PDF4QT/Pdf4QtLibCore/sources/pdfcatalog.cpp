@@ -557,6 +557,62 @@ PDFPageLabel PDFPageLabel::parse(PDFInteger pageIndex, const PDFObjectStorage* s
     return PDFPageLabel();
 }
 
+QString PDFPageLabel::formatPageNumber(NumberingStyle style, PDFInteger number)
+{
+    switch (style)
+    {
+        case NumberingStyle::None:
+        {
+            return QString();
+        }
+
+        case NumberingStyle::DecimalArabic:
+        {
+            return QString::number(number);
+        }
+
+        case NumberingStyle::UppercaseRoman:
+        case NumberingStyle::LowercaseRoman:
+        {
+            static constexpr std::array<std::pair<PDFInteger, const char*>, 13> romanNumerals = { {
+                { 1000, "M" }, { 900, "CM" }, { 500, "D" }, { 400, "CD" },
+                { 100, "C" },  { 90, "XC" },  { 50, "L" },  { 40, "XL" },
+                { 10, "X" },   { 9, "IX" },   { 5, "V" },   { 4, "IV" },
+                { 1, "I" }
+            } };
+
+            PDFInteger remainder = qMax(number, PDFInteger(1));
+            QString result;
+            for (const auto& [value, numeral] : romanNumerals)
+            {
+                while (remainder >= value)
+                {
+                    result += QString::fromLatin1(numeral);
+                    remainder -= value;
+                }
+            }
+
+            return style == NumberingStyle::UppercaseRoman ? result : result.toLower();
+        }
+
+        case NumberingStyle::UppercaseLetters:
+        case NumberingStyle::LowercaseLetters:
+        {
+            const PDFInteger index = qMax(number, PDFInteger(1)) - 1;
+            const PDFInteger letterIndex = index % 26;
+            const PDFInteger repeatCount = index / 26 + 1;
+
+            const QChar letter = QChar::fromLatin1(char('A' + letterIndex));
+            QString result(repeatCount, letter);
+
+            return style == NumberingStyle::UppercaseLetters ? result : result.toLower();
+        }
+    }
+
+    Q_ASSERT(false);
+    return QString();
+}
+
 const PDFDocumentSecurityStore::SecurityStoreItem* PDFDocumentSecurityStore::getItem(const QByteArray& hash) const
 {
     auto it = m_VRI.find(hash);
@@ -1051,6 +1107,53 @@ PDFPageAdditionalActions PDFPageAdditionalActions::parse(const PDFObjectStorage*
     }
 
     return result;
+}
+
+QString PDFPageLayoutUtils::convertPageLayoutToString(PageLayout pageLayout)
+{
+    switch (pageLayout)
+    {
+        case PageLayout::SinglePage:
+            return "SinglePage";
+
+        case PageLayout::OneColumn:
+            return "OneColumn";
+
+        case PageLayout::TwoColumnLeft:
+            return "TwoColumnLeft";
+
+        case PageLayout::TwoColumnRight:
+            return "TwoColumnRight";
+
+        case PageLayout::TwoPagesLeft:
+            return "TwoPagesLeft";
+
+        case PageLayout::TwoPagesRight:
+            return "TwoPagesRight";
+
+        case PageLayout::Custom:
+            return "Custom";
+
+        default:
+            Q_ASSERT(false);
+            break;
+    }
+
+    return QString();
+}
+
+PageLayout PDFPageLayoutUtils::convertStringToPageLayout(const QString& text, PageLayout defaultPageLayout)
+{
+    for (PageLayout pageLayout : { PageLayout::SinglePage, PageLayout::OneColumn, PageLayout::TwoColumnLeft,
+                                   PageLayout::TwoColumnRight, PageLayout::TwoPagesLeft, PageLayout::TwoPagesRight, PageLayout::Custom })
+    {
+        if (convertPageLayoutToString(pageLayout) == text)
+        {
+            return pageLayout;
+        }
+    }
+
+    return defaultPageLayout;
 }
 
 }   // namespace pdf

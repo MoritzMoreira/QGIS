@@ -29,11 +29,543 @@
 #include <QPaintEngine>
 #include <QPainterPathStroker>
 
-#ifdef Q_OS_WIN
-#include <Blend2d.h>
+#include <utility>
+
+#if __has_include(<blend2d/blend2d.h>)
+  #include <blend2d/blend2d.h>
 #else
-#include <blend2d.h>
+  #include <blend2d.h>
 #endif
+
+// Compatibility layer between blend2d's snake_case API (>= 0.20) and the
+// older camelCase API (< 0.20). Each wrapper below detects, at compile time,
+// which spelling the installed blend2d headers actually provide and forwards
+// to it, so the call sites in this file can always use the snake_case name
+// regardless of which blend2d version is installed.
+namespace blcompat
+{
+
+template <typename T, typename... Args>
+decltype(auto) assign_data(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.assign_data(args...); })
+    {
+        return obj.assign_data(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.assignData(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) assign_deep(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.assign_deep(args...); })
+    {
+        return obj.assign_deep(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.assignDeep(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) assign_stops(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.assign_stops(args...); })
+    {
+        return obj.assign_stops(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.assignStops(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) blit_image(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.blit_image(args...); })
+    {
+        return obj.blit_image(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.blitImage(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) clear_all(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.clear_all(args...); })
+    {
+        return obj.clear_all(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.clearAll(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) clip_to_rect(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.clip_to_rect(args...); })
+    {
+        return obj.clip_to_rect(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.clipToRect(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) create_from_data(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.create_from_data(args...); })
+    {
+        return obj.create_from_data(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.createFromData(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) create_from_face(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.create_from_face(args...); })
+    {
+        return obj.create_from_face(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.createFromFace(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) cubic_to(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.cubic_to(args...); })
+    {
+        return obj.cubic_to(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.cubicTo(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) fill_ellipse(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.fill_ellipse(args...); })
+    {
+        return obj.fill_ellipse(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.fillEllipse(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) fill_rect_array(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.fill_rect_array(args...); })
+    {
+        return obj.fill_rect_array(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.fillRectArray(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) fill_path(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.fill_path(args...); })
+    {
+        return obj.fill_path(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.fillPath(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) line_to(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.line_to(args...); })
+    {
+        return obj.line_to(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.lineTo(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) move_to(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.move_to(args...); })
+    {
+        return obj.move_to(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.moveTo(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) reset_transform(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.reset_transform(args...); })
+    {
+        return obj.reset_transform(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.resetTransform(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) restore_clipping(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.restore_clipping(args...); })
+    {
+        return obj.restore_clipping(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.restoreClipping(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) set_comp_op(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.set_comp_op(args...); })
+    {
+        return obj.set_comp_op(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.setCompOp(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) set_fill_rule(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.set_fill_rule(args...); })
+    {
+        return obj.set_fill_rule(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.setFillRule(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) set_fill_style(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.set_fill_style(args...); })
+    {
+        return obj.set_fill_style(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.setFillStyle(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) set_global_alpha(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.set_global_alpha(args...); })
+    {
+        return obj.set_global_alpha(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.setGlobalAlpha(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) set_hint(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.set_hint(args...); })
+    {
+        return obj.set_hint(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.setHint(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) set_stroke_alpha(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.set_stroke_alpha(args...); })
+    {
+        return obj.set_stroke_alpha(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.setStrokeAlpha(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) set_stroke_caps(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.set_stroke_caps(args...); })
+    {
+        return obj.set_stroke_caps(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.setStrokeCaps(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) set_stroke_dash_array(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.set_stroke_dash_array(args...); })
+    {
+        return obj.set_stroke_dash_array(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.setStrokeDashArray(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) set_stroke_dash_offset(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.set_stroke_dash_offset(args...); })
+    {
+        return obj.set_stroke_dash_offset(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.setStrokeDashOffset(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) set_stroke_join(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.set_stroke_join(args...); })
+    {
+        return obj.set_stroke_join(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.setStrokeJoin(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) set_stroke_miter_limit(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.set_stroke_miter_limit(args...); })
+    {
+        return obj.set_stroke_miter_limit(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.setStrokeMiterLimit(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) set_stroke_options(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.set_stroke_options(args...); })
+    {
+        return obj.set_stroke_options(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.setStrokeOptions(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) set_stroke_style(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.set_stroke_style(args...); })
+    {
+        return obj.set_stroke_style(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.setStrokeStyle(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) set_stroke_width(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.set_stroke_width(args...); })
+    {
+        return obj.set_stroke_width(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.setStrokeWidth(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) set_transform(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.set_transform(args...); })
+    {
+        return obj.set_transform(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.setTransform(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) stroke_line(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.stroke_line(args...); })
+    {
+        return obj.stroke_line(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.strokeLine(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) stroke_options(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.stroke_options(args...); })
+    {
+        return obj.stroke_options(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.strokeOptions(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) stroke_path(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.stroke_path(args...); })
+    {
+        return obj.stroke_path(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.strokePath(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) stroke_rect_array(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.stroke_rect_array(args...); })
+    {
+        return obj.stroke_rect_array(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.strokeRectArray(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) user_to_meta(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.user_to_meta(args...); })
+    {
+        return obj.user_to_meta(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.userToMeta(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T, typename... Args>
+decltype(auto) user_transform(T& obj, Args&&... args)
+{
+    if constexpr (requires { obj.user_transform(args...); })
+    {
+        return obj.user_transform(std::forward<Args>(args)...);
+    }
+    else
+    {
+        return obj.userTransform(std::forward<Args>(args)...);
+    }
+}
+
+template <typename T>
+decltype(auto) dash_array(T& obj)
+{
+    if constexpr (requires { obj.dash_array; })
+    {
+        return (obj.dash_array);
+    }
+    else
+    {
+        return (obj.dashArray);
+    }
+}
+
+template <typename T>
+decltype(auto) dash_offset(T& obj)
+{
+    if constexpr (requires { obj.dash_offset; })
+    {
+        return (obj.dash_offset);
+    }
+    else
+    {
+        return (obj.dashOffset);
+    }
+}
+
+template <typename T>
+decltype(auto) thread_count(T& obj)
+{
+    if constexpr (requires { obj.thread_count; })
+    {
+        return (obj.thread_count);
+    }
+    else
+    {
+        return (obj.threadCount);
+    }
+}
+
+}   // namespace blcompat
 
 namespace pdf
 {
@@ -191,6 +723,11 @@ int PDFBLPaintDevice::metric(PaintDeviceMetric metric) const
         return m_offscreenBuffer.devicePixelRatio();
     case QPaintDevice::PdmDevicePixelRatioScaled:
         return m_offscreenBuffer.devicePixelRatioFScale();
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+    case QPaintDevice::PdmDevicePixelRatioF_EncodedA:
+    case QPaintDevice::PdmDevicePixelRatioF_EncodedB:
+        return QPaintDevice::encodeMetricF(metric, m_offscreenBuffer.devicePixelRatio());
+#endif
     default:
         Q_ASSERT(false);
         break;
@@ -222,19 +759,19 @@ bool PDFBLPaintEngine::begin(QPaintDevice*)
     if (m_isMultithreaded)
     {
         info.flags = BL_CONTEXT_CREATE_FLAG_FALLBACK_TO_SYNC;
-        info.threadCount = QThread::idealThreadCount();
+        blcompat::thread_count(info) = QThread::idealThreadCount();
     }
 
-    m_blContext->setHint(BL_CONTEXT_HINT_RENDERING_QUALITY, BL_RENDERING_QUALITY_MAX_VALUE);
+    blcompat::set_hint(*m_blContext, BL_CONTEXT_HINT_RENDERING_QUALITY, BL_RENDERING_QUALITY_MAX_VALUE);
 
-    m_blOffscreenBuffer->createFromData(m_qtOffscreenBuffer.width(), m_qtOffscreenBuffer.height(), BL_FORMAT_PRGB32, m_qtOffscreenBuffer.bits(), m_qtOffscreenBuffer.bytesPerLine());
+    blcompat::create_from_data(*m_blOffscreenBuffer, m_qtOffscreenBuffer.width(), m_qtOffscreenBuffer.height(), BL_FORMAT_PRGB32, m_qtOffscreenBuffer.bits(), m_qtOffscreenBuffer.bytesPerLine());
     if (m_blContext->begin(m_blOffscreenBuffer.value(), info) == BL_SUCCESS)
     {
-        m_blContext->clearAll();
+        blcompat::clear_all(*m_blContext);
 
         qreal devicePixelRatio = m_qtOffscreenBuffer.devicePixelRatioF();
         m_blContext->scale(devicePixelRatio);
-        m_blContext->userToMeta();
+        blcompat::user_to_meta(*m_blContext);
 
         setBLPen(m_blContext.value(), m_currentPen);
         setBLBrush(m_blContext.value(), m_currentBrush);
@@ -296,18 +833,18 @@ void PDFBLPaintEngine::updateState(const QPaintEngineState& updatedState)
 
     if (updatedState.state().testFlag(QPaintEngine::DirtyCompositionMode))
     {
-        m_blContext->setCompOp(getBLCompOp(updatedState.compositionMode()));
+        blcompat::set_comp_op(*m_blContext, getBLCompOp(updatedState.compositionMode()));
     }
 
     if (updatedState.state().testFlag(QPaintEngine::DirtyOpacity))
     {
-        m_blContext->setGlobalAlpha(updatedState.opacity());
+        blcompat::set_global_alpha(*m_blContext, updatedState.opacity());
     }
 
     if (updatedState.state().testFlag(QPaintEngine::DirtyTransform))
     {
         m_currentTransform = updatedState.transform();
-        m_blContext->setTransform(getBLMatrix(updatedState.transform()));
+        blcompat::set_transform(*m_blContext, getBLMatrix(updatedState.transform()));
     }
 
     if (updatedState.state().testFlag(QPaintEngine::DirtyFont))
@@ -381,12 +918,12 @@ void PDFBLPaintEngine::drawRects(const QRect* rects, int rectCount)
 
     if (isFillActive())
     {
-        m_blContext->fillRectArray(blRects.view());
+        blcompat::fill_rect_array(*m_blContext, blRects.view());
     }
 
     if (isStrokeActive())
     {
-        m_blContext->strokeRectArray(blRects.view());
+        blcompat::stroke_rect_array(*m_blContext, blRects.view());
     }
 }
 
@@ -427,12 +964,12 @@ void PDFBLPaintEngine::drawRects(const QRectF* rects, int rectCount)
 
     if (isFillActive())
     {
-        m_blContext->fillRectArray(blRects.view());
+        blcompat::fill_rect_array(*m_blContext, blRects.view());
     }
 
     if (isStrokeActive())
     {
-        m_blContext->strokeRectArray(blRects.view());
+        blcompat::stroke_rect_array(*m_blContext, blRects.view());
     }
 }
 
@@ -482,7 +1019,7 @@ void PDFBLPaintEngine::drawLines(const QLine* lines, int lineCount)
             }
         }
 
-        m_blContext->strokeLine(line.x1(), line.y1(), line.x2(), line.y2());
+        blcompat::stroke_line(*m_blContext, line.x1(), line.y1(), line.x2(), line.y2());
     }
 }
 
@@ -531,7 +1068,7 @@ void PDFBLPaintEngine::drawLines(const QLineF* lines, int lineCount)
             }
         }
 
-        m_blContext->strokeLine(line.x1(), line.y1(), line.x2(), line.y2());
+        blcompat::stroke_line(*m_blContext, line.x1(), line.y1(), line.x2(), line.y2());
     }
 }
 
@@ -585,8 +1122,8 @@ void PDFBLPaintEngine::drawPathImpl(const QPainterPath& path, bool enableStroke,
                 if (!fillPath.isEmpty())
                 {
                     m_blContext->save();
-                    m_blContext->resetTransform();
-                    m_blContext->fillPath(getBLPath(fillPath));
+                    blcompat::reset_transform(*m_blContext);
+                    blcompat::fill_path(*m_blContext, getBLPath(fillPath));
                     m_blContext->restore();
                 }
             }
@@ -601,9 +1138,9 @@ void PDFBLPaintEngine::drawPathImpl(const QPainterPath& path, bool enableStroke,
                 if (!finalTransformedStrokedPath.isEmpty())
                 {
                     m_blContext->save();
-                    m_blContext->resetTransform();
+                    blcompat::reset_transform(*m_blContext);
                     setBLBrush(m_blContext.value(), m_currentPen.brush());
-                    m_blContext->fillPath(getBLPath(finalTransformedStrokedPath));
+                    blcompat::fill_path(*m_blContext, getBLPath(finalTransformedStrokedPath));
                     m_blContext->restore();
                 }
             }
@@ -616,19 +1153,19 @@ void PDFBLPaintEngine::drawPathImpl(const QPainterPath& path, bool enableStroke,
 
     if ((isFillActive() && enableFill) || forceFill)
     {
-        m_blContext->fillPath(blPath);
+        blcompat::fill_path(*m_blContext, blPath);
     }
 
     if (isStrokeActive() && enableStroke)
     {
-        m_blContext->strokePath(blPath);
+        blcompat::stroke_path(*m_blContext, blPath);
     }
 }
 
 void PDFBLPaintEngine::drawPoints(const QPointF* points, int pointCount)
 {
     m_blContext->save();
-    m_blContext->setFillStyle(BLRgba32(m_currentPen.color().rgba()));
+    blcompat::set_fill_style(*m_blContext, BLRgba32(m_currentPen.color().rgba()));
 
     for (int i = 0; i < pointCount; ++i)
     {
@@ -640,7 +1177,7 @@ void PDFBLPaintEngine::drawPoints(const QPointF* points, int pointCount)
         }
 
         BLEllipse blEllipse(c.x(), c.y(), m_currentPen.widthF() * 0.5, m_currentPen.widthF() * 0.5);
-        m_blContext->fillEllipse(blEllipse);
+        blcompat::fill_ellipse(*m_blContext, blEllipse);
     }
 
     m_blContext->restore();
@@ -649,7 +1186,7 @@ void PDFBLPaintEngine::drawPoints(const QPointF* points, int pointCount)
 void PDFBLPaintEngine::drawPoints(const QPoint* points, int pointCount)
 {
     m_blContext->save();
-    m_blContext->setFillStyle(BLRgba32(m_currentPen.color().rgba()));
+    blcompat::set_fill_style(*m_blContext, BLRgba32(m_currentPen.color().rgba()));
 
     for (int i = 0; i < pointCount; ++i)
     {
@@ -661,7 +1198,7 @@ void PDFBLPaintEngine::drawPoints(const QPoint* points, int pointCount)
         }
 
         BLEllipse blEllipse(c.x(), c.y(), m_currentPen.widthF() * 0.5, m_currentPen.widthF() * 0.5);
-        m_blContext->fillEllipse(blEllipse);
+        blcompat::fill_ellipse(*m_blContext, blEllipse);
     }
 
     m_blContext->restore();
@@ -716,10 +1253,10 @@ void PDFBLPaintEngine::drawTiledPixmap(const QRectF& r, const QPixmap& pixmap, c
     int tilesY = qCeil(r.height() / pixmap.height());
 
     BLImage blImage;
-    blImage.createFromData(image.width(), image.height(), BL_FORMAT_PRGB32, image.bits(), image.bytesPerLine());
+    blcompat::create_from_data(blImage, image.width(), image.height(), BL_FORMAT_PRGB32, image.bits(), image.bytesPerLine());
 
     BLImage blDrawImage;
-    blDrawImage.assignDeep(blImage);
+    blcompat::assign_deep(blDrawImage, blImage);
 
     for (int x = 0; x < tilesX; ++x)
     {
@@ -730,7 +1267,7 @@ void PDFBLPaintEngine::drawTiledPixmap(const QRectF& r, const QPixmap& pixmap, c
 
             if (tilePos.x() < r.right() && tilePos.y() < r.bottom())
             {
-                m_blContext->blitImage(getBLPoint(tilePos), blDrawImage);
+                blcompat::blit_image(*m_blContext, getBLPoint(tilePos), blDrawImage);
             }
         }
     }
@@ -776,14 +1313,14 @@ void PDFBLPaintEngine::drawImage(const QRectF& r, const QImage& pm, const QRectF
     }
 
     BLImage blImage;
-    blImage.createFromData(image.width(), image.height(), BL_FORMAT_PRGB32, image.bits(), image.bytesPerLine());
+    blcompat::create_from_data(blImage, image.width(), image.height(), BL_FORMAT_PRGB32, image.bits(), image.bytesPerLine());
 
     BLImage blDrawImage;
-    blDrawImage.assignDeep(blImage);
+    blcompat::assign_deep(blDrawImage, blImage);
 
-    m_blContext->blitImage(BLRect(r.x(), r.y(), r.width(), r.height()),
-                           blDrawImage,
-                           BLRectI(sr.x(), sr.y(), sr.width(), sr.height()));
+    blcompat::blit_image(*m_blContext, BLRect(r.x(), r.y(), r.width(), r.height()),
+                         blDrawImage,
+                         BLRectI(sr.x(), sr.y(), sr.width(), sr.height()));
 }
 
 QPaintEngine::Type PDFBLPaintEngine::type() const
@@ -838,11 +1375,11 @@ BLPath PDFBLPaintEngine::getBLPath(const QPainterPath& path)
         switch (element.type)
         {
         case QPainterPath::MoveToElement:
-            blPath.moveTo(element.x, element.y);
+            blcompat::move_to(blPath, element.x, element.y);
             break;
 
         case QPainterPath::LineToElement:
-            blPath.lineTo(element.x, element.y);
+            blcompat::line_to(blPath, element.x, element.y);
             break;
 
         case QPainterPath::CurveToElement:
@@ -851,7 +1388,7 @@ BLPath PDFBLPaintEngine::getBLPath(const QPainterPath& path)
                 const QPainterPath::Element& ctrlPoint1 = path.elementAt(i++);
                 const QPainterPath::Element& ctrlPoint2 = path.elementAt(i++);
                 const QPainterPath::Element& endPoint = path.elementAt(i);
-                blPath.cubicTo(ctrlPoint1.x, ctrlPoint1.y, ctrlPoint2.x, ctrlPoint2.y, endPoint.x, endPoint.y);
+                blcompat::cubic_to(blPath, ctrlPoint1.x, ctrlPoint1.y, ctrlPoint2.x, ctrlPoint2.y, endPoint.x, endPoint.y);
             }
             break;
 
@@ -875,22 +1412,23 @@ void PDFBLPaintEngine::setBLPen(BLContext& context, const QPen& pen)
     const QList<qreal> customDashPattern = pen.dashPattern();
     const Qt::PenStyle penStyle = pen.style();
 
-    context.setStrokeAlpha(pen.color().alphaF());
-    context.setStrokeWidth(width);
-    context.setStrokeMiterLimit(miterLimit);
+    blcompat::set_stroke_alpha(context, pen.color().alphaF());
+    blcompat::set_stroke_width(context, width);
+    blcompat::set_stroke_miter_limit(context, miterLimit);
 
     switch (capStyle)
     {
     case Qt::FlatCap:
-        context.setStrokeCaps(BL_STROKE_CAP_BUTT);
+        blcompat::set_stroke_caps(context, BL_STROKE_CAP_BUTT);
         break;
     case Qt::SquareCap:
-        context.setStrokeCaps(BL_STROKE_CAP_SQUARE);
+        blcompat::set_stroke_caps(context, BL_STROKE_CAP_SQUARE);
         break;
     case Qt::RoundCap:
-        context.setStrokeCaps(BL_STROKE_CAP_ROUND);
+        blcompat::set_stroke_caps(context, BL_STROKE_CAP_ROUND);
         break;
     default:
+        Q_ASSERT(false);
         break;
     }
 
@@ -901,71 +1439,72 @@ void PDFBLPaintEngine::setBLPen(BLContext& context, const QPen& pen)
         dashArray.append(value);
     }
 
-    context.setStrokeDashOffset(dashOffset);
-    context.setStrokeDashArray(dashArray);
+    blcompat::set_stroke_dash_offset(context, dashOffset);
+    blcompat::set_stroke_dash_array(context, dashArray);
 
     switch (joinStyle)
     {
     case Qt::MiterJoin:
-        context.setStrokeJoin(BL_STROKE_JOIN_MITER_CLIP);
+        blcompat::set_stroke_join(context, BL_STROKE_JOIN_MITER_CLIP);
         break;
     case Qt::BevelJoin:
-        context.setStrokeJoin(BL_STROKE_JOIN_BEVEL);
+        blcompat::set_stroke_join(context, BL_STROKE_JOIN_BEVEL);
         break;
     case Qt::RoundJoin:
-        context.setStrokeJoin(BL_STROKE_JOIN_ROUND);
+        blcompat::set_stroke_join(context, BL_STROKE_JOIN_ROUND);
         break;
     case Qt::SvgMiterJoin:
-        context.setStrokeJoin(BL_STROKE_JOIN_MITER_CLIP);
+        blcompat::set_stroke_join(context, BL_STROKE_JOIN_MITER_CLIP);
         break;
     default:
+        Q_ASSERT(false);
         break;
     }
 
-    context.setStrokeStyle(BLRgba32(color.rgba()));
+    blcompat::set_stroke_style(context, BLRgba32(color.rgba()));
 
-    BLStrokeOptions strokeOptions = context.strokeOptions();
+    BLStrokeOptions strokeOptions = blcompat::stroke_options(context);
 
     switch (penStyle)
     {
     case Qt::SolidLine:
-        strokeOptions.dashArray.clear();
-        strokeOptions.dashOffset = 0.0;
+        blcompat::dash_array(strokeOptions).clear();
+        blcompat::dash_offset(strokeOptions) = 0.0;
         break;
 
     case Qt::DashLine:
     {
         constexpr double dashPattern[] = {4, 4};
-        strokeOptions.dashArray.assignData(dashPattern, std::size(dashPattern));
+        blcompat::assign_data(blcompat::dash_array(strokeOptions), dashPattern, std::size(dashPattern));
         break;
     }
 
     case Qt::DotLine:
     {
         constexpr double dashPattern[] = {1, 3};
-        strokeOptions.dashArray.assignData(dashPattern, std::size(dashPattern));
+        blcompat::assign_data(blcompat::dash_array(strokeOptions), dashPattern, std::size(dashPattern));
         break;
     }
 
     case Qt::DashDotLine:
     {
         constexpr double dashPattern[] = {4, 2, 1, 2};
-        strokeOptions.dashArray.assignData(dashPattern, std::size(dashPattern));
+        blcompat::assign_data(blcompat::dash_array(strokeOptions), dashPattern, std::size(dashPattern));
         break;
     }
 
     case Qt::DashDotDotLine:
     {
         constexpr double dashPattern[] = {4, 2, 1, 2, 1, 2};
-        strokeOptions.dashArray.assignData(dashPattern, std::size(dashPattern));
+        blcompat::assign_data(blcompat::dash_array(strokeOptions), dashPattern, std::size(dashPattern));
         break;
     }
 
     case Qt::CustomDashLine:
     {
         auto dashPattern = pen.dashPattern();
-        strokeOptions.dashArray.assignData(dashPattern.data(), dashPattern.size());
-        strokeOptions.dashOffset = pen.dashOffset();
+        blcompat::assign_data(blcompat::dash_array(strokeOptions), dashPattern.data(), dashPattern.size());
+        blcompat::dash_offset(strokeOptions) = pen.dashOffset();
         break;
     }
 
@@ -973,7 +1512,7 @@ void PDFBLPaintEngine::setBLPen(BLContext& context, const QPen& pen)
         break;
     }
 
-    context.setStrokeOptions(strokeOptions);
+    blcompat::set_stroke_options(context, strokeOptions);
 }
 
 void PDFBLPaintEngine::setBLBrush(BLContext& context, const QBrush& brush)
@@ -985,7 +1524,7 @@ void PDFBLPaintEngine::setBLBrush(BLContext& context, const QBrush& brush)
         {
             stops.append(BLGradientStop(stop.first, BLRgba32(stop.second.red(), stop.second.green(), stop.second.blue(), stop.second.alpha())));
         }
-        blGradient.assignStops(stops.constData(), stops.size());
+        blcompat::assign_stops(blGradient, stops.constData(), stops.size());
     };
 
     switch (brush.style())
@@ -995,7 +1534,7 @@ void PDFBLPaintEngine::setBLBrush(BLContext& context, const QBrush& brush)
         {
             QColor color = brush.color();
             BLRgba32 blColor = BLRgba32(color.red(), color.green(), color.blue(), color.alpha());
-            context.setFillStyle(blColor);
+            blcompat::set_fill_style(context, blColor);
             break;
         }
         case Qt::LinearGradientPattern:
@@ -1011,7 +1550,7 @@ void PDFBLPaintEngine::setBLBrush(BLContext& context, const QBrush& brush)
                 blLinearGradient.y1 = linearGradient->finalStop().y();
                 BLGradient blGradient(blLinearGradient);
                 setGradientStops(blGradient, *gradient);
-                context.setFillStyle(blGradient);
+                blcompat::set_fill_style(context, blGradient);
             }
             break;
         }
@@ -1029,7 +1568,7 @@ void PDFBLPaintEngine::setBLBrush(BLContext& context, const QBrush& brush)
                 blRadialGradientValues.r0 = radialGradient->radius();
                 BLGradient blGradient(blRadialGradientValues);
                 setGradientStops(blGradient, *gradient);
-                context.setFillStyle(blGradient);
+                blcompat::set_fill_style(context, blGradient);
             }
             break;
         }
@@ -1041,12 +1580,12 @@ bool PDFBLPaintEngine::loadBLFont(BLFont& font, QString fontName, PDFReal fontSi
     QByteArray data = PDFSystemFont::getFontData(fontName.toLatin1());
 
     BLFontData blFontData;
-    if (blFontData.createFromData(data.data(), data.size()) == BL_SUCCESS)
+    if (blcompat::create_from_data(blFontData, data.data(), data.size()) == BL_SUCCESS)
     {
         BLFontFace fontFace;
-        if (fontFace.createFromData(blFontData, 0) == BL_SUCCESS)
+        if (blcompat::create_from_data(fontFace, blFontData, 0) == BL_SUCCESS)
         {
-            if (font.createFromFace(fontFace, fontSize) == BL_SUCCESS)
+            if (blcompat::create_from_face(font, fontFace, fontSize) == BL_SUCCESS)
             {
                 return true;
             }
@@ -1158,7 +1697,7 @@ void PDFBLPaintEngine::updateClipping(std::optional<QRegion> clipRegion,
             m_finalClipPath.reset();
             m_finalClipPathBoundingBox = QRectF();
             m_clipSingleRect = false;
-            m_blContext->restoreClipping();
+            blcompat::restore_clipping(*m_blContext);
             return;
 
         case Qt::ReplaceClip:
@@ -1192,14 +1731,14 @@ void PDFBLPaintEngine::updateClipping(std::optional<QRegion> clipRegion,
 
     if (m_clipSingleRect)
     {
-        BLMatrix2D matrix = m_blContext->userTransform();
-        m_blContext->resetTransform();
-        m_blContext->clipToRect(getBLRect(m_finalClipPath->boundingRect()));
-        m_blContext->setTransform(matrix);
+        BLMatrix2D matrix = blcompat::user_transform(*m_blContext);
+        blcompat::reset_transform(*m_blContext);
+        blcompat::clip_to_rect(*m_blContext, getBLRect(m_finalClipPath->boundingRect()));
+        blcompat::set_transform(*m_blContext, matrix);
     }
     else
     {
-        m_blContext->restoreClipping();
+        blcompat::restore_clipping(*m_blContext);
     }
 }
 
@@ -1316,7 +1855,7 @@ void PDFBLPaintEngine::setFillRule(Qt::FillRule fillRule)
         break;
     }
 
-    m_blContext->setFillRule(blFillRule);
+    blcompat::set_fill_rule(*m_blContext, blFillRule);
 }
 
 }   // namespace pdf

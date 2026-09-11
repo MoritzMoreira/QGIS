@@ -17,9 +17,9 @@
 #ifndef QGSPROJECTUTILS_H
 #define QGSPROJECTUTILS_H
 
-#include "qgis_sip.h"
-#include "qgis_core.h"
 #include "qgis.h"
+#include "qgis_core.h"
+#include "qgis_sip.h"
 #include "qgsproject.h"
 
 #include <QList>
@@ -33,15 +33,20 @@ class QgsMapLayer;
 */
 class CORE_EXPORT QgsProjectUtils
 {
-
   public:
-
     /**
      * Returns a list of all layers in the specified \a project which match the given \a path.
      *
      * This method can be used to retrieve a list of layers in a project associated with a file path.
      */
     static QList< QgsMapLayer * > layersMatchingPath( const QgsProject *project, const QString &path );
+
+    /**
+     * Returns a list of all layers in the specified \a project point to the same \a uri resource at the specified hierarchy \a level.
+     *
+     * \since QGIS 4.0
+     */
+    static QList< QgsMapLayer * > layersMatchingUri( const QgsProject *project, const QString &provider, const QString &uri, Qgis::SourceHierarchyLevel level = Qgis::SourceHierarchyLevel::Object );
 
     /**
      * Updates a \a project, replacing the data source for all layers which match the given \a oldPath
@@ -64,9 +69,6 @@ class CORE_EXPORT QgsProjectUtils
      * \since QGIS 4.0
      */
     static Qgis::ProjectTrustStatus checkUserTrust( QgsProject *project );
-
 };
 
 #endif // QGSPROJECTUTILS_H
-
-

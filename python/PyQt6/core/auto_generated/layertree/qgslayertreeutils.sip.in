@@ -10,6 +10,7 @@
 
 
 
+
 class QgsLayerTreeUtils
 {
 %Docstring(signature="appended")
@@ -20,7 +21,6 @@ Assorted functions for dealing with layer trees.
 #include "qgslayertreeutils.h"
 %End
   public:
-
     static bool readOldLegend( QgsLayerTreeGroup *root, const QDomElement &legendElem );
 %Docstring
 Try to load layer tree from \verbatim <legend> \endverbatim tag from
@@ -62,6 +62,18 @@ Returns ``True`` if any of the layers is modified
     static void removeInvalidLayers( QgsLayerTreeGroup *group );
 %Docstring
 Removes layer nodes that refer to invalid layers
+%End
+
+    static void regenerateGroupIds( QgsLayerTreeNode *node );
+%Docstring
+Assigns a new unique id to every group in the sub-tree rooted at
+``node``.
+
+Call this on a copied sub-tree before inserting it into a project
+(paste, duplicate, QLR import) so duplicated groups do not share an id
+with their source. Layer and custom nodes are not changed.
+
+.. versionadded:: 4.4
 %End
 
     static void storeOriginalLayersProperties( QgsLayerTreeGroup *group, const QDomDocument *doc );

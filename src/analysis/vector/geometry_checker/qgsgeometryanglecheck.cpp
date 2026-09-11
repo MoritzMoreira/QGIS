@@ -13,19 +13,26 @@
  *                                                                         *
  ***************************************************************************/
 
+#include "qgsgeometryanglecheck.h"
+
+#include "qgsfeaturepool.h"
 #include "qgsfeedback.h"
 #include "qgsgeometrycheckcontext.h"
-#include "qgsgeometryanglecheck.h"
-#include "qgsgeometryutils.h"
-#include "qgsfeaturepool.h"
 #include "qgsgeometrycheckerror.h"
+#include "qgsgeometryutils.h"
+
+#include <QString>
+
+using namespace Qt::StringLiterals;
 
 QList<Qgis::GeometryType> QgsGeometryAngleCheck::compatibleGeometryTypes() const
 {
   return factoryCompatibleGeometryTypes();
 }
 
-QgsGeometryCheck::Result QgsGeometryAngleCheck::collectErrors( const QMap<QString, QgsFeaturePool *> &featurePools, QList<QgsGeometryCheckError *> &errors, QStringList &messages, QgsFeedback *feedback, const LayerFeatureIds &ids ) const
+QgsGeometryCheck::Result QgsGeometryAngleCheck::collectErrors(
+  const QMap<QString, QgsFeaturePool *> &featurePools, QList<QgsGeometryCheckError *> &errors, QStringList &messages, QgsFeedback *feedback, const LayerFeatureIds &ids
+) const
 {
   Q_UNUSED( messages )
 
@@ -103,7 +110,7 @@ void QgsGeometryAngleCheck::fixError( const QMap<QString, QgsFeaturePool *> &fea
   const QgsVertexId vidx = error->vidx();
 
   // Check if point still exists
-  if ( !vidx.isValid( geometry ) )
+  if ( !geometry->hasVertex( vidx ) )
   {
     error->setObsolete();
     return;
@@ -156,7 +163,9 @@ void QgsGeometryAngleCheck::fixError( const QMap<QString, QgsFeaturePool *> &fea
     {
       changes[error->layerId()][error->featureId()].append( Change( ChangeNode, ChangeRemoved, vidx ) );
       // Avoid duplicate nodes as result of deleting spike vertex
-      if ( QgsGeometryUtils::sqrDistance2D( p1, p3 ) < ( mContext->tolerance * mContext->tolerance ) && QgsGeometryCheckerUtils::canDeleteVertex( geometry, vidx.part, vidx.ring ) && geometry->deleteVertex( error->vidx() ) ) // error->vidx points to p3 after removing p2
+      if ( QgsGeometryUtils::sqrDistance2D( p1, p3 ) < ( mContext->tolerance * mContext->tolerance )
+           && QgsGeometryCheckerUtils::canDeleteVertex( geometry, vidx.part, vidx.ring )
+           && geometry->deleteVertex( error->vidx() ) ) // error->vidx points to p3 after removing p2
       {
         changes[error->layerId()][error->featureId()].append( Change( ChangeNode, ChangeRemoved, QgsVertexId( vidx.part, vidx.ring, ( vidx.vertex + 1 ) % n ) ) );
       }
@@ -209,7 +218,7 @@ bool QgsGeometryAngleCheck::factoryIsCompatible( QgsVectorLayer *layer )
 
 QString QgsGeometryAngleCheck::factoryId()
 {
-  return QStringLiteral( "QgsGeometryAngleCheck" );
+  return u"QgsGeometryAngleCheck"_s;
 }
 
 QgsGeometryCheck::CheckType QgsGeometryAngleCheck::factoryCheckType()

@@ -14,9 +14,10 @@
  ***************************************************************************/
 
 #include "qgseditorwidgetfactory.h"
+
 #include "qgsdefaultsearchwidgetwrapper.h"
-#include "qgssearchwidgetwrapper.h"
 #include "qgsfields.h"
+#include "qgssearchwidgetwrapper.h"
 #include "qgsvectordataprovider.h"
 
 #include <QSettings>
@@ -26,8 +27,7 @@ class QgsDefaultSearchWidgetWrapper;
 QgsEditorWidgetFactory::QgsEditorWidgetFactory( const QString &name, const QIcon &icon )
   : mName( name )
   , mIcon( icon )
-{
-}
+{}
 
 /**
  * By default a simple QgsFilterLineEdit is returned as search widget.

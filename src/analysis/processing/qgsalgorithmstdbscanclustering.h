@@ -18,12 +18,13 @@
 #ifndef QGSALGORITHMDSTBSCANCLUSTERING_H
 #define QGSALGORITHMDSTBSCANCLUSTERING_H
 
-#define SIP_NO_FILE
 
-#include "qgis_sip.h"
 #include "qgis_analysis.h"
-#include "qgsprocessingalgorithm.h"
+#include "qgis_sip.h"
 #include "qgsalgorithmdbscanclustering.h"
+#include "qgsprocessingalgorithm.h"
+
+#define SIP_NO_FILE
 
 ///@cond PRIVATE
 
@@ -43,6 +44,7 @@ class ANALYSIS_EXPORT QgsStDbscanClusteringAlgorithm : public QgsDbscanClusterin
     QString group() const override;
     QString groupId() const override;
     QString shortHelpString() const override;
+    QList<QgsAcademicReference> academicReferences() const override;
     QgsStDbscanClusteringAlgorithm *createInstance() const override SIP_FACTORY;
 };
 

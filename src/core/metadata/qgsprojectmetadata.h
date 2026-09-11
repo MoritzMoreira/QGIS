@@ -18,8 +18,8 @@
 #ifndef QGSPROJECTMETADATA_H
 #define QGSPROJECTMETADATA_H
 
-#include "qgis_sip.h"
 #include "qgis_core.h"
+#include "qgis_sip.h"
 #include "qgsabstractmetadatabase.h"
 
 #include <QDateTime>
@@ -52,8 +52,11 @@
  */
 class CORE_EXPORT QgsProjectMetadata : public QgsAbstractMetadataBase
 {
-  public:
+    Q_GADGET
 
+    Q_PROPERTY( QString author READ author )
+
+  public:
     QgsProjectMetadata() = default;
 
     QgsProjectMetadata *clone() const override SIP_FACTORY;
@@ -90,7 +93,6 @@ class CORE_EXPORT QgsProjectMetadata : public QgsAbstractMetadataBase
     bool operator==( const QgsProjectMetadata &metadataOther ) const;
 
   private:
-
     /*
      * IMPORTANT!!!!!!
      *
@@ -108,7 +110,6 @@ class CORE_EXPORT QgsProjectMetadata : public QgsAbstractMetadataBase
      * definition located at resources/qgis-resource-metadata.xsd
      *
      */
-
 };
 
 

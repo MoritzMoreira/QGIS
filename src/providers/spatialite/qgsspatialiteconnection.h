@@ -15,12 +15,12 @@
 #ifndef QGSSPATIALITECONNECTION_H
 #define QGSSPATIALITECONNECTION_H
 
-#include <QStringList>
-#include <QObject>
-#include <QMutex>
-
 #include "qgsspatialiteutils.h"
 #include "qgsvectordataprovider.h"
+
+#include <QMutex>
+#include <QObject>
+#include <QStringList>
 
 extern "C"
 {
@@ -144,30 +144,17 @@ class QgsSqliteHandle
     QgsSqliteHandle( spatialite_database_unique_ptr &&database, const QString &dbPath, bool shared )
       : ref( shared ? 1 : -1 )
       , mDbPath( dbPath )
-      , mIsValid( true )
     {
       mDatabase = std::move( database );
     }
 
-    sqlite3 *handle()
-    {
-      return mDatabase.get();
-    }
+    sqlite3 *handle() { return mDatabase.get(); }
 
-    QString dbPath() const
-    {
-      return mDbPath;
-    }
+    QString dbPath() const { return mDbPath; }
 
-    bool isValid() const
-    {
-      return mIsValid;
-    }
+    bool isValid() const { return mIsValid; }
 
-    void invalidate()
-    {
-      mIsValid = false;
-    }
+    void invalidate() { mIsValid = false; }
 
     /**
      * Returns a possibly cached SQLite DB object from \a path, if \a shared is FALSE
@@ -189,7 +176,7 @@ class QgsSqliteHandle
     int ref;
     spatialite_database_unique_ptr mDatabase;
     QString mDbPath;
-    bool mIsValid;
+    bool mIsValid = true;
 
     static QMap<QString, QgsSqliteHandle *> sHandles;
     static QMutex sHandleMutex;

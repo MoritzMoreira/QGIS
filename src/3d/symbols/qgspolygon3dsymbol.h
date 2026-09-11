@@ -17,9 +17,8 @@
 #define QGSPOLYGON3DSYMBOL_H
 
 #include "qgis_3d.h"
-
-#include "qgsabstract3dsymbol.h"
 #include "qgs3dtypes.h"
+#include "qgsabstract3dsymbol.h"
 
 #include <Qt3DRender/QCullFace>
 
@@ -98,14 +97,14 @@ class _3D_EXPORT QgsPolygon3DSymbol : public QgsAbstract3DSymbol SIP_NODEFAULTCT
     void setExtrusionHeight( float extrusionHeight ) { mExtrusionHeight = extrusionHeight; }
 
     //! Returns material settings used for shading of the symbol
-    QgsAbstractMaterialSettings *materialSettings() const;
+    QgsAbstractMaterialSettings *materialSettings() const override;
 
     /**
      * Sets the \a material settings used for shading of the symbol.
      *
      * Ownership of \a material is transferred to the symbol.
      */
-    void setMaterialSettings( QgsAbstractMaterialSettings *materialSettings SIP_TRANSFER );
+    void setMaterialSettings( QgsAbstractMaterialSettings *materialSettings SIP_TRANSFER ) override;
 
     //! Returns front/back culling mode
     Qgs3DTypes::CullingMode cullingMode() const { return mCullingMode; }
@@ -168,7 +167,7 @@ class _3D_EXPORT QgsPolygon3DSymbol : public QgsAbstract3DSymbol SIP_NODEFAULTCT
     /**
      * Sets which facade of the buildings is rendered (0 for None, 1 for Walls, 2 for Roof, 3 for WallsAndRoof)
      * \since QGIS 3.16
-     * \deprecated QGIS 4.0 Use setExtrusionFaces() instead.
+     * \deprecated QGIS 4.0. Use setExtrusionFaces() instead.
      */
     Q_DECL_DEPRECATED void setRenderedFacade( int side ) SIP_DEPRECATED;
 
@@ -181,7 +180,7 @@ class _3D_EXPORT QgsPolygon3DSymbol : public QgsAbstract3DSymbol SIP_NODEFAULTCT
     /**
      * Returns which facade of the buildings is rendered (0 for None, 1 for Walls, 2 for Roof, 3 for WallsAndRoof)
      * \since QGIS 3.16
-     * \deprecated QGIS 4.0 Use extrusionFaces() instead.
+     * \deprecated QGIS 4.0. Use extrusionFaces() instead.
      */
     Q_DECL_DEPRECATED int renderedFacade() SIP_DEPRECATED;
 

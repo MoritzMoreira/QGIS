@@ -10,6 +10,8 @@
 
 
 
+
+
 class QgsProcessingContextGenerator
 {
 %Docstring(signature="appended")
@@ -22,14 +24,15 @@ An interface for objects which can create Processing contexts.
 #include "qgsprocessingwidgetwrapper.h"
 %End
   public:
-    virtual QgsProcessingContext *processingContext() = 0;
+    virtual QgsProcessingContext *processingContext() const = 0;
 %Docstring
 This method needs to be reimplemented in all classes which implement
 this interface and return a Processing context.
 
-Note that ownership of the context is not transferred - it is intended
-that subclasses return a pointer to a context which they have already
-created and own.
+.. note::
+
+   Ownership of the context is not transferred - it is intended that subclasses
+   return a pointer to a context which they have already created and own.
 %End
 
     virtual ~QgsProcessingContextGenerator();
@@ -72,155 +75,6 @@ QFlags<QgsProcessingParametersGenerator::Flag> operator|(QgsProcessingParameters
 
 
 
-class QgsProcessingParameterWidgetContext
-{
-%Docstring(signature="appended")
-Contains settings which reflect the context in which a Processing
-parameter widget is shown.
-
-For instance, the parent model algorithm, a linked map canvas, and other
-relevant information which allows the widget to fine-tune its behavior.
-
-.. versionadded:: 3.4
-%End
-
-%TypeHeaderCode
-#include "qgsprocessingwidgetwrapper.h"
-%End
-  public:
-    QgsProcessingParameterWidgetContext();
-
-    void setMapCanvas( QgsMapCanvas *canvas );
-%Docstring
-Sets the map ``canvas`` associated with the widget. This allows the
-widget to retrieve the current map scale and other properties from the
-canvas.
-
-.. seealso:: :py:func:`mapCanvas`
-%End
-
-    QgsMapCanvas *mapCanvas() const;
-%Docstring
-Returns the map canvas associated with the widget.
-
-.. seealso:: :py:func:`setMapCanvas`
-%End
-
-    void setMessageBar( QgsMessageBar *bar );
-%Docstring
-Sets the message ``bar`` associated with the widget. This allows the
-widget to push feedback messages to the user.
-
-.. seealso:: :py:func:`messageBar`
-
-.. versionadded:: 3.12
-%End
-
-    QgsMessageBar *messageBar() const;
-%Docstring
-Returns the message bar associated with the widget. This allows the
-widget to push feedback messages to the user.
-
-.. seealso:: :py:func:`setMessageBar`
-
-.. versionadded:: 3.12
-%End
-
-    void setBrowserModel( QgsBrowserGuiModel *model );
-%Docstring
-Sets the browser ``model`` associated with the widget. This will usually
-be the shared app instance of the browser model
-
-.. seealso:: :py:func:`browserModel`
-
-.. versionadded:: 3.14
-%End
-
-    QgsBrowserGuiModel *browserModel() const;
-%Docstring
-Returns the browser model associated with the widget.
-
-.. seealso:: :py:func:`setBrowserModel`
-
-.. versionadded:: 3.12
-%End
-
-    void setProject( QgsProject *project );
-%Docstring
-Sets the ``project`` associated with the widget. This allows the widget
-to retrieve the map layers and other properties from the correct
-project.
-
-.. seealso:: :py:func:`project`
-
-.. versionadded:: 3.8
-%End
-
-    QgsProject *project() const;
-%Docstring
-Returns the project associated with the widget.
-
-.. seealso:: :py:func:`setProject`
-%End
-
-    QgsProcessingModelAlgorithm *model() const;
-%Docstring
-Returns the model which the parameter widget is associated with.
-
-.. seealso:: :py:func:`setModel`
-
-.. seealso:: :py:func:`modelChildAlgorithmId`
-%End
-
-    void setModel( QgsProcessingModelAlgorithm *model );
-%Docstring
-Sets the ``model`` which the parameter widget is associated with.
-
-.. seealso:: :py:func:`model`
-
-.. seealso:: :py:func:`setModelChildAlgorithmId`
-%End
-
-    QString modelChildAlgorithmId() const;
-%Docstring
-Returns the child algorithm ID within the model which the parameter
-widget is associated with.
-
-.. seealso:: :py:func:`setModelChildAlgorithmId`
-
-.. seealso:: :py:func:`model`
-%End
-
-    void setModelChildAlgorithmId( const QString &id );
-%Docstring
-Sets the child algorithm ``id`` within the model which the parameter
-widget is associated with.
-
-.. seealso:: :py:func:`modelChildAlgorithmId`
-
-.. seealso:: :py:func:`setModel`
-%End
-
-    QgsMapLayer *activeLayer() const;
-%Docstring
-Returns the current active layer.
-
-.. seealso:: :py:func:`setActiveLayer`
-
-.. versionadded:: 3.14
-%End
-
-    void setActiveLayer( QgsMapLayer *layer );
-%Docstring
-Sets the current active ``layer``.
-
-.. seealso:: :py:func:`activeLayer`
-
-.. versionadded:: 3.14
-%End
-
-};
-
 
 class QgsAbstractProcessingParameterWidgetWrapper : QObject, QgsExpressionContextGenerator
 {
@@ -247,7 +101,9 @@ they are constructed through the central registry, via calls to
 #include "qgsprocessingwidgetwrapper.h"
 %End
   public:
-    QgsAbstractProcessingParameterWidgetWrapper( const QgsProcessingParameterDefinition *parameter = 0, Qgis::ProcessingMode type = Qgis::ProcessingMode::Standard, QObject *parent /TransferThis/ = 0 );
+    QgsAbstractProcessingParameterWidgetWrapper(
+      const QgsProcessingParameterDefinition *parameter = 0, Qgis::ProcessingMode type = Qgis::ProcessingMode::Standard, QObject *parent /TransferThis/ = 0
+    );
 %Docstring
 Constructor for QgsAbstractProcessingParameterWidgetWrapper, for the
 specified ``parameter`` definition and dialog ``type``.
@@ -392,9 +248,9 @@ The default implementation returns 0.
     virtual QgsExpressionContext createExpressionContext() const;
 
 
-    virtual void setDialog( QDialog *dialog );
+    virtual void setDialog( QWidget *dialog );
 %Docstring
-Sets the parent ``dialog`` in which the wrapper is shown.
+Sets the parent ``dialog`` (or widget) in which the wrapper is shown.
 
 .. versionadded:: 3.8
 %End
@@ -501,7 +357,9 @@ The ``type`` argument indicates the dialog type to create a wrapper for.
 .. seealso:: :py:func:`createModelerWidgetWrapper`
 %End
 
-    virtual QgsProcessingModelerParameterWidget *createModelerWidgetWrapper( QgsProcessingModelAlgorithm *model, const QString &childId, const QgsProcessingParameterDefinition *parameter, QgsProcessingContext &context );
+    virtual QgsProcessingModelerParameterWidget *createModelerWidgetWrapper(
+      QgsProcessingModelAlgorithm *model, const QString &childId, const QgsProcessingParameterDefinition *parameter, QgsProcessingContext &context
+    );
 %Docstring
 Creates a new modeler parameter widget for the given ``parameter``. This
 widget allows configuration of the parameter's value when used inside a
@@ -521,10 +379,7 @@ must last for the lifetime of the widget.
 %End
 
     virtual QgsProcessingAbstractParameterDefinitionWidget *createParameterDefinitionWidget(
-      QgsProcessingContext &context,
-      const QgsProcessingParameterWidgetContext &widgetContext,
-      const QgsProcessingParameterDefinition *definition = 0,
-      const QgsProcessingAlgorithm *algorithm = 0
+      QgsProcessingContext &context, const QgsProcessingParameterWidgetContext &widgetContext, const QgsProcessingParameterDefinition *definition = 0, const QgsProcessingAlgorithm *algorithm = 0
     ) /Factory/;
 %Docstring
 Creates a new parameter definition widget allowing for configuration of

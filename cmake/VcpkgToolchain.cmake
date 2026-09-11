@@ -2,20 +2,46 @@ set(NUGET_SOURCE "https://nuget.pkg.github.com/qgis/index.json" CACHE STRING "Nu
 set(NUGET_USERNAME "qgis" CACHE STRING "Nuget user")
 
 # Setup features (dependencies) based on cmake configuration
+if(WITH_3D)
+  list(APPEND VCPKG_MANIFEST_FEATURES "3d")
+endif()
+if(WITH_AUTH)
+  list(APPEND VCPKG_MANIFEST_FEATURES "auth")
+endif()
 if(WITH_BINDINGS)
   list(APPEND VCPKG_MANIFEST_FEATURES "bindings")
 endif()
-if(WITH_3D)
-  list(APPEND VCPKG_MANIFEST_FEATURES "3d")
+if(WITH_EXIV2)
+  list(APPEND VCPKG_MANIFEST_FEATURES "exiv2")
 endif()
 if(WITH_GUI)
   list(APPEND VCPKG_MANIFEST_FEATURES "gui")
 endif()
+if(WITH_HANA)
+  list(APPEND VCPKG_MANIFEST_FEATURES "hana")
+endif()
 if(WITH_ORACLE)
   list(APPEND VCPKG_MANIFEST_FEATURES "oracle")
 endif()
+if(WITH_PDAL)
+  list(APPEND VCPKG_MANIFEST_FEATURES "pdal")
+endif()
+if(WITH_QTPOSITIONING)
+  list(APPEND VCPKG_MANIFEST_FEATURES "qtpositioning")
+endif()
 if(WITH_SFCGAL)
   list(APPEND VCPKG_MANIFEST_FEATURES "sfcgal")
+endif()
+if(WITH_PROJ_DATA)
+  list(APPEND VCPKG_MANIFEST_FEATURES "proj-data")
+endif()
+if(WITH_TRACY)
+  list(APPEND VCPKG_MANIFEST_FEATURES "tracy")
+endif()
+# We cannot detect the EMSCRIPTEN variable yet, as we didn't load the toolchain file at this point.
+# So we use the target triplet to determine if we are building for wasm.
+if(VCPKG_TARGET_TRIPLET MATCHES "^wasm32-")
+  set(VCPKG_MANIFEST_NO_DEFAULT_FEATURES ON)
 endif()
 
 # Binarycache can only be used on Windows or if mono is available.
@@ -63,7 +89,8 @@ if(NOT "${NUGET_TOKEN}" STREQUAL "" AND (CMAKE_HOST_WIN32 OR EXISTS "${_VCPKG_MO
   endif()
 
   file(TO_NATIVE_PATH "${_CONFIG_PATH}" _CONFIG_PATH_NATIVE)
-  set(ENV{VCPKG_BINARY_SOURCES} "$ENV{VCPKG_BINARY_SOURCES};nugetconfig,${_CONFIG_PATH_NATIVE},readwrite")
+  # qtbase/qtdeclarative nupkgs exceed vcpkg's default 100s push timeout on the GitHub Packages
+  set(ENV{VCPKG_BINARY_SOURCES} "$ENV{VCPKG_BINARY_SOURCES};nugettimeout,1800;nugetconfig,${_CONFIG_PATH_NATIVE},readwrite")
 endif()
 
 set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")

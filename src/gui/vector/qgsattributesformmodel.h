@@ -17,7 +17,6 @@
 #define QGSATTRIBUTESFORMMODEL_H
 
 // We don't want to expose this in the public API
-#define SIP_NO_FILE
 
 #include "qgsaction.h"
 #include "qgsaddtaborgroup.h"
@@ -28,6 +27,8 @@
 #include <QAbstractItemModel>
 #include <QPushButton>
 #include <QSortFilterProxyModel>
+
+#define SIP_NO_FILE
 
 /**
  * \brief Describes editor data contained in a QgsAttributesFormModel.
@@ -78,6 +79,7 @@ class GUI_EXPORT QgsAttributesFormData
         QString mAlias;
         QgsPropertyCollection mDataDefinedProperties;
         QString mComment;
+        QString mCustomComment;
         QString mDefaultValueExpression;
         Qgis::FieldDomainSplitPolicy mSplitPolicy = Qgis::FieldDomainSplitPolicy::Duplicate;
         Qgis::FieldDuplicatePolicy mDuplicatePolicy = Qgis::FieldDuplicatePolicy::Duplicate;
@@ -404,7 +406,13 @@ class GUI_EXPORT QgsAttributesFormItem : public QObject
      * If \a parent is specified, the item will be added as child of the parent item.
      * If it is not specified then it will be set when manually added to another item.
      */
-    explicit QgsAttributesFormItem( QgsAttributesFormData::AttributesFormItemType itemType, const QgsAttributesFormData::AttributeFormItemData &data, const QString &name, const QString &displayName = QString(), QgsAttributesFormItem *parent = nullptr );
+    explicit QgsAttributesFormItem(
+      QgsAttributesFormData::AttributesFormItemType itemType,
+      const QgsAttributesFormData::AttributeFormItemData &data,
+      const QString &name,
+      const QString &displayName = QString(),
+      QgsAttributesFormItem *parent = nullptr
+    );
 
     /**
      * \brief Access the child item located at \a row position.
@@ -470,6 +478,20 @@ class GUI_EXPORT QgsAttributesFormItem : public QObject
     void deleteChildAtIndex( int index );
 
     /**
+     * Removes the child item placed at the given \a index from this item without
+     * deleting it.
+     *
+     * Caller takes ownership of the returned object.
+     *
+     * The returned item is detached from its parent, so it can be re-inserted
+     * elsewhere in the tree.
+     * Returns a NULLPTR if \a index is out of range.
+     *
+     * \since QGIS 4.2.1
+     */
+    std::unique_ptr< QgsAttributesFormItem > takeChild( int index );
+
+    /**
      * Deletes all child items from this item.
      */
     void deleteChildren();
@@ -516,6 +538,7 @@ class GUI_EXPORT QgsAttributesFormItem : public QObject
     static bool isGroup( QgsAttributesFormItem *item );
 
   signals:
+
     /**
      * Notifies other objects when children have been added to the \a item, informing the indices where added children are located.
      *
@@ -627,12 +650,14 @@ class GUI_EXPORT QgsAttributesFormModel : public QAbstractItemModel
     QgsAttributesFormItem *rootItem() const;
 
   public slots:
+
     /**
      * Populates the model with initial data read from the layer.
      */
     virtual void populate() = 0;
 
   signals:
+
     /**
      *  Notifies other objects that the field config data has changed in the \a item.
      *
@@ -671,6 +696,17 @@ class GUI_EXPORT QgsAttributesFormModel : public QAbstractItemModel
      * \param roles   List of roles that have changed in the model.
      */
     void emitDataChangedRecursively( const QModelIndex &parent = QModelIndex(), const QVector<int> &roles = QVector<int>() );
+
+    /**
+     * Returns the icon used for items of the given \a itemType, both in the
+     * available widgets tree and in the form layout tree.
+     *
+     * An invalid icon is returned for item types without a fixed icon (e.g.,
+     * fields, whose icon depends on their editor widget type).
+     *
+     * \since QGIS 4.2.1
+     */
+    static QIcon iconForItemType( QgsAttributesFormData::AttributesFormItemType itemType );
 
     std::unique_ptr< QgsAttributesFormItem > mRootItem;
     QgsVectorLayer *mLayer;
@@ -755,10 +791,11 @@ class GUI_EXPORT QgsAttributesAvailableWidgetsModel : public QgsAttributesFormMo
 
 
 /**
+ * \ingroup gui
  * \brief Manages form layouts when configuring attributes forms via drag and drop designer.
  *
  * \warning Not part of stable API and may change in future QGIS releases.
- * \ingroup gui
+ *
  * \since QGIS 3.44
  */
 class GUI_EXPORT QgsAttributesFormLayoutModel : public QgsAttributesFormModel
@@ -840,9 +877,9 @@ class GUI_EXPORT QgsAttributesFormLayoutModel : public QgsAttributesFormModel
 
   signals:
     //! Informs that items were inserted (via drop) in the model from another model.
-    void externalItemDropped( QModelIndex &index );
+    void externalItemsDropped( const QModelIndexList &indexes );
     //! Informs that items were moved (via drop) in the model from the same model.
-    void internalItemDropped( QModelIndex &index );
+    void internalItemsDropped( const QModelIndexList &indexes );
 
   private:
     //! Update the field config for all items in the model.
@@ -854,6 +891,14 @@ class GUI_EXPORT QgsAttributesFormLayoutModel : public QgsAttributesFormModel
     void loadAttributeEditorElementItem( QgsAttributeEditorElement *const editorElement, QgsAttributesFormItem *parent, const int position = -1 );
 
     /**
+     * Sets the alias, field config and editor widget icon on a field \a item,
+     * taking the data from the corresponding layer field (matched by item name).
+     *
+     * Does nothing if no matching layer field is found.
+     */
+    void setFieldItemDataFromLayer( QgsAttributesFormItem *item );
+
+    /**
      * Creates a list of indexes filtering out children whose parents are already included.
      *
      * This discards redundant indexes before creating MimeData, because a parent will
@@ -862,6 +907,17 @@ class GUI_EXPORT QgsAttributesFormLayoutModel : public QgsAttributesFormModel
      * \param indexes Input list of indexes, potentially with redundant indexes.
      */
     QModelIndexList curateIndexesForMimeData( const QModelIndexList &indexes ) const;
+
+    /**
+     * Performs the actual relocation of the \a draggedIndexes under \a parent at
+     * \a row. This is invoked (queued) from dropMimeData() after the drag's modal
+     * event loop has exited: mutating the model while the drag is still in
+     * progress corrupts QSortFilterProxyModel's mapping.
+     */
+    void performInternalMove( const QList< QPersistentModelIndex > &draggedIndexes, const QModelIndex &parent, int row );
+
+    // Capture source items being dragged in an ongoing internal move.
+    mutable QList< QPersistentModelIndex > mDraggedLayoutIndexes;
 };
 
 

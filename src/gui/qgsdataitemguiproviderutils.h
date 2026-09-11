@@ -16,13 +16,15 @@
 #ifndef QGSDATAITEMGUIPROVIDERUTILS_H
 #define QGSDATAITEMGUIPROVIDERUTILS_H
 
+#include <functional>
+
+#include "qgis.h"
 #include "qgis_gui.h"
 #include "qgis_sip.h"
-#include "qgis.h"
 #include "qgsdataitem.h"
 #include "qgsdataitemguiprovider.h"
+
 #include <QPointer>
-#include <functional>
 
 class QgsDataItem;
 
@@ -44,8 +46,7 @@ class GUI_EXPORT QgsDataItemGuiProviderUtils
      *
      * \note Not available in Python bindings
      */
-    template<class T>
-    static void deleteConnections( const QList<T *> &items, const std::function<void( const QString & )> &deleteConnection, QgsDataItemGuiContext context )
+    template<class T> static void deleteConnections( const QList<T *> &items, const std::function<void( const QString & )> &deleteConnection, QgsDataItemGuiContext context )
     {
       ( void ) context;
       if ( items.empty() )

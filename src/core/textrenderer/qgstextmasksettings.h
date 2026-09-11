@@ -16,13 +16,13 @@
 #ifndef QGSTEXTMASKSETTINGS_H
 #define QGSTEXTMASKSETTINGS_H
 
-#include "qgis_sip.h"
-#include "qgis_core.h"
 #include "qgis.h"
+#include "qgis_core.h"
+#include "qgis_sip.h"
 #include "qgsmapunitscale.h"
 
-#include <QSharedDataPointer>
 #include <QDomElement>
+#include <QSharedDataPointer>
 
 class QgsTextMaskSettingsPrivate;
 class QgsPaintEffect;
@@ -42,7 +42,6 @@ class QgsSymbolLayerReference;
 class CORE_EXPORT QgsTextMaskSettings
 {
   public:
-
     /**
      * Mask shape types.
      */
@@ -213,7 +212,6 @@ class CORE_EXPORT QgsTextMaskSettings
     QSet<QString> referencedFields( const QgsRenderContext &context ) const;
 
   private:
-
     QSharedDataPointer<QgsTextMaskSettingsPrivate> d;
 };
 

@@ -18,15 +18,16 @@
 #ifndef QGSWMSSOURCESELECT_H
 #define QGSWMSSOURCESELECT_H
 #include "ui_qgswmssourceselectbase.h"
+
+#include "qgsabstractdatasourcewidget.h"
 #include "qgsdatasourceuri.h"
 #include "qgsguiutils.h"
 #include "qgshelp.h"
 #include "qgsproviderregistry.h"
 #include "qgswmsprovider.h"
-#include "qgsabstractdatasourcewidget.h"
 
-#include <QStringList>
 #include <QPushButton>
+#include <QStringList>
 
 class QButtonGroup;
 class QgsTreeWidgetItem;
@@ -128,7 +129,9 @@ class QgsWMSSourceSelect : public QgsAbstractDataSourceWidget, private Ui::QgsWM
     bool populateLayerList( const QgsWmsCapabilities &capabilities );
 
     //! create an item including possible parents
-    QgsTreeWidgetItem *createItem( int id, const QStringList &names, QMap<int, QgsTreeWidgetItem *> &items, int &layerAndStyleCount, const QMap<int, int> &layerParents, const QMap<int, QStringList> &layerParentNames );
+    QgsTreeWidgetItem *createItem(
+      int id, const QStringList &names, QMap<int, QgsTreeWidgetItem *> &items, int &layerAndStyleCount, const QMap<int, int> &layerParents, const QMap<int, QStringList> &layerParentNames
+    );
 
     //! Returns a textual description for the authority id
     QString descriptionForAuthId( const QString &authId );

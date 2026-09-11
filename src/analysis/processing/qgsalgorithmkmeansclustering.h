@@ -18,11 +18,12 @@
 #ifndef QGSALGORITHMKMEANSCLUSTERING_H
 #define QGSALGORITHMKMEANSCLUSTERING_H
 
-#define SIP_NO_FILE
 
-#include "qgis_sip.h"
 #include "qgis_analysis.h"
+#include "qgis_sip.h"
 #include "qgsprocessingalgorithm.h"
+
+#define SIP_NO_FILE
 
 ///@cond PRIVATE
 
@@ -41,6 +42,7 @@ class ANALYSIS_EXPORT QgsKMeansClusteringAlgorithm : public QgsProcessingAlgorit
     QString group() const override;
     QString groupId() const override;
     QString shortHelpString() const override;
+    QList<QgsAcademicReference> academicReferences() const override;
     QString shortDescription() const override;
     QgsKMeansClusteringAlgorithm *createInstance() const override SIP_FACTORY;
 

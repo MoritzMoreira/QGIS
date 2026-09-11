@@ -17,9 +17,10 @@
 
 #include "qgis.h"
 #include "qgsmaplayerlistutils_p.h"
-#include <QObject>
-#include <QHash>
+
 #include <QDialog>
+#include <QHash>
+#include <QObject>
 #include <QPointer>
 
 class QAction;
@@ -44,7 +45,7 @@ class QgsCanvasElevationControllerBridge : public QObject
     QTimer *mUpdateCanvasTimer = nullptr;
     QgsElevationControllerWidget *mController = nullptr;
     QPointer<QgsMapCanvas> mCanvas;
-    QgsWeakMapLayerPointerList mCanvasLayers;
+    QgsWeakMapLayerPointerList mElevationLayers;
 };
 
 class QgsAppCanvasFiltering : public QObject

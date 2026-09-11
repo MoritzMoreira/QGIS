@@ -39,13 +39,12 @@ class CORE_EXPORT QgsProfileSourceRegistry : public QObject
     Q_OBJECT
 
   public:
-
     /**
      * Constructor - creates a registry of profile sources
      */
     QgsProfileSourceRegistry();
 
-    ~QgsProfileSourceRegistry();
+    ~QgsProfileSourceRegistry() override;
 
     /**
      * Returns a list of registered profile sources.

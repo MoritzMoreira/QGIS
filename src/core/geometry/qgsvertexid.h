@@ -16,8 +16,13 @@ email                : marco.hugentobler at sourcepole dot com
 #ifndef QGSVERTEXID_H
 #define QGSVERTEXID_H
 
-#include "qgis_core.h"
 #include "qgis.h"
+#include "qgis_core.h"
+
+#include <QHash>
+#include <QString>
+
+using namespace Qt::StringLiterals;
 
 class QgsAbstractGeometry;
 
@@ -28,11 +33,12 @@ class QgsAbstractGeometry;
  */
 struct CORE_EXPORT QgsVertexId
 {
-
-  /**
+    // clang-format off
+    /**
    * Constructor for QgsVertexId.
    */
-  explicit QgsVertexId( int _part = -1, int _ring = -1, int _vertex = -1, Qgis::VertexType _type = Qgis::VertexType::Segment ) SIP_HOLDGIL
+    explicit QgsVertexId( int _part = -1, int _ring = -1, int _vertex = -1, Qgis::VertexType _type = Qgis::VertexType::Segment ) SIP_HOLDGIL
+      // clang-format on
 : part( _part )
   , ring( _ring )
   , vertex( _vertex )
@@ -81,8 +87,10 @@ struct CORE_EXPORT QgsVertexId
 
   /**
    * Returns TRUE if this vertex ID is valid for the specified \a geom.
+   *
+   * \deprecated QGIS 4.4. Use QgsAbstractGeometry::hasVertex() instead.
    */
-  bool isValid( const QgsAbstractGeometry *geom ) const SIP_HOLDGIL;
+  Q_DECL_DEPRECATED bool isValid( const QgsAbstractGeometry *geom ) const SIP_HOLDGIL SIP_DEPRECATED;
 
   //! Part number
   int part = -1;
@@ -97,13 +105,22 @@ struct CORE_EXPORT QgsVertexId
   Qgis::VertexType type = Qgis::VertexType::Segment;
 
 #ifdef SIP_RUN
+// clang-format off
   SIP_PYOBJECT __repr__();
   % MethodCode
-  QString str = QStringLiteral( "<QgsVertexId: %1,%2,%3 %4>" ).arg( sipCpp->part ).arg( sipCpp->ring ).arg( sipCpp->vertex ).arg( qgsEnumValueToKey( sipCpp->type ) );
+  QString str = u"<QgsVertexId: %1,%2,%3 %4>"_s.arg( sipCpp->part ).arg( sipCpp->ring ).arg( sipCpp->vertex ).arg( qgsEnumValueToKey( sipCpp->type ) );
   sipRes = PyUnicode_FromString( str.toUtf8().data() );
   % End
+// clang-format on
 #endif
 
 };
+
+#ifndef SIP_RUN
+inline size_t qHash( QgsVertexId id, size_t seed = 0 ) noexcept
+{
+  return qHashMulti( seed, id.part, id.ring, id.vertex );
+}
+#endif
 
 #endif //QGSVERTEXID_H

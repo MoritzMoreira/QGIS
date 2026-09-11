@@ -11,6 +11,7 @@
 
 
 
+
 class QgsRasterRendererRegistry
 {
 %Docstring(signature="appended")
@@ -29,7 +30,6 @@ but rather accessed through
 #include "qgsrasterrendererregistry.h"
 %End
   public:
-
     QgsRasterRendererRegistry();
 %Docstring
 Constructor for QgsRasterRendererRegistry.
@@ -56,12 +56,13 @@ Returns the capabilities for the renderer with the specified name.
 .. versionadded:: 3.38
 %End
 
-    QgsRasterRenderer *defaultRendererForDrawingStyle( Qgis::RasterDrawingStyle drawingStyle, QgsRasterDataProvider *provider ) const /Factory/;
+    std::unique_ptr<QgsRasterRenderer> defaultRendererForDrawingStyle( Qgis::RasterDrawingStyle drawingStyle, QgsRasterDataProvider *provider ) const;
 %Docstring
 Creates a default renderer for a raster drawing style (considering user
 options such as default contrast enhancement). Caller takes ownership.
 %End
 
+  public:
 };
 
 /************************************************************************

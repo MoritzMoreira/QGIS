@@ -19,29 +19,19 @@ __author__ = "Victor Olaya"
 __date__ = "August 2012"
 __copyright__ = "(C) 2012, Victor Olaya"
 
-import operator
 import os
 import warnings
 
+from qgis.core import Qgis, QgsApplication, QgsMapLayerType, QgsProcessingAlgorithm
+from qgis.gui import QgsDockWidget, QgsGui, QgsProcessingToolboxProxyModel
 from qgis.PyQt import uic
-from qgis.PyQt.QtCore import Qt, QCoreApplication, pyqtSignal
-from qgis.PyQt.QtWidgets import QWidget, QToolButton, QMenu, QAction
+from qgis.PyQt.QtCore import QCoreApplication, Qt, pyqtSignal
+from qgis.PyQt.QtWidgets import QAction, QMenu, QToolButton, QWidget
 from qgis.utils import iface
-from qgis.core import (
-    QgsWkbTypes,
-    QgsMapLayerType,
-    QgsApplication,
-    QgsProcessingAlgorithm,
-)
-from qgis.gui import QgsGui, QgsDockWidget, QgsProcessingToolboxProxyModel
 
-from processing.gui.Postprocessing import handleAlgorithmResults
 from processing.core.ProcessingConfig import ProcessingConfig
-from processing.gui.MessageDialog import MessageDialog
 from processing.gui.EditRenderingStylesDialog import EditRenderingStylesDialog
-from processing.gui.MessageBarProgress import MessageBarProgress
 from processing.gui.ProviderActions import ProviderActions, ProviderContextMenuActions
-from processing.tools import dataobjects
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
@@ -72,7 +62,9 @@ class ProcessingToolbox(QgsDockWidget, WIDGET):
         self.setAllowedAreas(
             Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea
         )
-        self.processingToolbar.setIconSize(iface.iconSize(True))
+        self.processingToolbar.setIconSize(
+            QgsGui.iconSize(Qgis.UserInterfaceIconType.DockedToolbar)
+        )
 
         self.algorithmTree.setRegistry(
             QgsApplication.processingRegistry(),
@@ -168,9 +160,11 @@ class ProcessingToolbox(QgsDockWidget, WIDGET):
 
             actions = ProviderActions.actions[provider.id()]
             menu = QMenu(provider.name(), self)
+            menu.setObjectName(provider.name() + "_menu")
             for action in actions:
                 action.setData(self)
                 act = QAction(action.name, menu)
+                act.setObjectName(action.name)
                 act.triggered.connect(action.execute)
                 menu.addAction(act)
             toolbarButton.setMenu(menu)

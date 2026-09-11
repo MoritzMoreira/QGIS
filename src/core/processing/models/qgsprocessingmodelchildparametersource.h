@@ -18,9 +18,10 @@
 #ifndef QGSPROCESSINGMODELCHILDPARAMETERSOURCE_H
 #define QGSPROCESSINGMODELCHILDPARAMETERSOURCE_H
 
-#include "qgis_core.h"
 #include "qgis.h"
+#include "qgis_core.h"
 #include "qgsprocessing.h"
+
 class QgsProcessingParameterDefinition;
 class QgsProcessingModelAlgorithm;
 
@@ -33,7 +34,6 @@ class QgsProcessingModelAlgorithm;
 class CORE_EXPORT QgsProcessingModelChildParameterSource
 {
   public:
-
     /**
      * Constructor for QgsProcessingModelChildParameterSource. It is recommended that the static methods
      * fromStaticValue(), fromModelParameter(), fromChildOutput() and fromExpression() are used instead.
@@ -41,17 +41,13 @@ class CORE_EXPORT QgsProcessingModelChildParameterSource
     QgsProcessingModelChildParameterSource() = default;
 
     bool operator==( const QgsProcessingModelChildParameterSource &other ) const;
-    bool operator!=( const QgsProcessingModelChildParameterSource &other ) const
-    {
-      return !operator==( other );
-    }
+    bool operator!=( const QgsProcessingModelChildParameterSource &other ) const { return !operator==( other ); }
 
     /**
      * Returns a new QgsProcessingModelChildParameterSource which takes its value from a static \a value.
      * \see fromModelParameter()
      * \see fromChildOutput()
      * \see fromExpression()
-     * \see fromExpressionText()
      */
     static QgsProcessingModelChildParameterSource fromStaticValue( const QVariant &value );
 
@@ -60,7 +56,6 @@ class CORE_EXPORT QgsProcessingModelChildParameterSource
      * \see fromStaticValue()
      * \see fromChildOutput()
      * \see fromExpression()
-     * \see fromExpressionText()
      */
     static QgsProcessingModelChildParameterSource fromModelParameter( const QString &parameterName );
 
@@ -69,7 +64,6 @@ class CORE_EXPORT QgsProcessingModelChildParameterSource
      * \see fromStaticValue()
      * \see fromModelParameter()
      * \see fromExpression()
-     * \see fromExpressionText()
      */
     static QgsProcessingModelChildParameterSource fromChildOutput( const QString &childId, const QString &outputName );
 
@@ -81,7 +75,6 @@ class CORE_EXPORT QgsProcessingModelChildParameterSource
      * \see fromStaticValue()
      * \see fromChildOutput()
      * \see fromModelParameter()
-     * \see fromExpressionText()
      * \since QGIS 3.2
      */
     static QgsProcessingModelChildParameterSource fromExpression( const QString &expression );
@@ -96,9 +89,9 @@ class CORE_EXPORT QgsProcessingModelChildParameterSource
      * \see fromChildOutput()
      * \see fromModelParameter()
      * \see fromExpression()
-     * \since QGIS 3.2
+     * \deprecated QGIS 4.4. Use fromStaticValue() or fromExpression() instead.
      */
-    static QgsProcessingModelChildParameterSource fromExpressionText( const QString &text );
+    Q_DECL_DEPRECATED static QgsProcessingModelChildParameterSource fromExpressionText( const QString &text ) SIP_DEPRECATED;
 
     /**
      * Returns the parameter value's source.
@@ -122,7 +115,11 @@ class CORE_EXPORT QgsProcessingModelChildParameterSource
      * Sets the source's static value. Calling this will also change the source() to StaticValue.
      * \see staticValue()
      */
-    void setStaticValue( const QVariant &value ) { mStaticValue = value; mSource = Qgis::ProcessingModelChildParameterSource::StaticValue; }
+    void setStaticValue( const QVariant &value )
+    {
+      mStaticValue = value;
+      mSource = Qgis::ProcessingModelChildParameterSource::StaticValue;
+    }
 
     /**
      * Returns the source's model parameter name. This is only used when the source() is ModelParameter.
@@ -134,7 +131,11 @@ class CORE_EXPORT QgsProcessingModelChildParameterSource
      * Sets the source's model parameter \a name. Calling this will also change the source() to ModelParameter.
      * \see parameterName()
      */
-    void setParameterName( const QString &name ) { mParameterName = name; mSource = Qgis::ProcessingModelChildParameterSource::ModelParameter; }
+    void setParameterName( const QString &name )
+    {
+      mParameterName = name;
+      mSource = Qgis::ProcessingModelChildParameterSource::ModelParameter;
+    }
 
     /**
      * Returns the source's child algorithm ID from which the output value will be taken. This is only used when the source() is ChildOutput.
@@ -148,7 +149,11 @@ class CORE_EXPORT QgsProcessingModelChildParameterSource
      * \see parameterName()
      * \see setOutputName()
      */
-    void setOutputChildId( const QString &id ) { mChildId = id; mSource = Qgis::ProcessingModelChildParameterSource::ChildOutput; }
+    void setOutputChildId( const QString &id )
+    {
+      mChildId = id;
+      mSource = Qgis::ProcessingModelChildParameterSource::ChildOutput;
+    }
 
     /**
      * Returns the source's child algorithm output name from which the output value will be taken. This is only used when the source() is ChildOutput.
@@ -162,7 +167,11 @@ class CORE_EXPORT QgsProcessingModelChildParameterSource
      * \see outputName()
      * \see setOutputChildId()
      */
-    void setOutputName( const QString &name ) { mOutputName = name; mSource = Qgis::ProcessingModelChildParameterSource::ChildOutput; }
+    void setOutputName( const QString &name )
+    {
+      mOutputName = name;
+      mSource = Qgis::ProcessingModelChildParameterSource::ChildOutput;
+    }
 
     /**
      * Returns the source's expression. This is only used when the source() is Expression.
@@ -177,15 +186,19 @@ class CORE_EXPORT QgsProcessingModelChildParameterSource
      * executed by the model.
      * \see expression()
      */
-    void setExpression( const QString &expression ) { mExpression = expression; mSource = Qgis::ProcessingModelChildParameterSource::Expression; }
+    void setExpression( const QString &expression )
+    {
+      mExpression = expression;
+      mSource = Qgis::ProcessingModelChildParameterSource::Expression;
+    }
 
     /**
      * Returns the source's text with expressions. This is only used when the
      * source() is ExpressionText.
      * \see setExpressionText()
-     * \since QGIS 3.2
+     * \deprecated QGIS 4.4. Use staticValue() or expression() instead.
      */
-    QString expressionText() const { return mExpressionText; }
+    Q_DECL_DEPRECATED QString expressionText() const SIP_DEPRECATED { return mExpressionText; }
 
     /**
      * Sets the source's text containing expressions. Calling this will also
@@ -194,9 +207,13 @@ class CORE_EXPORT QgsProcessingModelChildParameterSource
      * in its expression context to include results calculated from the child
      * algorithms already executed by the model.
      * \see expressionText()
-     * \since QGIS 3.2
+     * \deprecated QGIS 4.4. Use setStaticValue() or setExpression() instead.
      */
-    void setExpressionText( const QString &text ) { mExpressionText = text; mSource = Qgis::ProcessingModelChildParameterSource::ExpressionText; }
+    Q_DECL_DEPRECATED void setExpressionText( const QString &text ) SIP_DEPRECATED
+    {
+      mExpressionText = text;
+      mSource = Qgis::ProcessingModelChildParameterSource::ExpressionText;
+    }
 
     /**
      * Saves this source to a QVariant.
@@ -231,7 +248,6 @@ class CORE_EXPORT QgsProcessingModelChildParameterSource
     QString friendlyIdentifier( QgsProcessingModelAlgorithm *model ) const;
 
   private:
-
     Qgis::ProcessingModelChildParameterSource mSource = Qgis::ProcessingModelChildParameterSource::StaticValue;
     QVariant mStaticValue;
     QString mParameterName;
@@ -239,7 +255,6 @@ class CORE_EXPORT QgsProcessingModelChildParameterSource
     QString mOutputName;
     QString mExpression;
     QString mExpressionText;
-
 };
 
 Q_DECLARE_METATYPE( QgsProcessingModelChildParameterSource );

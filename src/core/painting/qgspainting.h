@@ -15,8 +15,8 @@
 #ifndef QGSPAINTING_H
 #define QGSPAINTING_H
 
-#include "qgis_core.h"
 #include "qgis.h"
+#include "qgis_core.h"
 #include "qgis_sip.h"
 
 #include <QPainter>
@@ -31,7 +31,6 @@ class QTransform;
 class CORE_EXPORT QgsPainting
 {
   public:
-
     /**
      * Returns a QPainter::CompositionMode corresponding to a Qgis::BlendMode.
      *
@@ -75,7 +74,9 @@ class CORE_EXPORT QgsPainting
      *
      * \since QGIS 3.34
      */
-    static QTransform triangleToTriangleTransform( double inX1, double inY1, double inX2, double inY2, double inX3, double inY3, double outX1, double outY1, double outX2, double outY2, double outX3, double outY3, bool &ok SIP_OUT );
+    static QTransform triangleToTriangleTransform(
+      double inX1, double inY1, double inX2, double inY2, double inX3, double inY3, double outX1, double outY1, double outX2, double outY2, double outX3, double outY3, bool &ok SIP_OUT
+    );
 
     /**
      * Draws a \a triangle onto a \a painter using a mapped texture image.
@@ -90,12 +91,7 @@ class CORE_EXPORT QgsPainting
      * \since QGIS 3.34
      */
     static bool drawTriangleUsingTexture(
-      QPainter *painter,
-      const QPolygonF &triangle,
-      const QImage &textureImage,
-      float textureX1, float textureY1,
-      float textureX2, float textureY2,
-      float textureX3, float textureY3
+      QPainter *painter, const QPolygonF &triangle, const QImage &textureImage, float textureX1, float textureY1, float textureX2, float textureY2, float textureX3, float textureY3
     );
 
     /**
@@ -139,6 +135,16 @@ class CORE_EXPORT QgsPainting
      * \since QGIS 3.40
      */
     static void drawPicture( QPainter *painter, const QPointF &point, const QPicture &picture );
+
+    /**
+     * Rotates a \a painter by \a angle degrees clockwise around \a point.
+     *
+     * \note This is a low-level method, which alters the \a painter state and relies on the
+     * caller saving/restoring painter state accordingly.
+     *
+     * \since QGIS 4.4
+     */
+    static void rotatePainterAroundPoint( QPainter *painter, const QPointF &point, double angle );
 };
 
 #endif // QGSPAINTING_H

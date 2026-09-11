@@ -59,6 +59,16 @@ class PDFModifiedDocument;
 using TextAlignment = Qt::Alignment;
 using Polygons = std::vector<QPolygonF>;
 
+struct PDFFreeTextStyle
+{
+    PDFFreeTextStyle() = default;
+
+    QString fontFamily = "Helvetica";
+    PDFReal fontSize = 10.0;
+    QColor textColor = Qt::black;
+    TextAlignment textAlignment = TextAlignment(Qt::AlignLeft | Qt::AlignTop);
+};
+
 enum class AnnotationType
 {
     Invalid,
@@ -607,6 +617,9 @@ public:
     /// Returns true, if annotation is editable
     /// \param type Annotation type
     static bool isTypeEditable(AnnotationType type);
+
+    /// Returns true, if annotation is link with URI action
+    static bool isExternalLinkAnnotation(const PDFAnnotation* annotation);
 
 protected:
     virtual QColor getStrokeColor() const;

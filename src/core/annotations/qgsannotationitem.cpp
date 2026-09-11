@@ -16,12 +16,20 @@
  ***************************************************************************/
 
 #include "qgsannotationitem.h"
+
 #include "qgsannotationitemnode.h"
-#include "qgscalloutsregistry.h"
 #include "qgsapplication.h"
+#include "qgscalloutsregistry.h"
+#include "qgspainting.h"
 #include "qgsrendercontext.h"
 #include "qgssymbollayerutils.h"
 #include "qgsunittypes.h"
+
+#include <QPainter>
+#include <QString>
+#include <QTransform>
+
+using namespace Qt::StringLiterals;
 
 QgsAnnotationItem::QgsAnnotationItem() = default;
 
@@ -105,53 +113,53 @@ void QgsAnnotationItem::copyCommonProperties( const QgsAnnotationItem *other )
 
 bool QgsAnnotationItem::writeCommonProperties( QDomElement &element, QDomDocument &doc, const QgsReadWriteContext &context ) const
 {
-  element.setAttribute( QStringLiteral( "enabled" ), static_cast<int>( enabled() ) );
-  element.setAttribute( QStringLiteral( "zIndex" ), zIndex() );
-  element.setAttribute( QStringLiteral( "useReferenceScale" ), useSymbologyReferenceScale() ? QStringLiteral( "1" ) : QStringLiteral( "0" ) );
-  element.setAttribute( QStringLiteral( "referenceScale" ), qgsDoubleToString( symbologyReferenceScale() ) );
+  element.setAttribute( u"enabled"_s, static_cast<int>( enabled() ) );
+  element.setAttribute( u"zIndex"_s, zIndex() );
+  element.setAttribute( u"useReferenceScale"_s, useSymbologyReferenceScale() ? u"1"_s : u"0"_s );
+  element.setAttribute( u"referenceScale"_s, qgsDoubleToString( symbologyReferenceScale() ) );
 
   if ( mCallout )
   {
-    element.setAttribute( QStringLiteral( "calloutType" ), mCallout->type() );
+    element.setAttribute( u"calloutType"_s, mCallout->type() );
     mCallout->saveProperties( doc, element, context );
   }
   if ( !mCalloutAnchor.isEmpty() )
   {
-    element.setAttribute( QStringLiteral( "calloutAnchor" ), mCalloutAnchor.asWkt() );
+    element.setAttribute( u"calloutAnchor"_s, mCalloutAnchor.asWkt() );
   }
   if ( mOffsetFromCallout.isValid() )
   {
-    element.setAttribute( QStringLiteral( "offsetFromCallout" ), QgsSymbolLayerUtils::encodeSize( mOffsetFromCallout ) );
-    element.setAttribute( QStringLiteral( "offsetFromCalloutUnit" ), QgsUnitTypes::encodeUnit( mOffsetFromCalloutUnit ) );
+    element.setAttribute( u"offsetFromCallout"_s, QgsSymbolLayerUtils::encodeSize( mOffsetFromCallout ) );
+    element.setAttribute( u"offsetFromCalloutUnit"_s, QgsUnitTypes::encodeUnit( mOffsetFromCalloutUnit ) );
   }
   return true;
 }
 
 bool QgsAnnotationItem::readCommonProperties( const QDomElement &element, const QgsReadWriteContext &context )
 {
-  setEnabled( element.attribute( QStringLiteral( "enabled" ), QStringLiteral( "1" ) ).toInt() );
-  setZIndex( element.attribute( QStringLiteral( "zIndex" ) ).toInt() );
-  setUseSymbologyReferenceScale( element.attribute( QStringLiteral( "useReferenceScale" ), QStringLiteral( "0" ) ).toInt() );
-  setSymbologyReferenceScale( element.attribute( QStringLiteral( "referenceScale" ) ).toDouble() );
+  setEnabled( element.attribute( u"enabled"_s, u"1"_s ).toInt() );
+  setZIndex( element.attribute( u"zIndex"_s ).toInt() );
+  setUseSymbologyReferenceScale( element.attribute( u"useReferenceScale"_s, u"0"_s ).toInt() );
+  setSymbologyReferenceScale( element.attribute( u"referenceScale"_s ).toDouble() );
 
-  const QString calloutType = element.attribute( QStringLiteral( "calloutType" ) );
+  const QString calloutType = element.attribute( u"calloutType"_s );
   if ( calloutType.isEmpty() )
   {
     mCallout.reset();
   }
   else
   {
-    mCallout.reset( QgsApplication::calloutRegistry()->createCallout( calloutType, element.firstChildElement( QStringLiteral( "callout" ) ), context ) );
+    mCallout.reset( QgsApplication::calloutRegistry()->createCallout( calloutType, element.firstChildElement( u"callout"_s ), context ) );
     if ( !mCallout )
       mCallout.reset( QgsCalloutRegistry::defaultCallout() );
   }
 
-  const QString calloutAnchorWkt = element.attribute( QStringLiteral( "calloutAnchor" ) );
+  const QString calloutAnchorWkt = element.attribute( u"calloutAnchor"_s );
   setCalloutAnchor( calloutAnchorWkt.isEmpty() ? QgsGeometry() : QgsGeometry::fromWkt( calloutAnchorWkt ) );
 
-  mOffsetFromCallout = element.attribute( QStringLiteral( "offsetFromCallout" ) ).isEmpty() ? QSizeF() : QgsSymbolLayerUtils::decodeSize( element.attribute( QStringLiteral( "offsetFromCallout" ) ) );
+  mOffsetFromCallout = element.attribute( u"offsetFromCallout"_s ).isEmpty() ? QSizeF() : QgsSymbolLayerUtils::decodeSize( element.attribute( u"offsetFromCallout"_s ) );
   bool ok = false;
-  mOffsetFromCalloutUnit = QgsUnitTypes::decodeRenderUnit( element.attribute( QStringLiteral( "offsetFromCalloutUnit" ) ), &ok );
+  mOffsetFromCalloutUnit = QgsUnitTypes::decodeRenderUnit( element.attribute( u"offsetFromCalloutUnit"_s ), &ok );
   if ( !ok )
     mOffsetFromCalloutUnit = Qgis::RenderUnit::Millimeters;
 
@@ -178,9 +186,29 @@ void QgsAnnotationItem::renderCallout( QgsRenderContext &context, const QRectF &
   }
   anchor.transform( context.mapToPixel().transform() );
 
+  // Rotate the painter with the item, but counter-rotate the anchor so the
+  // callout still points to its anchor on screen.
+  QPainter *painter = context.painter();
+  const bool rotated = !qgsDoubleNear( angle, 0 );
+  if ( rotated )
+  {
+    const QPointF center = rect.center();
+    QTransform anchorTransform;
+    anchorTransform.translate( center.x(), center.y() );
+    anchorTransform.rotate( -angle );
+    anchorTransform.translate( -center.x(), -center.y() );
+    anchor.transform( anchorTransform );
+
+    painter->save();
+    QgsPainting::rotatePainterAroundPoint( painter, center, angle );
+  }
+
   mCallout->startRender( context );
-  mCallout->render( context, rect, angle, anchor, calloutContext );
+  mCallout->render( context, rect, 0, anchor, calloutContext );
   mCallout->stopRender( context );
+
+  if ( rotated )
+    painter->restore();
 }
 
 Qgis::RenderUnit QgsAnnotationItem::offsetFromCalloutUnit() const

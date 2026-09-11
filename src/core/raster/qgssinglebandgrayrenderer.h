@@ -18,12 +18,12 @@
 #ifndef QGSSINGLEBANDGRAYRENDERER_H
 #define QGSSINGLEBANDGRAYRENDERER_H
 
+#include <memory>
+
 #include "qgis_core.h"
 #include "qgis_sip.h"
-#include "qgsrasterrenderer.h"
 #include "qgscolorramplegendnodesettings.h"
-
-#include <memory>
+#include "qgsrasterrenderer.h"
 
 class QgsContrastEnhancement;
 class QDomElement;
@@ -32,7 +32,7 @@ class QDomElement;
  * \ingroup core
   * \brief Raster renderer pipe for single band gray.
   */
-class CORE_EXPORT QgsSingleBandGrayRenderer: public QgsRasterRenderer
+class CORE_EXPORT QgsSingleBandGrayRenderer : public QgsRasterRenderer
 {
   public:
     enum Gradient
@@ -51,7 +51,7 @@ class CORE_EXPORT QgsSingleBandGrayRenderer: public QgsRasterRenderer
     QgsSingleBandGrayRenderer *clone() const override SIP_FACTORY;
     Qgis::RasterRendererFlags flags() const override;
 
-    static QgsRasterRenderer *create( const QDomElement &elem, QgsRasterInterface *input ) SIP_FACTORY;
+    static std::unique_ptr<QgsRasterRenderer> create( const QDomElement &elem, QgsRasterInterface *input );
 
     QgsRasterBlock *block( int bandNo, const QgsRectangle &extent, int width, int height, QgsRasterBlockFeedback *feedback = nullptr ) override SIP_FACTORY;
 
@@ -121,7 +121,7 @@ class CORE_EXPORT QgsSingleBandGrayRenderer: public QgsRasterRenderer
 #endif
 
     int mGrayBand;
-    Gradient mGradient;
+    Gradient mGradient = BlackToWhite;
     std::unique_ptr< QgsContrastEnhancement > mContrastEnhancement;
     std::unique_ptr< QgsColorRampLegendNodeSettings > mLegendSettings;
 };

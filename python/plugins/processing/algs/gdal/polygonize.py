@@ -21,20 +21,19 @@ __copyright__ = "(C) 2012, Victor Olaya"
 
 import os
 
-from qgis.PyQt.QtGui import QIcon
-
 from qgis.core import (
     QgsProcessing,
     QgsProcessingException,
+    QgsProcessingParameterBand,
+    QgsProcessingParameterBoolean,
     QgsProcessingParameterDefinition,
     QgsProcessingParameterRasterLayer,
-    QgsProcessingParameterBand,
     QgsProcessingParameterString,
-    QgsProcessingParameterBoolean,
     QgsProcessingParameterVectorDestination,
 )
+from qgis.PyQt.QtGui import QIcon
+
 from processing.algs.gdal.GdalAlgorithm import GdalAlgorithm
-from processing.tools.system import isWindows
 from processing.algs.gdal.GdalUtils import GdalUtils
 
 pluginPath = os.path.split(os.path.split(os.path.dirname(__file__))[0])[0]
@@ -155,6 +154,6 @@ class polygonize(GdalAlgorithm):
             arguments.extend(input_details.credential_options_as_arguments())
 
         return [
-            self.commandName() + (".bat" if isWindows() else ".py"),
+            self.commandName() + (".bat" if GdalUtils.is_windows() else ".py"),
             GdalUtils.escapeAndJoin(arguments),
         ]

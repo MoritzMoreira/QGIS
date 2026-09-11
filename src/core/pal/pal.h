@@ -30,8 +30,10 @@
 #ifndef PAL_H
 #define PAL_H
 
-#define SIP_NO_FILE
 
+#include <ctime>
+#include <iostream>
+#include <unordered_map>
 
 #include "qgis_core.h"
 #include "qgsgeometry.h"
@@ -39,11 +41,13 @@
 #include "qgssettingstree.h"
 
 #include <QList>
-#include <iostream>
-#include <ctime>
 #include <QMutex>
+#include <QString>
 #include <QStringList>
-#include <unordered_map>
+
+#define SIP_NO_FILE
+
+using namespace Qt::StringLiterals;
 
 class QgsSettingsEntryInteger;
 
@@ -63,11 +67,11 @@ namespace pal
   //! Search method to use
   enum SearchMethod
   {
-    CHAIN = 0, //!< Is the worst but fastest method
+    CHAIN = 0,               //!< Is the worst but fastest method
     POPMUSIC_TABU_CHAIN = 1, //!< Is the best but slowest
-    POPMUSIC_TABU = 2, //!< Is a little bit better than CHAIN but slower
-    POPMUSIC_CHAIN = 3, //!< Is slower and best than TABU, worse and faster than TABU_CHAIN
-    FALP = 4 //!< Only initial solution
+    POPMUSIC_TABU = 2,       //!< Is a little bit better than CHAIN but slower
+    POPMUSIC_CHAIN = 3,      //!< Is slower and best than TABU, worse and faster than TABU_CHAIN
+    FALP = 4                 //!< Only initial solution
   };
 
   /**
@@ -86,17 +90,25 @@ namespace pal
       friend class Layer;
 
     public:
-      static inline QgsSettingsTreeNode *sTreePal = QgsSettingsTree::sTreeRendering->createChildNode( QStringLiteral( "pal" ) );
+      static inline QgsSettingsTreeNode *sTreePal = QgsSettingsTree::sTreeRendering->createChildNode( u"pal"_s );
 
       static const QgsSettingsEntryInteger *settingsRenderingLabelCandidatesLimitPoints;
       static const QgsSettingsEntryInteger *settingsRenderingLabelCandidatesLimitLines;
       static const QgsSettingsEntryInteger *settingsRenderingLabelCandidatesLimitPolygons;
 
-      Pal();
+      /**
+       * Constructor for pal labeling engine.
+       */
+      Pal( Qgis::LabelingFlags flags );
       ~Pal();
 
       Pal( const Pal &other ) = delete;
       Pal &operator=( const Pal &other ) = delete;
+
+      /**
+       * Returns labeling flags.
+       */
+      Qgis::LabelingFlags flags() const { return mFlags; }
 
       /**
        * \brief add a new layer
@@ -168,6 +180,8 @@ namespace pal
        * \see showPartialLabels()
        */
       void setShowPartialLabels( bool show );
+
+      static constexpr bool DEFAULT_SHOW_PARTIAL_LABELS = true;
 
       /**
        * Returns whether partial labels should be allowed.
@@ -279,6 +293,7 @@ namespace pal
       QList< QgsAbstractLabelingEngineRule * > rules() const { return mRules; }
 
     private:
+      Qgis::LabelingFlags mFlags;
 
       std::vector< std::pair< QgsAbstractLabelProvider *, std::unique_ptr< Layer > > > mLayers;
 
@@ -304,7 +319,7 @@ namespace pal
       /**
        * \brief show partial labels (cut-off by the map canvas) or not
        */
-      bool mShowPartialLabels = true;
+      bool mShowPartialLabels = DEFAULT_SHOW_PARTIAL_LABELS;
 
       double mMaxLineCandidatesPerMapUnit = 0;
       double mMaxPolygonCandidatesPerMapUnitSquared = 0;
@@ -368,7 +383,6 @@ namespace pal
        * \see getMinIt()
        */
       int getMaxIt() const;
-
   };
 
 } // end namespace pal

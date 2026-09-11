@@ -16,13 +16,13 @@
 #ifndef QGSMAPLAYERMODEL_H
 #define QGSMAPLAYERMODEL_H
 
-#include <QAbstractItemModel>
-#include <QSortFilterProxyModel>
-#include <QStringList>
-#include <QIcon>
-
 #include "qgis_core.h"
 #include "qgis_sip.h"
+
+#include <QAbstractItemModel>
+#include <QIcon>
+#include <QSortFilterProxyModel>
+#include <QStringList>
 
 class QgsMapLayer;
 class QgsProject;
@@ -43,7 +43,6 @@ class CORE_EXPORT QgsMapLayerModel : public QAbstractItemModel
     Q_PROPERTY( QStringList additionalItems READ additionalItems WRITE setAdditionalItems )
 
   public:
-
     // *INDENT-OFF*
 
     /**
@@ -54,29 +53,54 @@ class CORE_EXPORT QgsMapLayerModel : public QAbstractItemModel
      */
     enum class CustomRole SIP_MONKEYPATCH_SCOPEENUM_UNNEST( QgsMapLayerModel, ItemDataRole ) : int
     {
-      LayerId SIP_MONKEYPATCH_COMPAT_NAME(LayerIdRole) = Qt::UserRole + 1, //!< Stores the map layer ID
-      Layer SIP_MONKEYPATCH_COMPAT_NAME(LayerRole), //!< Stores pointer to the map layer itself
-      Empty SIP_MONKEYPATCH_COMPAT_NAME(EmptyRole), //!< True if index corresponds to the empty (not set) value
-      Additional SIP_MONKEYPATCH_COMPAT_NAME(AdditionalRole), //!< True if index corresponds to an additional (non map layer) item
+      LayerId SIP_MONKEYPATCH_COMPAT_NAME( LayerIdRole ) = Qt::UserRole + 1, //!< Stores the map layer ID
+      Layer SIP_MONKEYPATCH_COMPAT_NAME( LayerRole ),                        //!< Stores pointer to the map layer itself
+      Empty SIP_MONKEYPATCH_COMPAT_NAME( EmptyRole ),                        //!< True if index corresponds to the empty (not set) value
+      Additional SIP_MONKEYPATCH_COMPAT_NAME( AdditionalRole ),              //!< True if index corresponds to an additional (non map layer) item
     };
     Q_ENUM( CustomRole )
     // *INDENT-ON*
+
+    // TODO QGIS 5.0 -- remove deprecated constructors
 
     /**
      * \brief QgsMapLayerModel creates a model to display layers in widgets.
      *
      * If \a project is not specified then the QgsProject.instance() project will be used to
      * populate the model.
+     *
+     * \note Will be removed in QGIS 5.0. Use the constructor with the explicit QgsProject argument instead.
      */
-    explicit QgsMapLayerModel( QObject *parent SIP_TRANSFERTHIS = nullptr, QgsProject *project = nullptr );
+    explicit QgsMapLayerModel( QObject *parent SIP_TRANSFERTHIS = nullptr, QgsProject *project = nullptr ) SIP_DEPRECATED;
+
+    /**
+     * \brief QgsMapLayerModel creates a model to display a specific list of
+     * layers in a widget.
+     *
+     * If \a project is not specified then the QgsProject.instance() project
+     * will be used to populate the model.
+     *
+     * \deprecated QGIS 4.4. Will be removed in QGIS 5.0. Use the constructor with the explicit QgsProject argument instead.
+     */
+    Q_DECL_DEPRECATED explicit QgsMapLayerModel( const QList<QgsMapLayer *> &layers, QObject *parent = nullptr, QgsProject *project = nullptr ) SIP_DEPRECATED;
+
+    // TODO QGIS 5.0 -- drop SIP_SKIP from the following constructors, so that they are available in Python
+
+    /**
+     * \brief QgsMapLayerModel creates a model to display layers in widgets.
+     *
+     * Layers are taken from \a project.
+     *
+     * \since QGIS 4.4
+     */
+    explicit QgsMapLayerModel( QgsProject *project, QObject *parent SIP_TRANSFERTHIS = nullptr ) SIP_SKIP;
 
     /**
      * \brief QgsMapLayerModel creates a model to display a specific list of layers in a widget.
      *
-     * If \a project is not specified then the QgsProject.instance() project will be used to
-     * populate the model.
+     * \since QGIS 4.4
      */
-    explicit QgsMapLayerModel( const QList<QgsMapLayer *> &layers, QObject *parent = nullptr, QgsProject *project = nullptr );
+    explicit QgsMapLayerModel( QgsProject *project, const QList<QgsMapLayer *> &layers, QObject *parent SIP_TRANSFERTHIS = nullptr ) SIP_SKIP;
 
     /**
      * \brief Defines if layers should be selectable in the widget
@@ -238,7 +262,6 @@ class CORE_EXPORT QgsMapLayerModel : public QAbstractItemModel
     QgsProject *mProject = nullptr;
 
   private:
-
     bool mAllowEmpty = false;
     QString mEmptyText;
     QIcon mEmptyIcon;

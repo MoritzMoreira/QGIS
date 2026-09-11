@@ -14,19 +14,20 @@
  ***************************************************************************/
 
 #include "qgsmaptooladdpart.h"
-#include "moc_qgsmaptooladdpart.cpp"
+
+#include "qgisapp.h"
 #include "qgsadvanceddigitizingdockwidget.h"
 #include "qgscurvepolygon.h"
 #include "qgsgeometry.h"
 #include "qgslinestring.h"
+#include "qgslogger.h"
 #include "qgsmapcanvas.h"
+#include "qgsmapmouseevent.h"
 #include "qgsproject.h"
 #include "qgsvectordataprovider.h"
 #include "qgsvectorlayer.h"
-#include "qgslogger.h"
-#include "qgisapp.h"
-#include "qgsmapmouseevent.h"
 
+#include "moc_qgsmaptooladdpart.cpp"
 
 QgsMapToolAddPart::QgsMapToolAddPart( QgsMapCanvas *canvas )
   : QgsMapToolCaptureLayerGeometry( canvas, QgisApp::instance()->cadDockWidget(), CaptureNone )
@@ -51,6 +52,8 @@ bool QgsMapToolAddPart::supportsTechnique( Qgis::CaptureTechnique technique ) co
 
     case Qgis::CaptureTechnique::CircularString:
     case Qgis::CaptureTechnique::Shape:
+    case Qgis::CaptureTechnique::PolyBezier:
+    case Qgis::CaptureTechnique::NurbsCurve:
       return mode() != QgsMapToolCapture::CapturePoint;
   }
   return false;
@@ -77,37 +80,50 @@ void QgsMapToolAddPart::cadCanvasReleaseEvent( QgsMapMouseEvent *e )
   QgsMapToolCapture::cadCanvasReleaseEvent( e );
 }
 
-void QgsMapToolAddPart::layerPointCaptured( const QgsPoint &point )
+void QgsMapToolAddPart::layerGeometryCaptured( const QgsGeometry &geometry )
 {
   QgsVectorLayer *layer = getLayerAndCheckSelection();
   if ( !layer )
     return;
+
   layer->beginEditCommand( tr( "Part added" ) );
-  Qgis::GeometryOperationResult errorCode = layer->addPart( QgsPointSequence() << point );
-  finalizeEditCommand( layer, errorCode );
+
+
+  const QVector<QgsGeometry> geomCollection = geometry.asGeometryCollection();
+
+  Qgis::GeometryOperationResult errorCode = Qgis::GeometryOperationResult::NothingHappened;
+  for ( const QgsGeometry &item : geomCollection )
+  {
+    switch ( item.type() )
+    {
+      case Qgis::GeometryType::Point:
+      {
+        auto pt = *qgsgeometry_cast<const QgsPoint *>( item.constGet() );
+        errorCode = layer->addPart( QgsPointSequence() << pt );
+        break;
+      }
+      case Qgis::GeometryType::Line:
+      {
+        auto line = qgsgeometry_cast<const QgsCurve *>( item.constGet() );
+        errorCode = layer->addPart( line->clone() );
+        break;
+      }
+      case Qgis::GeometryType::Polygon:
+      {
+        auto polygon = qgsgeometry_cast<const QgsCurvePolygon *>( item.constGet() );
+        errorCode = layer->addPart( polygon->clone() );
+        break;
+      }
+      case Qgis::GeometryType::Null:
+      case Qgis::GeometryType::Unknown:
+        break;
+    }
+  }
+
+  finalizeEditCommand( layer, geometry, errorCode );
 }
 
-void QgsMapToolAddPart::layerLineCaptured( const QgsCurve *line )
-{
-  QgsVectorLayer *layer = getLayerAndCheckSelection();
-  if ( !layer )
-    return;
-  layer->beginEditCommand( tr( "Part added" ) );
-  Qgis::GeometryOperationResult errorCode = layer->addPart( line->clone() );
-  finalizeEditCommand( layer, errorCode );
-}
-
-void QgsMapToolAddPart::layerPolygonCaptured( const QgsCurvePolygon *polygon )
-{
-  QgsVectorLayer *layer = getLayerAndCheckSelection();
-  if ( !layer )
-    return;
-  layer->beginEditCommand( tr( "Part added" ) );
-  Qgis::GeometryOperationResult errorCode = layer->addPart( polygon->exteriorRing()->clone() );
-  finalizeEditCommand( layer, errorCode );
-}
-
-void QgsMapToolAddPart::finalizeEditCommand( QgsVectorLayer *layer, Qgis::GeometryOperationResult errorCode )
+void QgsMapToolAddPart::finalizeEditCommand( QgsVectorLayer *layer, const QgsGeometry &topologicalCandidates, Qgis::GeometryOperationResult errorCode )
 {
   QString errorMessage;
   switch ( errorCode )
@@ -121,7 +137,7 @@ void QgsMapToolAddPart::finalizeEditCommand( QgsVectorLayer *layer, Qgis::Geomet
       const bool topologicalEditing = QgsProject::instance()->topologicalEditing();
       if ( topologicalEditing )
       {
-        addTopologicalPoints( pointsZM() );
+        ( void ) layer->addTopologicalPoints( topologicalCandidates );
       }
 
       layer->endEditCommand();
@@ -210,10 +226,13 @@ QgsVectorLayer *QgsMapToolAddPart::getLayerAndCheckSelection()
   {
     // Only one selected feature
     // For single-type layers only allow features without geometry
+    // Exception: TIN and PolyhedralSurface can hold multiple patches even though they are "single" types
     QgsFeatureIterator selectedFeatures = layer->getSelectedFeatures();
     QgsFeature selectedFeature;
     selectedFeatures.nextFeature( selectedFeature );
-    if ( QgsWkbTypes::isSingleType( layer->wkbType() ) && selectedFeature.geometry().constGet() )
+    const Qgis::WkbType layerFlatType = QgsWkbTypes::flatType( layer->wkbType() );
+    const bool isSurfaceWithPatches = ( layerFlatType == Qgis::WkbType::TIN || layerFlatType == Qgis::WkbType::PolyhedralSurface );
+    if ( QgsWkbTypes::isSingleType( layer->wkbType() ) && !isSurfaceWithPatches && selectedFeature.geometry().constGet() )
     {
       selectionErrorMsg = tr( "This layer does not support multipart geometries." );
     }

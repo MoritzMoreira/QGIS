@@ -27,13 +27,15 @@
 // version without notice, or even be removed.
 //
 
-#define SIP_NO_FILE
-
-#include "qgschunkedentity.h"
-#include "qgschunkqueuejob.h"
 
 #include <memory>
 
+#include "qgschunkedentity.h"
+#include "qgschunkqueuejob.h"
+#include "qgslayerstylewatcher.h"
+#include "qobjectuniqueptr.h"
+
+#define SIP_NO_FILE
 
 namespace Qt3DCore
 {
@@ -46,6 +48,7 @@ class QgsCoordinateTransform;
 class QgsMapLayer;
 class QgsTerrainGenerator;
 class TerrainMapUpdateJobFactory;
+class QgsLayerStyleWatcher;
 
 /**
  * \ingroup qgis_3d
@@ -62,7 +65,7 @@ class QgsTerrainEntity : public QgsChunkedEntity
     ~QgsTerrainEntity() override;
 
     //! Returns pointer to the generator of textures for terrain tiles
-    QgsTerrainTextureGenerator *textureGenerator() { return mTextureGenerator; }
+    QgsTerrainTextureGenerator *textureGenerator() { return mTextureGenerator.get(); }
 
     //! Returns the transform attached to the terrain entity
     Qt3DCore::QTransform *transform() const { return mTerrainTransform; }
@@ -74,19 +77,14 @@ class QgsTerrainEntity : public QgsChunkedEntity
   private slots:
     void onShowBoundingBoxesChanged();
     void invalidateMapImages();
-    void onLayersChanged();
     void onTerrainElevationOffsetChanged();
 
   private:
-    void connectToLayersRepaintRequest();
-
-    QgsTerrainTextureGenerator *mTextureGenerator = nullptr;
+    std::unique_ptr<QgsTerrainTextureGenerator> mTextureGenerator;
     Qt3DCore::QTransform *mTerrainTransform = nullptr;
 
     std::unique_ptr<TerrainMapUpdateJobFactory> mUpdateJobFactory;
-
-    //! layers that are currently being used for map rendering (and thus being watched for renderer updates)
-    QList<QgsMapLayer *> mLayers;
+    QObjectUniquePtr<QgsLayerStyleWatcher> mLayerWatcher;
 };
 
 

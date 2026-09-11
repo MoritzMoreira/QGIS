@@ -16,19 +16,21 @@
  ***************************************************************************/
 
 #include "qgstemporalcontrollerdockwidget.h"
-#include "moc_qgstemporalcontrollerdockwidget.cpp"
-#include "qgstemporalcontrollerwidget.h"
-#include "qgspanelwidgetstack.h"
+
 #include "qgsanimationexportdialog.h"
 #include "qgsmapcanvas.h"
 #include "qgsmapdecoration.h"
-#include "qgstemporalutils.h"
-#include "qgsproxyprogresstask.h"
 #include "qgsmessagebar.h"
+#include "qgspanelwidgetstack.h"
+#include "qgsproxyprogresstask.h"
+#include "qgstemporalcontrollerwidget.h"
+#include "qgstemporalutils.h"
 
-#include <QProgressDialog>
 #include <QMessageBox>
+#include <QProgressDialog>
 #include <QUrl>
+
+#include "moc_qgstemporalcontrollerdockwidget.cpp"
 
 QgsTemporalControllerDockWidget::QgsTemporalControllerDockWidget( const QString &name, QWidget *parent )
   : QgsDockWidget( parent )
@@ -125,7 +127,9 @@ void QgsTemporalControllerDockWidget::exportAnimation()
     }
     else
     {
-      QgisApp::instance()->messageBar()->pushMessage( tr( "Export Animation" ), tr( "Successfully exported animation to <a href=\"%1\">%2</a>" ).arg( QUrl::fromLocalFile( outputDir ).toString(), QDir::toNativeSeparators( outputDir ) ), Qgis::MessageLevel::Success, 0 );
+      QgisApp::instance()
+        ->messageBar()
+        ->pushMessage( tr( "Export Animation" ), tr( "Successfully exported animation to <a href=\"%1\">%2</a>" ).arg( QUrl::fromLocalFile( outputDir ).toString(), QDir::toNativeSeparators( outputDir ) ), Qgis::MessageLevel::Success, 0 );
     }
   } );
   dlg->setAttribute( Qt::WA_DeleteOnClose );

@@ -16,12 +16,11 @@
  ***************************************************************************/
 
 #include "qgspointcloudstatscalculationtask.h"
-#include "moc_qgspointcloudstatscalculationtask.cpp"
 
+#include "qgsfeedback.h"
 #include "qgspointcloudindex.h"
-#include "qgspointcloudrenderer.h"
 
-#include <QtConcurrent/QtConcurrent>
+#include "moc_qgspointcloudstatscalculationtask.cpp"
 
 ///@cond PRIVATE
 

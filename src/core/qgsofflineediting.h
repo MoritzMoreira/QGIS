@@ -21,10 +21,13 @@
 
 #include "qgis_core.h"
 #include "qgsfeature.h"
+#include "qgsproject.h"
 #include "qgssqliteutils.h"
 
 #include <QObject>
 #include <QString>
+
+using namespace Qt::StringLiterals;
 
 class QgsMapLayer;
 class QgsVectorLayer;
@@ -56,7 +59,20 @@ class CORE_EXPORT QgsOfflineEditing : public QObject
       GPKG
     };
 
-    QgsOfflineEditing();
+    // TODO QGIS 5.0 - remove default constructor
+    /**
+     * Default constructor -- uses the QgsProject instance().
+     *
+     * \note Will be removed in QGIS 5.0. Use the constructor which requires an explicit project instead.
+     */
+    QgsOfflineEditing() SIP_DEPRECATED;
+
+    /**
+     * QgsOfflineEditing object based on a QgsProject instance. This allows the offline editing plugin to be used with multiple projects.
+     *
+     * \since QGIS 4.4
+     */
+    QgsOfflineEditing( QgsProject *project );
 
     /**
      * Convert current project for offline editing
@@ -67,7 +83,9 @@ class CORE_EXPORT QgsOfflineEditing : public QObject
      * \param containerType defines the SQLite file container type like SpatiaLite or GPKG
      * \param layerNameSuffix Suffix string added to the offline layer name
      */
-    bool convertToOfflineProject( const QString &offlineDataPath, const QString &offlineDbFile, const QStringList &layerIds, bool onlySelected = false, ContainerType containerType = SpatiaLite, const QString &layerNameSuffix = QStringLiteral( " (offline)" ) );
+    bool convertToOfflineProject(
+      const QString &offlineDataPath, const QString &offlineDbFile, const QStringList &layerIds, bool onlySelected = false, ContainerType containerType = SpatiaLite, const QString &layerNameSuffix = u" (offline)"_s
+    );
 
     //! Returns TRUE if current project is offline
     bool isOfflineProject() const;
@@ -123,7 +141,9 @@ class CORE_EXPORT QgsOfflineEditing : public QObject
     bool createOfflineDb( const QString &offlineDbPath, ContainerType containerType = SpatiaLite );
     void createLoggingTables( sqlite3 *db );
 
-    void convertToOfflineLayer( QgsVectorLayer *layer, sqlite3 *db, const QString &offlineDbPath, bool onlySelected, ContainerType containerType = SpatiaLite, const QString &layerNameSuffix = QStringLiteral( " (offline)" ) );
+    void convertToOfflineLayer(
+      QgsVectorLayer *layer, sqlite3 *db, const QString &offlineDbPath, bool onlySelected, ContainerType containerType = SpatiaLite, const QString &layerNameSuffix = u" (offline)"_s
+    );
 
     void applyAttributesAdded( QgsVectorLayer *remoteLayer, sqlite3 *db, int layerId, int commitNo );
     void applyFeaturesAdded( QgsVectorLayer *offlineLayer, QgsVectorLayer *remoteLayer, sqlite3 *db, int layerId );
@@ -161,17 +181,17 @@ class CORE_EXPORT QgsOfflineEditing : public QObject
 
     struct AttributeValueChange
     {
-      QgsFeatureId fid;
-      int attr;
-      QString value;
+        QgsFeatureId fid;
+        int attr;
+        QString value;
     };
     typedef QList<AttributeValueChange> AttributeValueChanges;
     AttributeValueChanges sqlQueryAttributeValueChanges( sqlite3 *db, const QString &sql );
 
     struct GeometryChange
     {
-      QgsFeatureId fid;
-      QString geom_wkt;
+        QgsFeatureId fid;
+        QString geom_wkt;
     };
     typedef QList<GeometryChange> GeometryChanges;
     GeometryChanges sqlQueryGeometryChanges( sqlite3 *db, const QString &sql );
@@ -185,6 +205,9 @@ class CORE_EXPORT QgsOfflineEditing : public QObject
     void committedGeometriesChanges( const QString &qgisLayerId, const QgsGeometryMap &changedGeometries );
     void startListenFeatureChanges();
     void stopListenFeatureChanges();
+
+  private:
+    QgsProject *mProject = nullptr;
 };
 
 #endif // QGS_OFFLINE_EDITING_H

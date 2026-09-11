@@ -16,15 +16,17 @@
  ***************************************************************************/
 
 #include "qgslayoutchartwidget.h"
-#include "moc_qgslayoutchartwidget.cpp"
+
 #include "qgsapplication.h"
 #include "qgsgui.h"
 #include "qgslayout.h"
+#include "qgslayoutatlas.h"
 #include "qgslayoutchartseriesdetailswidget.h"
 #include "qgslayoutitemchart.h"
 #include "qgsplotregistry.h"
 #include "qgsplotwidget.h"
 
+#include "moc_qgslayoutchartwidget.cpp"
 
 QgsLayoutChartWidget::QgsLayoutChartWidget( QgsLayoutItemChart *chartItem )
   : QgsLayoutItemBaseWidget( nullptr, chartItem )
@@ -46,6 +48,7 @@ QgsLayoutChartWidget::QgsLayoutChartWidget( QgsLayoutItemChart *chartItem )
 
   connect( mChartTypeComboBox, static_cast<void ( QComboBox::* )( int )>( &QComboBox::currentIndexChanged ), this, &QgsLayoutChartWidget::mChartTypeComboBox_currentIndexChanged );
   connect( mChartPropertiesButton, &QPushButton::clicked, this, &QgsLayoutChartWidget::mChartPropertiesButton_clicked );
+  connect( mFlipAxesCheckBox, &QCheckBox::stateChanged, this, &QgsLayoutChartWidget::mFlipAxesCheckBox_stateChanged );
 
   connect( mLayerComboBox, &QgsMapLayerComboBox::layerChanged, this, &QgsLayoutChartWidget::changeLayer );
   connect( mLayerComboBox, &QgsMapLayerComboBox::layerChanged, mSortExpressionWidget, &QgsFieldExpressionWidget::setLayer );
@@ -53,13 +56,30 @@ QgsLayoutChartWidget::QgsLayoutChartWidget( QgsLayoutItemChart *chartItem )
   connect( mSortExpressionWidget, static_cast<void ( QgsFieldExpressionWidget::* )( const QString &, bool )>( &QgsFieldExpressionWidget::fieldChanged ), this, &QgsLayoutChartWidget::changeSortExpression );
   connect( mSortDirectionButton, &QToolButton::clicked, this, &QgsLayoutChartWidget::mSortDirectionButton_clicked );
 
+  connect( mGenerateCategoriesFromRendererCheckBox, &QCheckBox::stateChanged, this, &QgsLayoutChartWidget::mGenerateCategoriesFromRendererCheckBox_stateChanged );
+  connect( mApplyRendererStyleCheckBox, &QCheckBox::stateChanged, this, &QgsLayoutChartWidget::mApplyRendererStyleCheckBox_stateChanged );
+
   connect( mSeriesListWidget, &QListWidget::currentItemChanged, this, &QgsLayoutChartWidget::mSeriesListWidget_currentItemChanged );
   connect( mSeriesListWidget, &QListWidget::itemChanged, this, &QgsLayoutChartWidget::mSeriesListWidget_itemChanged );
   connect( mAddSeriesPushButton, &QPushButton::clicked, this, &QgsLayoutChartWidget::mAddSeriesPushButton_clicked );
   connect( mRemoveSeriesPushButton, &QPushButton::clicked, this, &QgsLayoutChartWidget::mRemoveSeriesPushButton_clicked );
   connect( mSeriesPropertiesButton, &QPushButton::clicked, this, &QgsLayoutChartWidget::mSeriesPropertiesButton_clicked );
 
+  mLinkedMapComboBox->setCurrentLayout( mChartItem->layout() );
+  mLinkedMapComboBox->setItemType( QgsLayoutItemRegistry::LayoutMap );
+  connect( mLinkedMapComboBox, &QgsLayoutItemComboBox::itemChanged, this, &QgsLayoutChartWidget::mLinkedMapComboBox_itemChanged );
+
+  connect( mFilterOnlyVisibleFeaturesCheckBox, &QCheckBox::stateChanged, this, &QgsLayoutChartWidget::mFilterOnlyVisibleFeaturesCheckBox_stateChanged );
+  connect( mIntersectAtlasCheckBox, &QCheckBox::stateChanged, this, &QgsLayoutChartWidget::mIntersectAtlasCheckBox_stateChanged );
+
   setGuiElementValues();
+  updateButtonsState();
+
+  if ( QgsLayoutAtlas *atlas = layoutAtlas() )
+  {
+    connect( atlas, &QgsLayoutAtlas::toggled, this, &QgsLayoutChartWidget::layoutAtlasToggled );
+    layoutAtlasToggled( atlas->enabled() );
+  }
 
   connect( mChartItem, &QgsLayoutObject::changed, this, &QgsLayoutChartWidget::setGuiElementValues );
 }
@@ -100,11 +120,24 @@ void QgsLayoutChartWidget::setGuiElementValues()
     whileBlocking( mChartTypeComboBox )->setCurrentIndex( mChartTypeComboBox->findData( mChartItem->plot()->type() ) );
     whileBlocking( mLayerComboBox )->setLayer( mChartItem->sourceLayer() );
 
-    whileBlocking( mSortCheckBox )->setCheckState( mChartItem->sortFeatures() ? Qt::Checked : Qt::Unchecked );
+    Qgs2DXyPlot *plot2DXy = dynamic_cast<Qgs2DXyPlot *>( mChartItem->plot() );
+    if ( plot2DXy )
+    {
+      mFlipAxesCheckBox->setEnabled( true );
+      whileBlocking( mFlipAxesCheckBox )->setChecked( plot2DXy->flipAxes() );
+    }
+    else
+    {
+      mFlipAxesCheckBox->setEnabled( false );
+      whileBlocking( mFlipAxesCheckBox )->setChecked( false );
+    }
 
+    whileBlocking( mGenerateCategoriesFromRendererCheckBox )->setCheckState( mChartItem->generateCategoriesFromRenderer() ? Qt::Checked : Qt::Unchecked );
+    whileBlocking( mApplyRendererStyleCheckBox )->setCheckState( mChartItem->applyRendererStyle() ? Qt::Checked : Qt::Unchecked );
+
+    whileBlocking( mSortCheckBox )->setCheckState( mChartItem->sortFeatures() ? Qt::Checked : Qt::Unchecked );
     whileBlocking( mSortDirectionButton )->setEnabled( mChartItem->sortFeatures() );
     whileBlocking( mSortDirectionButton )->setArrowType( mChartItem->sortAscending() ? Qt::UpArrow : Qt::DownArrow );
-
     whileBlocking( mSortExpressionWidget )->setEnabled( mChartItem->sortFeatures() );
     whileBlocking( mSortExpressionWidget )->setLayer( mChartItem->sourceLayer() );
     whileBlocking( mSortExpressionWidget )->setField( mChartItem->sortExpression() );
@@ -115,6 +148,22 @@ void QgsLayoutChartWidget::setGuiElementValues()
     {
       addSeriesListItem( series.name() );
     }
+
+    if ( !seriesList.isEmpty() )
+    {
+      mSeriesListWidget->setCurrentRow( 0 );
+    }
+    else
+    {
+      mSeriesPropertiesButton->setEnabled( false );
+    }
+
+    whileBlocking( mFilterOnlyVisibleFeaturesCheckBox )->setChecked( mChartItem->filterOnlyVisibleFeatures() );
+    mLinkedMapLabel->setEnabled( mFilterOnlyVisibleFeaturesCheckBox->isChecked() );
+    mLinkedMapComboBox->setEnabled( mFilterOnlyVisibleFeaturesCheckBox->isChecked() );
+    whileBlocking( mLinkedMapComboBox )->setItem( mChartItem->map() );
+
+    whileBlocking( mIntersectAtlasCheckBox )->setChecked( mChartItem->filterToAtlasFeature() );
   }
   else
   {
@@ -135,28 +184,20 @@ void QgsLayoutChartWidget::mChartTypeComboBox_currentIndexChanged( int )
     return;
   }
 
+  QgsPlot *oldPlot = mChartItem->plot();
   QgsPlot *newPlot = QgsApplication::instance()->plotRegistry()->createPlot( plotType );
+  // copy relevant properties from the old plot
+  newPlot->initFromPlot( oldPlot );
   Qgs2DXyPlot *newPlot2DXy = dynamic_cast<Qgs2DXyPlot *>( newPlot );
   if ( newPlot2DXy )
   {
-    Qgs2DXyPlot *oldPlot2DXy = dynamic_cast<Qgs2DXyPlot *>( mChartItem->plot() );
-    if ( oldPlot2DXy )
-    {
-      // Transfer a few basic details for a nicer UX
-      newPlot2DXy->setXMinimum( oldPlot2DXy->xMinimum() );
-      newPlot2DXy->setXMaximum( oldPlot2DXy->xMaximum() );
-      newPlot2DXy->setYMinimum( oldPlot2DXy->yMinimum() );
-      newPlot2DXy->setYMaximum( oldPlot2DXy->yMaximum() );
-
-      newPlot2DXy->xAxis().setType( oldPlot2DXy->xAxis().type() );
-      newPlot2DXy->xAxis().setGridIntervalMajor( oldPlot2DXy->xAxis().gridIntervalMajor() );
-      newPlot2DXy->xAxis().setGridIntervalMinor( oldPlot2DXy->xAxis().gridIntervalMinor() );
-      newPlot2DXy->xAxis().setLabelInterval( oldPlot2DXy->xAxis().labelInterval() );
-
-      newPlot2DXy->yAxis().setGridIntervalMajor( oldPlot2DXy->yAxis().gridIntervalMajor() );
-      newPlot2DXy->yAxis().setGridIntervalMinor( oldPlot2DXy->yAxis().gridIntervalMinor() );
-      newPlot2DXy->yAxis().setLabelInterval( oldPlot2DXy->yAxis().labelInterval() );
-    }
+    mFlipAxesCheckBox->setEnabled( true );
+    mFlipAxesCheckBox->setChecked( newPlot2DXy->flipAxes() );
+  }
+  else
+  {
+    mFlipAxesCheckBox->setEnabled( false );
+    mFlipAxesCheckBox->setChecked( false );
   }
 
   mChartItem->beginCommand( tr( "Change Chart Type" ) );
@@ -205,6 +246,25 @@ void QgsLayoutChartWidget::mChartPropertiesButton_clicked()
   openPanel( widget );
 }
 
+void QgsLayoutChartWidget::mFlipAxesCheckBox_stateChanged( int state )
+{
+  if ( !mChartItem )
+  {
+    return;
+  }
+
+  Qgs2DXyPlot *plot2DXy = dynamic_cast<Qgs2DXyPlot *>( mChartItem->plot() );
+  if ( !plot2DXy )
+  {
+    return;
+  }
+
+  mChartItem->beginCommand( tr( "Modify Chart" ) );
+  plot2DXy->setFlipAxes( state == Qt::Checked );
+  mChartItem->endCommand();
+  mChartItem->update();
+}
+
 void QgsLayoutChartWidget::changeLayer( QgsMapLayer *layer )
 {
   if ( !mChartItem )
@@ -222,6 +282,7 @@ void QgsLayoutChartWidget::changeLayer( QgsMapLayer *layer )
   mChartItem->setSourceLayer( vl );
   mChartItem->update();
   mChartItem->endCommand();
+  updateButtonsState();
 }
 
 void QgsLayoutChartWidget::changeSortExpression( const QString &expression, bool )
@@ -328,6 +389,7 @@ void QgsLayoutChartWidget::mAddSeriesPushButton_clicked()
 
   mSeriesListWidget->setCurrentRow( mSeriesListWidget->count() - 1 );
   mSeriesListWidget_currentItemChanged( mSeriesListWidget->currentItem(), nullptr );
+  updateButtonsState();
 }
 
 void QgsLayoutChartWidget::mRemoveSeriesPushButton_clicked()
@@ -353,6 +415,7 @@ void QgsLayoutChartWidget::mRemoveSeriesPushButton_clicked()
   mChartItem->setSeriesList( seriesList );
   mChartItem->endCommand();
   mChartItem->update();
+  updateButtonsState();
 }
 
 void QgsLayoutChartWidget::mSeriesPropertiesButton_clicked()
@@ -370,7 +433,8 @@ void QgsLayoutChartWidget::mSeriesPropertiesButton_clicked()
     return;
   }
 
-  QgsLayoutChartSeriesDetailsWidget *widget = new QgsLayoutChartSeriesDetailsWidget( mChartItem->sourceLayer(), idx, seriesList[idx], this );
+  QgsLayoutChartSeriesDetailsWidget *widget = new QgsLayoutChartSeriesDetailsWidget( mChartItem->sourceLayer(), idx, seriesList[idx], mGenerateCategoriesFromRendererCheckBox->isChecked(), this );
+  widget->registerExpressionContextGenerator( mChartItem );
   widget->setPanelTitle( tr( "Series Details" ) );
   connect( widget, &QgsPanelWidget::widgetChanged, this, [this, widget]() {
     if ( !mChartItem )
@@ -395,4 +459,107 @@ void QgsLayoutChartWidget::mSeriesPropertiesButton_clicked()
   } );
 
   openPanel( widget );
+}
+
+void QgsLayoutChartWidget::mLinkedMapComboBox_itemChanged( QgsLayoutItem *item )
+{
+  if ( !mChartItem )
+  {
+    return;
+  }
+
+  mChartItem->beginCommand( tr( "Change Chart Map Item" ) );
+  mChartItem->setMap( qobject_cast<QgsLayoutItemMap *>( item ) );
+  mChartItem->endCommand();
+  mChartItem->update();
+}
+
+void QgsLayoutChartWidget::mGenerateCategoriesFromRendererCheckBox_stateChanged( int state )
+{
+  if ( !mChartItem )
+  {
+    return;
+  }
+
+  mChartItem->beginCommand( tr( "Toggle Generate Categories from Layer Renderer" ) );
+  const bool generateCategoriesFromRenderer = ( state == Qt::Checked );
+  mChartItem->setGenerateCategoriesFromRenderer( generateCategoriesFromRenderer );
+  mChartItem->endCommand();
+  mChartItem->update();
+
+  mApplyRendererStyleCheckBox->setEnabled( mGenerateCategoriesFromRendererCheckBox->isChecked() );
+}
+
+void QgsLayoutChartWidget::mApplyRendererStyleCheckBox_stateChanged( int state )
+{
+  if ( !mChartItem )
+  {
+    return;
+  }
+
+  mChartItem->beginCommand( tr( "Toggle Apply Layer Renderer Style" ) );
+  const bool applyRendererStyle = ( state == Qt::Checked );
+  mChartItem->setApplyRendererStyle( applyRendererStyle );
+  mChartItem->endCommand();
+  mChartItem->update();
+}
+
+void QgsLayoutChartWidget::mFilterOnlyVisibleFeaturesCheckBox_stateChanged( int state )
+{
+  if ( !mChartItem )
+  {
+    return;
+  }
+
+  mChartItem->beginCommand( tr( "Toggle Visible Features Only Filter" ) );
+  const bool useOnlyVisibleFeatures = ( state == Qt::Checked );
+  mChartItem->setFilterOnlyVisibleFeatures( useOnlyVisibleFeatures );
+  mChartItem->endCommand();
+  mChartItem->update();
+
+  //enable/disable map combobox based on state of checkbox
+  mLinkedMapComboBox->setEnabled( state == Qt::Checked );
+  mLinkedMapLabel->setEnabled( state == Qt::Checked );
+}
+
+void QgsLayoutChartWidget::mIntersectAtlasCheckBox_stateChanged( int state )
+{
+  if ( !mChartItem )
+  {
+    return;
+  }
+
+  mChartItem->beginCommand( tr( "Toggle Chart Atlas Filter" ) );
+  const bool filterToAtlas = ( state == Qt::Checked );
+  mChartItem->setFilterToAtlasFeature( filterToAtlas );
+  mChartItem->endCommand();
+  mChartItem->update();
+}
+
+void QgsLayoutChartWidget::updateButtonsState()
+{
+  if ( !mChartItem )
+  {
+    return;
+  }
+
+  const bool enable = qobject_cast<QgsVectorLayer *>( mLayerComboBox->currentLayer() ) != nullptr;
+  mGenerateCategoriesFromRendererCheckBox->setEnabled( enable );
+  mApplyRendererStyleCheckBox->setEnabled( enable && mGenerateCategoriesFromRendererCheckBox->isChecked() );
+  mSortCheckBox->setEnabled( enable );
+  mAddSeriesPushButton->setEnabled( enable );
+  mRemoveSeriesPushButton->setEnabled( mSeriesListWidget->count() > 0 );
+}
+
+void QgsLayoutChartWidget::layoutAtlasToggled( bool atlasEnabled )
+{
+  if ( atlasEnabled )
+  {
+    mIntersectAtlasCheckBox->setEnabled( true );
+  }
+  else
+  {
+    mIntersectAtlasCheckBox->setEnabled( false );
+    mIntersectAtlasCheckBox->setChecked( false );
+  }
 }

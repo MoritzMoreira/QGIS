@@ -122,6 +122,15 @@ QgsDateTimeRange(QgsDateTimeRange)
 Copy constructor.
 """
 
+# MonkeyPatch old QgsServerWmsDimensionProperties.WmsDimensionInfo.DefaultDisplay enum manually
+# because sipify doesn't know how to deal with inner class unnest
+
+QgsServerWmsDimensionProperties.WmsDimensionInfo.DefaultDisplay = Qgis.WmsDimensionDefaultDisplay
+QgsServerWmsDimensionProperties.WmsDimensionInfo.AllValues = Qgis.WmsDimensionDefaultDisplay.AllValues
+QgsServerWmsDimensionProperties.WmsDimensionInfo.MinValue = Qgis.WmsDimensionDefaultDisplay.MinValue
+QgsServerWmsDimensionProperties.WmsDimensionInfo.MaxValue = Qgis.WmsDimensionDefaultDisplay.MaxValue
+QgsServerWmsDimensionProperties.WmsDimensionInfo.ReferenceValue = Qgis.WmsDimensionDefaultDisplay.ReferenceValue
+
 
 QgsProperty.__bool__ = lambda self: self.propertyType() != Qgis.PropertyType.Invalid
 QgsOptionalExpression.__bool__ = lambda self: self.enabled()
@@ -145,6 +154,77 @@ QgsProcessingFeatureSourceDefinition.__repr__ = _processing_source_repr
 QgsProcessingOutputLayerDefinition.__repr__ = _processing_output_layer_repr
 
 
+# Wrap QgsArrowIterator.setSchema to accept objects with __arrow_c_schema__
+_original_setSchema = QgsArrowIterator.setSchema
+
+
+def _arrow_iterator_set_schema(self, schema):
+    """
+    Set the ArrowSchema for the output of all future batches.
+
+    Accepts either a QgsArrowSchema or any object implementing __arrow_c_schema__()
+    (e.g., pyarrow.Schema).
+    """
+    if not isinstance(schema, QgsArrowSchema):
+        schema = QgsArrowSchema.fromArrow(schema)
+
+    return _original_setSchema(self, schema)
+
+
+QgsArrowIterator.setSchema = _arrow_iterator_set_schema
+
+
+def _arrow_iterator_stream_export(self, requested_schema=None):
+    """
+    Export this iterator as an Arrow PyCapsule stream.
+
+    This implements the Arrow PyCapsule interface (__arrow_c_stream__),
+    allowing QgsArrowIterator to be consumed directly by pyarrow,
+    geopandas, and other Arrow-compatible libraries.
+
+    :param requested_schema: Optional schema to request. If provided, a copy of
+                             this iterator will have its schema set to avoid
+                             mutating the original.
+    :returns: A PyCapsule containing the ArrowArrayStream pointer.
+    """
+    if requested_schema is not None:
+        # Use SIP copy constructor to avoid mutating the original iterator's schema
+        iterator_copy = QgsArrowIterator(self)
+        iterator_copy.setSchema(requested_schema)
+        return iterator_copy.toArrayStream().__arrow_c_stream__()
+
+    return self.toArrayStream().__arrow_c_stream__()
+
+
+QgsArrowIterator.__arrow_c_stream__ = _arrow_iterator_stream_export
+
+
+def _vector_layer_stream_export(self, requested_schema=None):
+    """
+    Export this layer as an Arrow PyCapsule stream.
+
+    This implements the Arrow PyCapsule interface (__arrow_c_stream__),
+    allowing QgsVectorLayer to be consumed directly by pyarrow,
+    geopandas, and other Arrow-compatible libraries.
+
+    :param requested_schema: Optional schema to request. If not provided,
+                             the schema will be inferred from the layer.
+    :returns: A PyCapsule containing the ArrowArrayStream pointer.
+    """
+    iterator = QgsArrowIterator(self.getFeatures())
+
+    if requested_schema is not None:
+        iterator.setSchema(requested_schema)
+    else:
+        inferred = QgsArrowIterator.inferSchema(self)
+        iterator.setSchema(inferred)
+
+    return iterator.toArrayStream().__arrow_c_stream__()
+
+
+QgsVectorLayer.__arrow_c_stream__ = _vector_layer_stream_export
+
+
 # Classes patched
 QgsSettingsEntryEnumFlag = PyQgsSettingsEntryEnumFlag
 
@@ -152,7 +232,7 @@ QgsSettingsEntryEnumFlag = PyQgsSettingsEntryEnumFlag
 QgsProviderMetadata = PyProviderMetadata
 
 # monkey patch deprecated enum values to maintain API
-# TODO - remove for QGIS 4.0
+# TODO - remove for QGIS 5.0
 Qgis.PythonEmbeddedMode = Qgis.EmbeddedScriptMode
 Qgis.PythonEmbeddedType = Qgis.EmbeddedScriptType
 Qgis.PythonMacroMode = Qgis.PythonEmbeddedMode
@@ -322,13 +402,13 @@ DEFAULT_LINE_WIDTH = Qgis.DEFAULT_LINE_WIDTH
 DEFAULT_SEGMENT_EPSILON = Qgis.DEFAULT_SEGMENT_EPSILON
 PROJECT_SCALES = Qgis.defaultProjectScales()
 
-# TODO QGIS 4.0 - remove, require use of explicit getter/setter
+# TODO QGIS 5.0 - remove, require use of explicit getter/setter
 
 QgsAbstractMetadataBaseValidator.ValidationResult.identifier = property(QgsAbstractMetadataBaseValidator.ValidationResult._identifier)
 QgsAbstractMetadataBaseValidator.ValidationResult.identifier = QgsAbstractMetadataBaseValidator.ValidationResult.identifier.setter(QgsAbstractMetadataBaseValidator.ValidationResult.setIdentifier)
 
 
-# TODO QGIS 4.0 - remove, replaced by Qgis.LinePlacementFlags
+# TODO QGIS 5.0 - remove, replaced by Qgis.LinePlacementFlags
 class _LinePlacementFlags:
   OnLine = 1
   AboveLine = 2
@@ -364,6 +444,17 @@ def _set_merge_lines(self, merge):
 
 QgsPalLayerSettings.mergeLines = property(_get_merge_lines)
 QgsPalLayerSettings.mergeLines = QgsPalLayerSettings.mergeLines.setter(_set_merge_lines)
+
+def _get_label_per_part(self):
+    return self.placementSettings().multiPartBehavior() == Qgis.MultiPartLabelingBehavior.LabelEveryPartWithEntireLabel
+
+
+def _set_label_per_part(self, label_per_part):
+    self.placementSettings().setMultiPartBehavior(Qgis.MultiPartLabelingBehavior.LabelEveryPartWithEntireLabel if label_per_part else Qgis.MultiPartLabelingBehavior.LabelLargestPartOnly)
+
+
+QgsPalLayerSettings.labelPerPart = property(_get_label_per_part)
+QgsPalLayerSettings.labelPerPart = QgsPalLayerSettings.labelPerPart.setter(_set_label_per_part)
 
 
 def _get_add_direction_symbol(self):
@@ -414,7 +505,7 @@ QgsPalLayerSettings.reverseDirectionSymbol = property(_get_reverse_direction_sym
 QgsPalLayerSettings.reverseDirectionSymbol = QgsPalLayerSettings.reverseDirectionSymbol.setter(_set_reverse_direction_symbol)
 
 
-# TODO QGIS 4.0 - remove, replaced by QgsLabelLineSettings.DirectionSymbolPlacement
+# TODO QGIS 5.0 - remove, replaced by QgsLabelLineSettings.DirectionSymbolPlacement
 class _DirectionSymbols:
   SymbolLeftRight = 0
   SymbolAbove = 1
@@ -550,7 +641,7 @@ QgsPalLayerSettings.obstacleFactor = QgsPalLayerSettings.obstacleFactor.setter(_
 
 
 
-# TODO QGIS 4.0 - remove, replaced by QgsLabelObstacleSettings.ObstacleType
+# TODO QGIS 5.0 - remove, replaced by QgsLabelObstacleSettings.ObstacleType
 
 QgsPalLayerSettings.ObstacleType = QgsLabelObstacleSettings.ObstacleType
 QgsPalLayerSettings.PolygonInterior = QgsLabelObstacleSettings.ObstacleType.PolygonInterior
@@ -585,6 +676,8 @@ QgsPalLayerSettings.displayAll = QgsPalLayerSettings.displayAll.setter(_set_disp
 QgsLocatorResult.userData = property(QgsLocatorResult._userData)
 QgsLocatorResult.userData = QgsLocatorResult.userData.setter(QgsLocatorResult.setUserData)
 
+QgsServerWmsDimensionProperties.WmsDimensionInfo.referenceValue = property(QgsServerWmsDimensionProperties.WmsDimensionInfo._referenceValue)
+QgsServerWmsDimensionProperties.WmsDimensionInfo.referenceValue = QgsServerWmsDimensionProperties.WmsDimensionInfo.referenceValue.setter(QgsServerWmsDimensionProperties.WmsDimensionInfo.setReferenceValue)
 
 def _get_pixel_transparency(self):
     return (1.0 - self.opacity) * 100
@@ -604,6 +697,8 @@ QgsProcessingException.__doc__ = "Custom exception class for processing related 
 QgsProviderConnectionException.__doc__ = "Custom exception class for provider connection related exceptions."
 QgsNotSupportedException.__doc__ = "Custom exception class which is raised when an operation is not supported."
 QgsSettingsException.__doc__ = "Custom exception class for settings related exceptions."
+QgsSfcgalException.__doc__ = "Custom exception class for SfCGAL related operations."
+QgsInvalidArgumentException.__doc__ = "Custom exception class when argument are invalid.\n\nIe. algorithms or processing can not continue computation."
 QgsException.__doc__ = "Defines a QGIS exception class."
 
 try:
@@ -813,15 +908,15 @@ try:
    def _vector_layer_as_geopandas(self) -> _gpd.GeoDataFrame:
        """
        Returns the vector layer as a GeoPandas GeoDataFrame.
-       
+
        :raises QgsNotSupportedException: if geopandas is not available on the system
-       
+
        .. versionadded:: 4.0
        """
        features = list(self.getFeatures())
-       
+
        geometries = [feat.geometry().as_shapely() if not feat.geometry().isEmpty() else None for feat in features]
-       
+
        field_names = [field.name() for field in self.fields()]
        data = {field_name: [feat[field_index] for feat in features] for field_index, field_name in enumerate(field_names)}
 
@@ -884,8 +979,8 @@ Creates a new geometry from a shapely object.
 QgsVectorLayer.as_geopandas.__doc__ = """
 Returns the vector layer as a GeoPandas GeoDataFrame.
 
-All features from the layer are converted to a GeoDataFrame, including their geometries 
-(converted to shapely objects) and all attribute values. The CRS is preserved from the 
+All features from the layer are converted to a GeoDataFrame, including their geometries
+(converted to shapely objects) and all attribute values. The CRS is preserved from the
 original layer.
 
 :raises QgsNotSupportedException: if geopandas is not available on the system

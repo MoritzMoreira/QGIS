@@ -16,6 +16,7 @@
  ***************************************************************************/
 
 #include "qgsprojectutils.h"
+
 #include "qgsaction.h"
 #include "qgsactionmanager.h"
 #include "qgsapplication.h"
@@ -41,6 +42,34 @@ QList<QgsMapLayer *> QgsProjectUtils::layersMatchingPath( const QgsProject *proj
     if ( QgsMapLayerUtils::layerSourceMatchesPath( layer, path ) )
     {
       layersList << layer;
+    }
+  }
+  return layersList;
+}
+
+QList<QgsMapLayer *> QgsProjectUtils::layersMatchingUri( const QgsProject *project, const QString &provider, const QString &uri, Qgis::SourceHierarchyLevel level )
+{
+  QList<QgsMapLayer *> layersList;
+  if ( !project )
+    return layersList;
+
+  const QMap<QString, QgsMapLayer *> mapLayers( project->mapLayers() );
+  for ( QgsMapLayer *layer : mapLayers )
+  {
+    if ( layer->providerType() != provider )
+      continue;
+
+    try
+    {
+      if ( QgsMapLayerUtils::layerRefersToUri( layer, uri, level ) )
+      {
+        layersList << layer;
+      }
+    }
+    catch ( QgsNotSupportedException &e )
+    {
+      // expected
+      ( void ) e;
     }
   }
   return layersList;
@@ -75,9 +104,8 @@ bool QgsProjectUtils::layerIsContainedInGroupLayer( QgsProject *project, QgsMapL
       return true;
   }
 
-  std::function< bool( QgsLayerTreeGroup *group ) > traverseTree;
-  traverseTree = [ &traverseTree, layer ]( QgsLayerTreeGroup * group ) -> bool
-  {
+  std::function< bool( QgsLayerTreeGroup * group ) > traverseTree;
+  traverseTree = [&traverseTree, layer]( QgsLayerTreeGroup *group ) -> bool {
     // is the group a layer group containing our target layer?
     if ( group->groupLayer() && group->findLayer( layer ) )
     {

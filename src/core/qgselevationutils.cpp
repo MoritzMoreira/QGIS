@@ -14,22 +14,32 @@
  ***************************************************************************/
 
 #include "qgselevationutils.h"
-#include "qgsproject.h"
+
 #include "qgsmaplayerelevationproperties.h"
+#include "qgsproject.h"
 #include "qgsrasterlayerelevationproperties.h"
 
 QgsDoubleRange QgsElevationUtils::calculateZRangeForProject( QgsProject *project )
 {
   const QMap<QString, QgsMapLayer *> &mapLayers = project->mapLayers();
-  QgsMapLayer *currentLayer = nullptr;
+  QList< QgsMapLayer * > layers;
+  layers.reserve( mapLayers.size() );
+  for ( QMap<QString, QgsMapLayer *>::const_iterator it = mapLayers.constBegin(); it != mapLayers.constEnd(); ++it )
+  {
+    if ( it.value() )
+      layers << it.value();
+  }
 
+  return calculateZRangeForLayers( layers );
+}
+
+QgsDoubleRange QgsElevationUtils::calculateZRangeForLayers( const QList< QgsMapLayer * > &layers )
+{
   double min = std::numeric_limits<double>::quiet_NaN();
   double max = std::numeric_limits<double>::quiet_NaN();
 
-  for ( QMap<QString, QgsMapLayer *>::const_iterator it = mapLayers.constBegin(); it != mapLayers.constEnd(); ++it )
+  for ( QgsMapLayer *currentLayer : layers )
   {
-    currentLayer = it.value();
-
     if ( !currentLayer->elevationProperties() || !currentLayer->elevationProperties()->hasElevation() )
       continue;
 
@@ -50,8 +60,7 @@ QgsDoubleRange QgsElevationUtils::calculateZRangeForProject( QgsProject *project
     }
   }
 
-  return QgsDoubleRange( std::isnan( min ) ? std::numeric_limits< double >::lowest() : min,
-                         std::isnan( max ) ? std::numeric_limits< double >::max() : max );
+  return QgsDoubleRange( std::isnan( min ) ? std::numeric_limits< double >::lowest() : min, std::isnan( max ) ? std::numeric_limits< double >::max() : max );
 }
 
 QList<double> QgsElevationUtils::significantZValuesForProject( QgsProject *project )
@@ -71,7 +80,7 @@ QList<double> QgsElevationUtils::significantZValuesForLayers( const QList<QgsMap
 {
   QSet< double > values;
 
-  for ( QgsMapLayer *currentLayer  : layers )
+  for ( QgsMapLayer *currentLayer : layers )
   {
     if ( !currentLayer->elevationProperties() || !currentLayer->elevationProperties()->hasElevation() )
       continue;
@@ -123,4 +132,3 @@ bool QgsElevationUtils::enableElevationForLayer( QgsMapLayer *layer )
   }
   return false;
 }
-

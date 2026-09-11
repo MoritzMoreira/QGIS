@@ -169,14 +169,14 @@ class CSW202Search(SearchBase):
 
 
 class OARecSearch(SearchBase):
-    def __init__(self, url, timeout, auth):
+    def __init__(self, url, timeout, username=None, password=None, auth=None):
         try:
             from owslib.ogcapi.records import Records
         except ModuleNotFoundError:
             # OWSLIB_OAREC_SUPPORTED already set to False
             pass
 
-        super().__init__(url, timeout, auth)
+        super().__init__(url, timeout, username, password, auth)
 
         self.type = CATALOG_TYPES[1]
         self.format = "json"
@@ -187,9 +187,7 @@ class OARecSearch(SearchBase):
 
         if "/collections/" in self.url:  # catalog is a collection
             log_message("OARec endpoint is a collection", Qgis.MessageLevel.Info)
-            self.base_url, self.record_collection = self.url.split(
-                "/collections/"
-            )  # noqa
+            self.base_url, self.record_collection = self.url.split("/collections/")  # noqa
             self.conn = Records(self.base_url, timeout=self.timeout, auth=self.auth)
             c = self.conn.collection(self.record_collection)
             try:

@@ -18,8 +18,9 @@
 #ifndef QGSRASTERRENDERERREGISTRY_H
 #define QGSRASTERRENDERERREGISTRY_H
 
-#include "qgis_core.h"
 #include "qgis.h"
+#include "qgis_core.h"
+
 #include <QHash>
 #include <QString>
 
@@ -27,12 +28,15 @@ class QDomElement;
 class QgsRasterInterface;
 class QgsRasterLayer;
 class QgsRasterRenderer;
+class QgsSettingsEntryBool;
+class QgsSettingsEntryDouble;
+class QgsSettingsEntryInteger;
 class QgsRasterRendererWidget;
 class QgsRasterDataProvider;
 class QgsRectangle;
 
 #ifndef SIP_RUN
-typedef QgsRasterRenderer *( *QgsRasterRendererCreateFunc )( const QDomElement &, QgsRasterInterface *input );
+typedef std::unique_ptr<QgsRasterRenderer> ( *QgsRasterRendererCreateFunc )( const QDomElement &, QgsRasterInterface *input );
 typedef QgsRasterRendererWidget *( *QgsRasterRendererWidgetCreateFunc )( QgsRasterLayer *, const QgsRectangle &extent );
 
 /**
@@ -43,29 +47,33 @@ typedef QgsRasterRendererWidget *( *QgsRasterRendererWidgetCreateFunc )( QgsRast
   */
 struct CORE_EXPORT QgsRasterRendererRegistryEntry
 {
-
-  /**
+    /**
    * Constructor for QgsRasterRendererRegistryEntry.
    *
    * Since QGIS 3.38, the \a capabilities argument can be used to specify renderer capabilities.
    */
-  QgsRasterRendererRegistryEntry( const QString &name, const QString &visibleName, QgsRasterRendererCreateFunc rendererFunction,
-                                  QgsRasterRendererWidgetCreateFunc widgetFunction, Qgis::RasterRendererCapabilities capabilities = Qgis::RasterRendererCapabilities() );
+    QgsRasterRendererRegistryEntry(
+      const QString &name,
+      const QString &visibleName,
+      QgsRasterRendererCreateFunc rendererFunction,
+      QgsRasterRendererWidgetCreateFunc widgetFunction,
+      Qgis::RasterRendererCapabilities capabilities = Qgis::RasterRendererCapabilities()
+    );
 
-  QgsRasterRendererRegistryEntry() = default;
-  QString name;
-  QString visibleName; //visible (and translatable) name
+    QgsRasterRendererRegistryEntry() = default;
+    QString name;
+    QString visibleName; //visible (and translatable) name
 
-  /**
+    /**
    * Renderer capabilities.
    *
    * \since QGIS 3.38
    */
-  Qgis::RasterRendererCapabilities capabilities;
+    Qgis::RasterRendererCapabilities capabilities;
 
-  QIcon icon();
-  QgsRasterRendererCreateFunc rendererCreateFunction = nullptr ; //pointer to create function
-  QgsRasterRendererWidgetCreateFunc widgetCreateFunction = nullptr ; //pointer to create function for renderer widget
+    QIcon icon();
+    QgsRasterRendererCreateFunc rendererCreateFunction = nullptr;     //pointer to create function
+    QgsRasterRendererWidgetCreateFunc widgetCreateFunction = nullptr; //pointer to create function for renderer widget
 };
 
 #endif
@@ -82,7 +90,6 @@ struct CORE_EXPORT QgsRasterRendererRegistryEntry
 class CORE_EXPORT QgsRasterRendererRegistry
 {
   public:
-
     /**
      * Constructor for QgsRasterRendererRegistry.
      *
@@ -137,7 +144,7 @@ class CORE_EXPORT QgsRasterRendererRegistry
      * Creates a default renderer for a raster drawing style (considering user options such as default contrast enhancement).
      * Caller takes ownership.
     */
-    QgsRasterRenderer *defaultRendererForDrawingStyle( Qgis::RasterDrawingStyle drawingStyle, QgsRasterDataProvider *provider ) const SIP_FACTORY;
+    std::unique_ptr<QgsRasterRenderer> defaultRendererForDrawingStyle( Qgis::RasterDrawingStyle drawingStyle, QgsRasterDataProvider *provider ) const;
 
   private:
     QHash< QString, QgsRasterRendererRegistryEntry > mEntries;
@@ -145,6 +152,15 @@ class CORE_EXPORT QgsRasterRendererRegistry
 
     //read min/max values from
     bool minMaxValuesForBand( int band, QgsRasterDataProvider *provider, double &minValue, double &maxValue ) const;
+
+  public:
+#ifndef SIP_RUN
+    static const QgsSettingsEntryInteger *settingsDefaultRedBand SIP_SKIP;
+    static const QgsSettingsEntryInteger *settingsDefaultGreenBand SIP_SKIP;
+    static const QgsSettingsEntryInteger *settingsDefaultBlueBand SIP_SKIP;
+    static const QgsSettingsEntryBool *settingsUseStandardDeviation SIP_SKIP;
+    static const QgsSettingsEntryDouble *settingsDefaultStandardDeviation SIP_SKIP;
+#endif
 };
 
 #endif // QGSRASTERRENDERERREGISTRY_H

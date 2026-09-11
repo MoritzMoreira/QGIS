@@ -72,6 +72,26 @@ Returns the icon to use for the elevation profile.
     QgsLayerTree *layerTree();
 %Docstring
 Returns the layer tree used by the profile.
+
+Will be ``None`` if :py:func:`~QgsElevationProfile.useProjectLayerTree`
+is ``True``.
+
+.. seealso:: :py:func:`useProjectLayerTree`
+
+.. seealso:: :py:func:`setUseProjectLayerTree`
+%End
+
+    bool useProjectLayerTree();
+%Docstring
+Returns ``True`` if the profile should always use the project's layer
+tree
+
+i.e. the profiles layer tree will be synchronized to the project and no
+reordering or re-grouping of layers is supported.
+
+.. seealso:: :py:func:`setUseProjectLayerTree`
+
+.. seealso:: :py:func:`layerTree`
 %End
 
     QgsCoordinateReferenceSystem crs() const;
@@ -197,6 +217,19 @@ Sets the distance ``unit`` used by the profile.
 .. seealso:: :py:func:`distanceUnit`
 %End
 
+
+    void setUseProjectLayerTree( bool useProjectTree );
+%Docstring
+Sets whether the profile should always use the project's layer tree
+
+i.e. the profiles layer tree will be synchronized to the project and no
+reordering or re-grouping of layers is supported.
+
+.. seealso:: :py:func:`useProjectLayerTree`
+
+.. seealso:: :py:func:`layerTree`
+%End
+
   signals:
 
     void nameChanged( const QString &newName );
@@ -206,6 +239,35 @@ Emitted when the profile is renamed.
 .. seealso:: :py:func:`name`
 
 .. seealso:: :py:func:`setName`
+%End
+
+    void useProjectLayerTreeChanged( bool useProjectTree );
+%Docstring
+Emitted when the use project layer tree property is changed.
+
+.. seealso:: :py:func:`setUseProjectLayerTree`
+%End
+
+    void profileCurveChanged();
+%Docstring
+Emitted when the profile curve is changed.
+
+.. seealso:: :py:func:`profileCurve`
+
+.. seealso:: :py:func:`setProfileCurve`
+
+.. versionadded:: 4.2
+%End
+
+    void toleranceChanged( double tolerance );
+%Docstring
+Emitted when the profile tolerance is changed.
+
+.. seealso:: :py:func:`tolerance`
+
+.. seealso:: :py:func:`setTolerance`
+
+.. versionadded:: 4.2
 %End
 
 };

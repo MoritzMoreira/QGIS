@@ -14,16 +14,19 @@
  ***************************************************************************/
 
 #include "qgsappquerylogger.h"
-#include "moc_qgsappquerylogger.cpp"
-#include "qgsdatabasequeryloggernode.h"
-#include "qgsapplication.h"
+
 #include "devtools/qgsdevtoolsmodelnode.h"
-#include "qgssettings.h"
 #include "qgis.h"
-#include <QThread>
+#include "qgsapplication.h"
+#include "qgsdatabasequeryloggernode.h"
+#include "qgssettings.h"
+
 #include <QApplication>
-#include <QUrlQuery>
 #include <QPainter>
+#include <QThread>
+#include <QUrlQuery>
+
+#include "moc_qgsappquerylogger.cpp"
 
 QgsAppQueryLogger::QgsAppQueryLogger( QObject *parent )
   : QAbstractItemModel( parent )
@@ -291,7 +294,8 @@ bool QgsDatabaseQueryLoggerProxyModel::filterAcceptsRow( int source_row, const Q
       }
       for ( int i = 0; i < request->childCount(); i++ )
       {
-        if ( QgsDevToolsModelValueNode *valueNode = static_cast<QgsDevToolsModelValueNode *>( request->childAt( i ) ); valueNode->value().contains( mFilterString, Qt::CaseInsensitive ) )
+        QgsDevToolsModelValueNode *valueNode = static_cast<QgsDevToolsModelValueNode *>( request->childAt( i ) );
+        if ( valueNode && valueNode->value().contains( mFilterString, Qt::CaseInsensitive ) )
         {
           return true;
         }
@@ -310,8 +314,7 @@ QueryCostDelegate::QueryCostDelegate( int sortRole, int totalCostRole, QObject *
   : QStyledItemDelegate( parent )
   , mSortRole( sortRole )
   , mTotalCostRole( totalCostRole )
-{
-}
+{}
 
 QueryCostDelegate::~QueryCostDelegate() = default;
 

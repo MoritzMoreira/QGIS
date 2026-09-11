@@ -13,26 +13,31 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "qgsapplication.h"
-#include "qgsguiutils.h"
-#include "qgsjsonutils.h"
 #include "qgsqueryloggerpanelwidget.h"
-#include "moc_qgsqueryloggerpanelwidget.cpp"
-#include "qgsdatabasequeryloggernode.h"
+
+#include <nlohmann/json.hpp>
+
+#include "qgsapplication.h"
 #include "qgsappquerylogger.h"
+#include "qgsdatabasequeryloggernode.h"
+#include "qgsgui.h"
+#include "qgsjsonutils.h"
 #include "qgssettings.h"
 
+#include <QCheckBox>
 #include <QFileDialog>
 #include <QFontDatabase>
+#include <QHeaderView>
 #include <QMenu>
 #include <QMessageBox>
 #include <QScrollBar>
-#include <QToolButton>
-#include <QCheckBox>
+#include <QString>
 #include <QTextStream>
-#include <QHeaderView>
+#include <QToolButton>
 
-#include <nlohmann/json.hpp>
+#include "moc_qgsqueryloggerpanelwidget.cpp"
+
+using namespace Qt::StringLiterals;
 
 //
 // QgsDatabaseQueryLoggerTreeView
@@ -173,7 +178,7 @@ QgsDatabaseQueryLoggerPanelWidget::QgsDatabaseQueryLoggerPanelWidget( QgsAppQuer
   mTreeView->sortByColumn( 0, Qt::SortOrder::AscendingOrder );
 
   verticalLayout->addWidget( mTreeView );
-  mToolbar->setIconSize( QgsGuiUtils::iconSize( true ) );
+  mToolbar->setIconSize( QgsGui::iconSize( Qgis::UserInterfaceIconType::DockedToolbar ) );
 
   mFilterLineEdit->setShowClearButton( true );
   mFilterLineEdit->setShowSearchIcon( true );
@@ -184,11 +189,17 @@ QgsDatabaseQueryLoggerPanelWidget::QgsDatabaseQueryLoggerPanelWidget( QgsAppQuer
   connect( mFilterLineEdit, &QgsFilterLineEdit::textChanged, mTreeView, &QgsDatabaseQueryLoggerTreeView::setFilterString );
   connect( mActionClear, &QAction::triggered, mLogger, &QgsAppQueryLogger::clear );
   connect( mActionRecord, &QAction::toggled, this, []( bool enabled ) {
-    QgsSettings().setValue( QStringLiteral( "logDatabaseQueries" ), enabled, QgsSettings::App );
+    QgsSettings().setValue( u"logDatabaseQueries"_s, enabled, QgsSettings::App );
     QgsApplication::databaseQueryLog()->setEnabled( enabled );
   } );
   connect( mActionSaveLog, &QAction::triggered, this, [this]() {
-    if ( QMessageBox::warning( this, tr( "Save Database Query Log" ), tr( "Security warning: query logs may contain sensitive data including usernames or passwords. Treat this log as confidential and be careful who you share it with. Continue?" ), QMessageBox::Yes | QMessageBox::No ) == QMessageBox::No )
+    if ( QMessageBox::warning(
+           this,
+           tr( "Save Database Query Log" ),
+           tr( "Security warning: query logs may contain sensitive data including usernames or passwords. Treat this log as confidential and be careful who you share it with. Continue?" ),
+           QMessageBox::Yes | QMessageBox::No
+         )
+         == QMessageBox::No )
       return;
 
     const QString saveFilePath = QFileDialog::getSaveFileName( this, tr( "Save Query Log" ), QDir::homePath(), tr( "Log files" ) + " (*.json)" );
@@ -211,11 +222,11 @@ QgsDatabaseQueryLoggerPanelWidget::QgsDatabaseQueryLoggerPanelWidget( QgsAppQuer
   } );
 
   QgsSettings settings;
-  mTreeView->header()->restoreState( settings.value( QStringLiteral( "UI/queryLogger/treeState" ), QByteArray(), QgsSettings::Gui ).toByteArray() );
+  mTreeView->header()->restoreState( settings.value( u"UI/queryLogger/treeState"_s, QByteArray(), QgsSettings::Gui ).toByteArray() );
 }
 
 QgsDatabaseQueryLoggerPanelWidget::~QgsDatabaseQueryLoggerPanelWidget()
 {
   QgsSettings settings;
-  settings.setValue( QStringLiteral( "UI/queryLogger/treeState" ), mTreeView->header()->saveState(), QgsSettings::Gui );
+  settings.setValue( u"UI/queryLogger/treeState"_s, mTreeView->header()->saveState(), QgsSettings::Gui );
 }

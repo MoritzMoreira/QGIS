@@ -12,6 +12,7 @@
 
 
 
+
 class QgsExpression
 {
 %Docstring(signature="appended")
@@ -85,32 +86,31 @@ Implicit sharing was added in 2.14
 #include "qgsexpression.h"
 %End
   public:
-
     struct ParserError
     {
-      enum ParserErrorType /BaseType=IntEnum/
-      {
-        Unknown,
-        FunctionUnknown,
-        FunctionWrongArgs,
-        FunctionInvalidParams,
-        FunctionNamedArgsError
-      };
+        enum ParserErrorType /BaseType=IntEnum/
+        {
+          Unknown,
+          FunctionUnknown,
+          FunctionWrongArgs,
+          FunctionInvalidParams,
+          FunctionNamedArgsError
+        };
 
-      QgsExpression::ParserError::ParserErrorType errorType;
+        QgsExpression::ParserError::ParserErrorType errorType;
 %Docstring
 The type of parser error that was found.
 %End
 
-      QString errorMsg;
+        QString errorMsg;
 
-      int firstLine;
+        int firstLine;
 
-      int firstColumn;
+        int firstColumn;
 
-      int lastLine;
+        int lastLine;
 
-      int lastColumn;
+        int lastColumn;
     };
 
     QgsExpression( const QString &expr );
@@ -449,8 +449,7 @@ units.
 .. seealso:: :py:func:`setDistanceUnits`
 %End
 
-    static QString replaceExpressionText( const QString &action, const QgsExpressionContext *context,
-                                          const QgsDistanceArea *distanceArea = 0 );
+    static QString replaceExpressionText( const QString &action, const QgsExpressionContext *context, const QgsDistanceArea *distanceArea = 0 );
 %Docstring
 This function replaces each expression between [% and %] in the string
 with the result of its evaluation with the specified context
@@ -773,6 +772,20 @@ IN type expression.
            possible
 
 .. versionadded:: 3.18
+%End
+
+    QgsExpression simplified() const;
+%Docstring
+Returns an expression which is the simplest direct equivalent of this
+expression
+
+Eg. an expression like ``1 + 2`` can be effectively replaced by the
+expression ``3``, or a nested expression like
+``coalesce(coalesce("field_a", "field_b"), "field_c")`` could be
+replaced by a single ``coalesce("field_a", "field_b", "field_c")``
+expression.
+
+.. versionadded:: 4.4
 %End
 
     SIP_PYOBJECT __repr__();

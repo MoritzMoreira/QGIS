@@ -17,17 +17,16 @@
 #ifndef QGSMSSQLSOURCESELECT_H
 #define QGSMSSQLSOURCESELECT_H
 
+#include "qgsabstractdbsourceselect.h"
 #include "qgsguiutils.h"
 #include "qgshelp.h"
-#include "qgsproviderregistry.h"
-#include "qgsabstractdbsourceselect.h"
 #include "qgsmssqltablemodel.h"
+#include "qgsproviderregistry.h"
 
-
-#include <QMap>
-#include <QPair>
 #include <QIcon>
 #include <QItemDelegate>
+#include <QMap>
+#include <QPair>
 
 class QPushButton;
 class QgsMssqlGeomColumnTypeThread;
@@ -121,7 +120,9 @@ class QgsMssqlSourceSelect : public QgsAbstractDbSourceSelect
     typedef QList<geomPair> geomCol;
 
     // queue another query for the thread
-    void addSearchGeometryColumn( const QString &service, const QString &host, const QString &database, const QString &username, const QString &password, const QgsMssqlLayerProperty &layerProperty, bool estimateMetadata, bool disableInvalidGeometryHandling );
+    void addSearchGeometryColumn(
+      const QString &service, const QString &host, const QString &database, const QString &username, const QString &password, const QgsMssqlLayerProperty &layerProperty, bool estimateMetadata, bool disableInvalidGeometryHandling
+    );
 
     // Set the position of the database connection list to the last
     // used one.

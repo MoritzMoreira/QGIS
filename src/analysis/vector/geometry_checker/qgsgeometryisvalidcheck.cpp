@@ -14,10 +14,12 @@ email                : matthias@opengis.ch
  ***************************************************************************/
 
 #include "qgsgeometryisvalidcheck.h"
-#include "qgssettingsregistrycore.h"
-#include "qgsgeometryvalidator.h"
-#include "qgssettingsentryimpl.h"
 
+#include "qgsgeometryvalidator.h"
+
+#include <QString>
+
+using namespace Qt::StringLiterals;
 
 QgsGeometryIsValidCheck::QgsGeometryIsValidCheck( const QgsGeometryCheckContext *context, const QVariantMap &configuration )
   : QgsSingleGeometryCheck( context, configuration )
@@ -32,15 +34,10 @@ QList<QgsSingleGeometryCheckError *> QgsGeometryIsValidCheck::processGeometry( c
 {
   QVector<QgsGeometry::Error> errors;
 
-  Qgis::GeometryValidationEngine method = Qgis::GeometryValidationEngine::QgisInternal;
-  if ( QgsSettingsRegistryCore::settingsDigitizingValidateGeometries->value() == 2 )
-    method = Qgis::GeometryValidationEngine::Geos;
-
+  Qgis::GeometryValidationEngine method = QgsGeometryValidator::defaultValidationEngine();
   QgsGeometryValidator validator( geometry, &errors, method );
 
-  QObject::connect( &validator, &QgsGeometryValidator::errorFound, &validator, [&errors]( const QgsGeometry::Error &error ) {
-    errors.append( error );
-  } );
+  QObject::connect( &validator, &QgsGeometryValidator::errorFound, &validator, [&errors]( const QgsGeometry::Error &error ) { errors.append( error ); } );
 
   // We are already on a thread here normally, no reason to start yet another one. Run synchronously.
   validator.run();
@@ -79,7 +76,7 @@ QString QgsGeometryIsValidCheck::factoryDescription()
 
 QString QgsGeometryIsValidCheck::factoryId()
 {
-  return QStringLiteral( "QgsIsValidCheck" );
+  return u"QgsIsValidCheck"_s;
 }
 
 QgsGeometryCheck::Flags QgsGeometryIsValidCheck::factoryFlags()
@@ -96,8 +93,7 @@ QgsGeometryCheck::CheckType QgsGeometryIsValidCheck::factoryCheckType()
 QgsGeometryIsValidCheckError::QgsGeometryIsValidCheckError( const QgsSingleGeometryCheck *check, const QgsGeometry &geometry, const QgsGeometry &errorLocation, const QString &errorDescription )
   : QgsSingleGeometryCheckError( check, geometry, errorLocation )
   , mDescription( errorDescription )
-{
-}
+{}
 
 QString QgsGeometryIsValidCheckError::description() const
 {

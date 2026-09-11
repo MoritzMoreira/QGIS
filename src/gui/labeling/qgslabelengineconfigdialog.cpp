@@ -13,25 +13,31 @@
  *                                                                         *
  ***************************************************************************/
 #include "qgslabelengineconfigdialog.h"
-#include "moc_qgslabelengineconfigdialog.cpp"
 
-#include "qgslabelingenginesettings.h"
-#include "qgsproject.h"
 #include "pal/pal.h"
-#include "qgshelp.h"
-#include "qgsmessagebar.h"
-#include "qgsmapcanvas.h"
-#include "qgsgui.h"
 #include "qgsapplication.h"
+#include "qgsgui.h"
+#include "qgshelp.h"
+#include "qgslabelingenginesettings.h"
+#include "qgsmapcanvas.h"
+#include "qgsmessagebar.h"
+#include "qgsproject.h"
 #include "qgsrendercontext.h"
+
 #include <QAction>
 #include <QDialogButtonBox>
-#include <QPushButton>
-#include <QMessageBox>
 #include <QMenu>
+#include <QMessageBox>
+#include <QPushButton>
+#include <QString>
+
+#include "moc_qgslabelengineconfigdialog.cpp"
+
+using namespace Qt::StringLiterals;
 
 QgsLabelEngineConfigWidget::QgsLabelEngineConfigWidget( QgsMapCanvas *canvas, QWidget *parent )
-  : QgsPanelWidget( parent ), mCanvas( canvas )
+  : QgsPanelWidget( parent )
+  , mCanvas( canvas )
 {
   setupUi( this );
 
@@ -94,7 +100,7 @@ QgsLabelEngineConfigWidget::QgsLabelEngineConfigWidget( QgsMapCanvas *canvas, QW
   QAction *resetAction = new QAction( tr( "Restore Defaults" ), this );
   mWidgetMenu->addAction( resetAction );
   connect( resetAction, &QAction::triggered, this, &QgsLabelEngineConfigWidget::setDefaults );
-  QAction *helpAction = new QAction( QgsApplication::getThemeIcon( QStringLiteral( "/mActionHelpContents.svg" ) ), tr( "Help…" ), this );
+  QAction *helpAction = new QAction( QgsApplication::getThemeIcon( u"/mActionHelpContents.svg"_s ), tr( "Help…" ), this );
   mWidgetMenu->addAction( helpAction );
   connect( helpAction, &QAction::triggered, this, &QgsLabelEngineConfigWidget::showHelp );
 }
@@ -135,20 +141,19 @@ void QgsLabelEngineConfigWidget::apply()
 
 void QgsLabelEngineConfigWidget::setDefaults()
 {
-  const pal::Pal p;
   spinCandLine->setValue( 5 );
   spinCandPolygon->setValue( 10 );
   chkShowCandidates->setChecked( false );
   chkShowMetrics->setChecked( false );
   chkShowAllLabels->setChecked( false );
-  chkShowPartialsLabels->setChecked( p.showPartialLabels() );
+  chkShowPartialsLabels->setChecked( pal::Pal::DEFAULT_SHOW_PARTIAL_LABELS );
   mTextRenderFormatComboBox->setCurrentIndex( mTextRenderFormatComboBox->findData( QVariant::fromValue( Qgis::TextRenderFormat::AlwaysOutlines ) ) );
   mPlacementVersionComboBox->setCurrentIndex( mPlacementVersionComboBox->findData( static_cast<int>( Qgis::LabelPlacementEngineVersion::Version2 ) ) );
 }
 
 void QgsLabelEngineConfigWidget::showHelp()
 {
-  QgsHelp::openHelp( QStringLiteral( "working_with_vector/vector_properties.html#setting-the-automated-placement-engine" ) );
+  QgsHelp::openHelp( u"working_with_vector/vector_properties.html#setting-the-automated-placement-engine"_s );
 }
 
 //
@@ -170,7 +175,7 @@ QgsLabelEngineConfigDialog::QgsLabelEngineConfigDialog( QgsMapCanvas *canvas, QW
   vLayout->addWidget( bbox );
   setLayout( vLayout );
 
-  setObjectName( QStringLiteral( "QgsLabelSettingsWidgetDialog" ) );
+  setObjectName( u"QgsLabelSettingsWidgetDialog"_s );
   QgsGui::enableAutoGeometryRestore( this );
 }
 

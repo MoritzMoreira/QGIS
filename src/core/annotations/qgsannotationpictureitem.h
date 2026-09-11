@@ -31,7 +31,6 @@
 class CORE_EXPORT QgsAnnotationPictureItem : public QgsAnnotationRectItem
 {
   public:
-
     /**
      * Constructor for QgsAnnotationPictureItem, rendering the specified image \a path
      * within the specified \a bounds geometry.
@@ -83,19 +82,51 @@ class CORE_EXPORT QgsAnnotationPictureItem : public QgsAnnotationRectItem
      */
     void setLockAspectRatio( bool locked );
 
-  protected:
+    /**
+     * Returns the 3D billboard scale mode for the picture.
+     *
+     * \see setBillboard3DScaleMode()
+     * \since QGIS 4.4
+     */
+    Qgis::BillboardScaleMode billboard3DScaleMode() const { return m3DBillboardScaleMode; }
 
+    /**
+     * Sets the 3D billboard scale \a mode for the picture.
+     *
+     * \see billboard3DScaleMode()
+     * \since QGIS 4.4
+     */
+    void setBillboard3DScaleMode( Qgis::BillboardScaleMode mode ) { m3DBillboardScaleMode = mode; }
+
+    /**
+     * Returns the 3D billboard size for the picture.
+     *
+     * \see setBillboard3DSize()
+     * \since QGIS 4.4
+     */
+    QSizeF billboard3DSize() const { return m3DSize; }
+
+    /**
+     * Sets the 3D billboard \a size for the picture.
+     *
+     * \see billboard3DSize()
+     * \since QGIS 4.4
+     */
+    void setBillboard3DSize( const QSizeF &size ) { m3DSize = size; }
+
+  protected:
     void renderInBounds( QgsRenderContext &context, const QRectF &painterBounds, QgsFeedback *feedback ) override;
 
   private:
-
     QString mPath;
     Qgis::PictureFormat mFormat = Qgis::PictureFormat::Unknown;
     bool mLockAspectRatio = true;
 
+    Qgis::BillboardScaleMode m3DBillboardScaleMode = Qgis::BillboardScaleMode::ViewIndependent;
+    QSizeF m3DSize;
+
 #ifdef SIP_RUN
     QgsAnnotationPictureItem( const QgsAnnotationPictureItem &other );
 #endif
-
 };
 #endif // QGSANNOTATIONPICTUREITEM_H

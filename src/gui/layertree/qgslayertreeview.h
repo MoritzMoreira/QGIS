@@ -16,9 +16,10 @@
 #ifndef QGSLAYERTREEVIEW_H
 #define QGSLAYERTREEVIEW_H
 
-#include <QTreeView>
 #include "qgis.h"
 #include "qgis_gui.h"
+
+#include <QTreeView>
 
 class QgsLayerTreeGroup;
 class QgsLayerTreeLayer;
@@ -468,7 +469,7 @@ class GUI_EXPORT QgsLayerTreeView : public QgsLayerTreeViewBase
     //! Sets provider for context menu. Takes ownership of the instance
     void setMenuProvider( QgsLayerTreeViewMenuProvider *menuProvider SIP_TRANSFER );
     //! Returns pointer to the context menu provider. May be NULLPTR
-    QgsLayerTreeViewMenuProvider *menuProvider() const { return mMenuProvider; }
+    QgsLayerTreeViewMenuProvider *menuProvider() const { return mMenuProvider.get(); }
 
     /**
      * Convenience methods which sets the visible state of the specified map \a layer.
@@ -617,7 +618,7 @@ class GUI_EXPORT QgsLayerTreeView : public QgsLayerTreeViewBase
 
   protected:
     //! Context menu provider. Owned by the view.
-    QgsLayerTreeViewMenuProvider *mMenuProvider = nullptr;
+    std::unique_ptr<QgsLayerTreeViewMenuProvider> mMenuProvider;
     //! Keeps track of current layer ID (to check when to emit signal about change of current layer)
     QString mCurrentLayerID;
     //! Storage of indicators used with the tree view

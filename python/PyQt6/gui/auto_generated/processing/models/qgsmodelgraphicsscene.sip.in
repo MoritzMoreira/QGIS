@@ -10,6 +10,7 @@
 
 
 
+
 class QgsModelGraphicsScene : QGraphicsScene
 {
 %Docstring(signature="appended")
@@ -30,6 +31,7 @@ QGraphicsScene subclass representing the model designer.
     {
       GroupBox,
       ArrowLink,
+      ArrowDecoration,
       ModelComponent,
       MouseHandles,
       RubberBand,
@@ -41,6 +43,7 @@ QGraphicsScene subclass representing the model designer.
     {
       FlagHideControls,
       FlagHideComments,
+      FlagHideFeatureCount,
     };
     typedef QFlags<QgsModelGraphicsScene::Flag> Flags;
 
@@ -98,30 +101,33 @@ Populates the scene by creating items representing the specified
 Returns list of selected component items.
 %End
 
-    QgsModelComponentGraphicItem *componentItemAt( QPointF position ) const;
-%Docstring
-Returns the topmost component item at a specified ``position``.
-%End
 
-    QgsModelComponentGraphicItem *groupBoxItem( const QString &uuid );
-%Docstring
-Returns the graphic item corresponding to the specified group box
-``uuid``.
-%End
 
-    QgsModelChildAlgorithmGraphicItem *childAlgorithmItem( const QString &childId );
-%Docstring
-Returns the graphic item corresponding to the specified child algorithm
 
-.. versionadded:: 3.44
+    void resetChildAlgorithmItems( const QSet<QString> &childAlgorithmSubset = QSet<QString>() );
+%Docstring
+Resets the status of child algorithm items.
+
+If the optional ``childAlgorithmSubset`` is specified, only the matching
+items are reset.
+
+.. versionadded:: 4.2
 %End
 
     QgsModelComponentGraphicItem *parameterItem( const QString &name );
 %Docstring
 Returns the :py:class:`QgsModelComponentGraphicItem` corresponding to
-the specified child algorithm
+the specified parameter name
 
 .. versionadded:: 3.44
+%End
+
+    QgsModelComponentGraphicItem *outputItem( const QString &childId, const QString &childOutputName );
+%Docstring
+Returns the :py:class:`QgsModelComponentGraphicItem` corresponding to
+the specified child algorithm output
+
+.. versionadded:: 4.0
 %End
 
     void selectAll();
@@ -143,7 +149,7 @@ update.
 Clears any selected items and sets ``item`` as the current selection.
 %End
 
-    void setLastRunResult( const QgsProcessingModelResult &result );
+    void setLastRunResult( const QgsProcessingModelResult &result, QgsProcessingContext &context );
 %Docstring
 Sets the ``result`` of the last run of the model through the designer
 window.
@@ -186,6 +192,23 @@ the model, with an additional margin arounds items.
 .. versionadded:: 4.0
 %End
 
+
+    void flagChildrenAsOutdated( const QSet< QString > &children );
+%Docstring
+Flags a set of children as possibly being outdated (i.e. previous
+results are invalid due to changes elsewhere in the model).
+
+.. versionadded:: 4.2
+%End
+
+    void registerWidgetContextGenerator( QgsProcessingWidgetContextGenerator *generator );
+%Docstring
+Register a Processing widget context generator class that will be used
+to retrieve a widget context for the scene when required.
+
+.. versionadded:: 4.4
+%End
+
   signals:
 
     void rebuildRequired();
@@ -193,7 +216,7 @@ the model, with an additional margin arounds items.
 Emitted when a change in the model requires a full rebuild of the scene.
 %End
 
-    void componentAboutToChange( const QString &text, int id = 0 );
+    void componentAboutToChange( const QString &text, const QString &id = QString() );
 %Docstring
 Emitted whenever a component of the model is about to be changed.
 
@@ -245,30 +268,14 @@ algorithm with matching ID.
 %End
 
   protected:
-    virtual QgsModelComponentGraphicItem *createParameterGraphicItem( QgsProcessingModelAlgorithm *model, QgsProcessingModelParameter *param ) const /Factory/;
-%Docstring
-Creates a new graphic item for a model parameter.
-%End
 
-    virtual QgsModelChildAlgorithmGraphicItem *createChildAlgGraphicItem( QgsProcessingModelAlgorithm *model, QgsProcessingModelChildAlgorithm *child ) const /Factory/;
-%Docstring
-Creates a new graphic item for a model child algorithm.
-%End
 
     virtual QgsModelComponentGraphicItem *createOutputGraphicItem( QgsProcessingModelAlgorithm *model, QgsProcessingModelOutput *output ) const /Factory/;
 %Docstring
 Creates a new graphic item for a model output.
 %End
 
-    virtual QgsModelComponentGraphicItem *createCommentGraphicItem( QgsProcessingModelAlgorithm *model, QgsProcessingModelComment *comment, QgsModelComponentGraphicItem *parentItem ) const /Factory/;
-%Docstring
-Creates a new graphic item for a model comment.
-%End
 
-    QgsModelComponentGraphicItem *createGroupBoxGraphicItem( QgsProcessingModelAlgorithm *model, QgsProcessingModelGroupBox *box ) const /Factory/;
-%Docstring
-Creates a new graphic item for a model group box.
-%End
 
 };
 

@@ -18,12 +18,12 @@
 
 #include "qgis.h"
 #include "qgis_core.h"
-#include "qgsrange.h"
-#include "qgsstacobject.h"
-#include "qgsstacasset.h"
-#include "qgsgeometry.h"
 #include "qgsbox3d.h"
+#include "qgsgeometry.h"
 #include "qgsmimedatautils.h"
+#include "qgsrange.h"
+#include "qgsstacasset.h"
+#include "qgsstacobject.h"
 
 /**
  * \ingroup core
@@ -47,13 +47,9 @@ class CORE_EXPORT QgsStacItem : public QgsStacObject
      * \param assets Dictionary of asset objects that can be downloaded, each with a unique key.
      * \param bbox Bounding Box of the asset represented by this Item. Required if geometry is not null
      */
-    QgsStacItem( const QString &id,
-                 const QString &version,
-                 const QgsGeometry &geometry,
-                 const QVariantMap &properties,
-                 const QVector< QgsStacLink > &links,
-                 const QMap< QString, QgsStacAsset > &assets,
-                 const QgsBox3D &bbox );
+    QgsStacItem(
+      const QString &id, const QString &version, const QgsGeometry &geometry, const QVariantMap &properties, const QVector< QgsStacLink > &links, const QMap< QString, QgsStacAsset > &assets, const QgsBox3D &bbox
+    );
 
     Qgis::StacObjectType type() const override;
     QString toHtml() const override;

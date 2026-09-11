@@ -17,13 +17,13 @@
 #define QGSRELATIONMANAGER_H
 
 #include "qgis_core.h"
+#include "qgspolymorphicrelation.h"
+#include "qgsrelation.h"
+
+#include <QDomDocument>
+#include <QDomNode>
 #include <QObject>
 #include <QPair>
-#include <QDomNode>
-#include <QDomDocument>
-
-#include "qgsrelation.h"
-#include "qgspolymorphicrelation.h"
 
 class QgsProject;
 class QgsVectorLayer;
@@ -37,7 +37,6 @@ class CORE_EXPORT QgsRelationManager : public QObject
     Q_OBJECT
 
   public:
-
     /**
      * Constructor for QgsRelationManager.
      * \param project associated project (used to notify project of changes)

@@ -20,7 +20,7 @@ __date__ = "October 2017"
 __copyright__ = "(C) 2017, Médéric Ribreux"
 
 from qgis.core import QgsProcessingParameterString
-from processing.tools.system import isWindows
+
 from grassprovider.grass_utils import GrassUtils
 
 
@@ -59,18 +59,14 @@ def processInputs(alg, parameters, context, feedback):
     # And set the region
     grassName = alg.exportedLayers["input"]
     # We use the shell to capture the results from r.proj -g
-    if isWindows():
+    if GrassUtils.is_windows():
         # TODO: make some tests under a non POSIX shell
         alg.commands.append("set regVar=")
         alg.commands.append(
-            'for /f "delims=" %%a in (\'r.proj -g input^="{}" location^="{}"\') do @set regVar=%%a'.format(
-                grassName, newLocation
-            )
+            f'for /f "delims=" %%a in (\'r.proj -g input^="{grassName}" location^="{newLocation}"\') do @set regVar=%%a'
         )
         alg.commands.append("g.region -a %regVar%")
     else:
         alg.commands.append(
-            'g.region -a $(r.proj -g input="{}" location="{}")'.format(
-                grassName, newLocation
-            )
+            f'g.region -a $(r.proj -g input="{grassName}" location="{newLocation}")'
         )

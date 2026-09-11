@@ -16,10 +16,11 @@
 #ifndef QGSEDITFORMCONFIG_P_H
 #define QGSEDITFORMCONFIG_P_H
 
-#include <QMap>
-#include "qgsfields.h"
-#include "qgseditformconfig.h"
 #include "qgsattributeeditorcontainer.h"
+#include "qgseditformconfig.h"
+#include "qgsfields.h"
+
+#include <QMap>
 
 /// @cond PRIVATE
 
@@ -49,33 +50,21 @@ class QgsEditFormConfigPrivate : public QSharedData
       , mFields( o.mFields )
     {}
 
-    ~QgsEditFormConfigPrivate()
-    {
-      delete mInvisibleRootContainer;
-    }
+    ~QgsEditFormConfigPrivate() {}
 
     static QgsPropertiesDefinition &propertyDefinitions()
     {
-      static QgsPropertiesDefinition sPropertyDefinitions
-      {
-        {
-          static_cast< int >( QgsEditFormConfig::DataDefinedProperty::Alias ),
-          QgsPropertyDefinition( "dataDefinedAlias",
-                                 QObject::tr( "Alias" ),
-                                 QgsPropertyDefinition::String )
-        },
-        {
-          static_cast< int >( QgsEditFormConfig::DataDefinedProperty::Editable ),
-          QgsPropertyDefinition( "dataDefinedEditable",
-                                 QObject::tr( "Editable" ),
-                                 QgsPropertyDefinition::Boolean )
-        },
+      static QgsPropertiesDefinition sPropertyDefinitions {
+        { static_cast< int >( QgsEditFormConfig::DataDefinedProperty::Alias ), QgsPropertyDefinition( "dataDefinedAlias", QObject::tr( "Alias" ), QgsPropertyDefinition::String ) },
+        { static_cast< int >( QgsEditFormConfig::DataDefinedProperty::Editable ), QgsPropertyDefinition( "dataDefinedEditable", QObject::tr( "Editable" ), QgsPropertyDefinition::Boolean ) },
+        { static_cast< int >( QgsEditFormConfig::DataDefinedProperty::CustomComment ),
+          QgsPropertyDefinition( "dataDefinedCustomComment", QObject::tr( "CustomComment" ), QgsPropertyDefinition::String ) },
       };
       return sPropertyDefinitions;
     };
 
     //! The invisible root container for attribute editors in the drag and drop designer
-    QgsAttributeEditorContainer *mInvisibleRootContainer = nullptr;
+    std::unique_ptr<QgsAttributeEditorContainer> mInvisibleRootContainer;
 
     //! This flag is set if the root container was configured by the user
     bool mConfiguredRootContainer = false;
@@ -107,7 +96,7 @@ class QgsEditFormConfigPrivate : public QSharedData
     QgsFields mFields;
 
   private:
-    QgsEditFormConfigPrivate &operator= ( const QgsEditFormConfigPrivate & ) = delete;
+    QgsEditFormConfigPrivate &operator=( const QgsEditFormConfigPrivate & ) = delete;
 };
 
 

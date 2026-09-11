@@ -24,8 +24,16 @@ Used to resolve layers from projects.
 #include "qgsrelationcontext.h"
 %End
   public:
+    QgsRelationContext() /Deprecated/;
+%Docstring
+Constructor for QgsRelationContext.
 
-    QgsRelationContext( QgsProject *project = 0 );
+.. note::
+
+   Will be removed in QGIS 5.0. Use QgsRelationContext( :py:class:`QgsProject` *project ) with explicit project instead.
+%End
+
+    QgsRelationContext( QgsProject *project );
 %Docstring
 Constructor for QgsRelationContext.
 %End
@@ -41,7 +49,6 @@ project instance
     ~QgsRelationContext();
 
 };
-
 
 /************************************************************************
  * This file has been generated automatically from                      *

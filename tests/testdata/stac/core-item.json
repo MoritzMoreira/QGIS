@@ -129,6 +129,22 @@
         "data",
         "metadata"
       ]
+    },
+    "geoparquet-file": {
+      "href": "https://github.com/opengeospatial/geoparquet/raw/refs/heads/main/examples/example.parquet",
+      "title": "GeoParquet File",
+      "type": "application/vnd.apache.parquet",
+      "roles": [
+        "data"
+      ]
+    },
+    "tiledb-array": {
+      "href": "az://some-url.com/tiledb_array",
+      "title": "Example TileDB array",
+      "type": "application/tiledb",
+      "roles": [
+        "data"
+      ]
     }
   }
 }

@@ -15,13 +15,15 @@
  ***************************************************************************/
 
 #include "qgslayoutitemguiregistry.h"
-#include "moc_qgslayoutitemguiregistry.cpp"
-#include "qgslayoutviewrubberband.h"
-#include "qgslayoutitemregistry.h"
+
 #include "qgslayoutframe.h"
+#include "qgslayoutitemregistry.h"
 #include "qgslayoutmultiframe.h"
+#include "qgslayoutviewrubberband.h"
+
 #include <QPainter>
 
+#include "moc_qgslayoutitemguiregistry.cpp"
 
 QgsLayoutViewRubberBand *QgsLayoutItemAbstractGuiMetadata::createRubberBand( QgsLayoutView *view )
 {
@@ -39,12 +41,10 @@ QgsLayoutItem *QgsLayoutItemAbstractGuiMetadata::createItem( QgsLayout * )
 }
 
 void QgsLayoutItemAbstractGuiMetadata::newItemAddedToLayout( QgsLayoutItem * )
-{
-}
+{}
 
 void QgsLayoutItemAbstractGuiMetadata::handleDoubleClick( QgsLayoutItem *, Qgis::MouseHandlesAction )
-{
-}
+{}
 
 void QgsLayoutItemGuiMetadata::handleDoubleClick( QgsLayoutItem *item, Qgis::MouseHandlesAction action )
 {
@@ -55,8 +55,7 @@ void QgsLayoutItemGuiMetadata::handleDoubleClick( QgsLayoutItem *item, Qgis::Mou
 
 QgsLayoutItemGuiRegistry::QgsLayoutItemGuiRegistry( QObject *parent )
   : QObject( parent )
-{
-}
+{}
 
 QgsLayoutItemGuiRegistry::~QgsLayoutItemGuiRegistry()
 {

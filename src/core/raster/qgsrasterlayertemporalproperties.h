@@ -19,12 +19,12 @@
 #ifndef QGSRASTERLAYERTEMPORALPROPERTIES_H
 #define QGSRASTERLAYERTEMPORALPROPERTIES_H
 
+#include "qgis.h"
 #include "qgis_core.h"
 #include "qgis_sip.h"
-#include "qgis.h"
 #include "qgsinterval.h"
-#include "qgsrange.h"
 #include "qgsmaplayertemporalproperties.h"
+#include "qgsrange.h"
 
 class QgsRasterLayer;
 
@@ -40,7 +40,6 @@ class CORE_EXPORT QgsRasterLayerTemporalProperties : public QgsMapLayerTemporalP
     Q_OBJECT
 
   public:
-
     /**
      * Constructor for QgsRasterLayerTemporalProperties, with the specified \a parent object.
      *
@@ -234,7 +233,6 @@ class CORE_EXPORT QgsRasterLayerTemporalProperties : public QgsMapLayerTemporalP
     void setDefaultsFromDataProviderTemporalCapabilities( const QgsDataProviderTemporalCapabilities *capabilities ) override;
 
   private:
-
     //! Temporal layer mode.
     Qgis::RasterTemporalMode mMode = Qgis::RasterTemporalMode::FixedTemporalRange;
 

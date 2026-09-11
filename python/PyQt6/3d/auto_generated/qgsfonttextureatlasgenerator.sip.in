@@ -10,6 +10,9 @@
 
 
 
+
+
+
 class QgsFontTextureAtlas
 {
 %Docstring(signature="appended")
@@ -43,6 +46,7 @@ Returns ``True`` if the atlas is valid.
 Returns the total size required for the atlas, i.e. the total size for
 the texture.
 %End
+
 
     QRect rect( const QString &grapheme ) const;
 %Docstring
@@ -121,11 +125,10 @@ Returns the number of textures in the atlas.
 
     Py_ssize_t __len__() const;
 %Docstring
-        Returns the number of textures in the atlas.
+    Returns the number of textures in the atlas.
 %End
 %MethodCode
-        sipRes
-      = sipCpp->count();
+    sipRes = sipCpp->count();
 %End
 
 };

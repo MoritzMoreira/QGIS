@@ -13,14 +13,17 @@
  *                                                                         *
  ***************************************************************************/
 
+#include "qgsgeometryduplicatenodescheck.h"
+
+#include "qgsfeaturepool.h"
 #include "qgsfeedback.h"
 #include "qgsgeometrycheckcontext.h"
-#include "qgsgeometryduplicatenodescheck.h"
-#include "qgsgeometryutils.h"
-#include "qgsfeaturepool.h"
 #include "qgsgeometrycheckerror.h"
+#include "qgsgeometryutils.h"
 
-QgsGeometryCheck::Result QgsGeometryDuplicateNodesCheck::collectErrors( const QMap<QString, QgsFeaturePool *> &featurePools, QList<QgsGeometryCheckError *> &errors, QStringList &messages, QgsFeedback *feedback, const LayerFeatureIds &ids ) const
+QgsGeometryCheck::Result QgsGeometryDuplicateNodesCheck::collectErrors(
+  const QMap<QString, QgsFeaturePool *> &featurePools, QList<QgsGeometryCheckError *> &errors, QStringList &messages, QgsFeedback *feedback, const LayerFeatureIds &ids
+) const
 {
   Q_UNUSED( messages )
 
@@ -67,7 +70,9 @@ QgsGeometryCheck::Result QgsGeometryDuplicateNodesCheck::collectErrors( const QM
   return QgsGeometryCheck::Result::Success;
 }
 
-void QgsGeometryDuplicateNodesCheck::fixError( const QMap<QString, QgsFeaturePool *> &featurePools, QgsGeometryCheckError *error, int method, const QMap<QString, int> & /*mergeAttributeIndices*/, Changes &changes ) const
+void QgsGeometryDuplicateNodesCheck::fixError(
+  const QMap<QString, QgsFeaturePool *> &featurePools, QgsGeometryCheckError *error, int method, const QMap<QString, int> & /*mergeAttributeIndices*/, Changes &changes
+) const
 {
   QgsFeaturePool *featurePool = featurePools[error->layerId()];
   QgsFeature feature;
@@ -81,7 +86,7 @@ void QgsGeometryDuplicateNodesCheck::fixError( const QMap<QString, QgsFeaturePoo
   const QgsVertexId vidx = error->vidx();
 
   // Check if point still exists
-  if ( !vidx.isValid( geom ) )
+  if ( !geom->hasVertex( vidx ) )
   {
     error->setObsolete();
     return;

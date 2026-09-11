@@ -22,37 +22,35 @@ __copyright__ = "(C) 2012, Victor Olaya"
 import os
 from pathlib import Path
 
-from qgis.PyQt.QtCore import pyqtSignal, QCoreApplication
-from qgis.PyQt.QtWidgets import (
-    QWidget,
-    QHBoxLayout,
-    QMenu,
-    QPushButton,
-    QLineEdit,
-    QSizePolicy,
-    QAction,
-    QFileDialog,
-)
-from qgis.PyQt.QtGui import QCursor
-
 from qgis.core import (
     QgsMapLayer,
-    QgsRasterLayer,
-    QgsSettings,
-    QgsProject,
     QgsProcessing,
-    QgsProcessingUtils,
-    QgsProcessingParameterMultipleLayers,
-    QgsProcessingParameterRasterLayer,
-    QgsProcessingParameterVectorLayer,
-    QgsProcessingParameterMeshLayer,
-    QgsProcessingParameterPointCloudLayer,
     QgsProcessingParameterFeatureSource,
     QgsProcessingParameterMapLayer,
+    QgsProcessingParameterMeshLayer,
+    QgsProcessingParameterMultipleLayers,
+    QgsProcessingParameterPointCloudLayer,
+    QgsProcessingParameterRasterLayer,
+    QgsProcessingParameterVectorLayer,
+    QgsProcessingUtils,
+    QgsProject,
+    QgsRasterLayer,
+    QgsSettings,
+)
+from qgis.PyQt.QtCore import QCoreApplication, pyqtSignal
+from qgis.PyQt.QtGui import QCursor
+from qgis.PyQt.QtWidgets import (
+    QAction,
+    QFileDialog,
+    QHBoxLayout,
+    QLineEdit,
+    QMenu,
+    QPushButton,
+    QSizePolicy,
+    QWidget,
 )
 
 from processing.gui.MultipleInputDialog import MultipleInputDialog
-
 from processing.tools import dataobjects
 
 
@@ -249,8 +247,6 @@ class BatchInputSelectionPanel(QWidget):
                     "/Processing/LastInputPath", os.path.dirname(str(files[0]))
                 )
 
-            for i, filename in enumerate(files):
-                files[i] = dataobjects.getRasterSublayer(filename, self.param)
             if len(files) == 1:
                 self.text.setText(files[0])
                 self.textEditingFinished()

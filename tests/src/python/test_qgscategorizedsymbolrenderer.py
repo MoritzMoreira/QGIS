@@ -13,10 +13,8 @@ __date__ = "2/12/2015"
 __copyright__ = "Copyright 2015, The QGIS Project"
 
 import os
+import unittest
 
-from qgis.PyQt.QtCore import QLocale, QSize, Qt, QTemporaryDir, QVariant
-from qgis.PyQt.QtGui import QColor
-from qgis.PyQt.QtXml import QDomDocument
 from qgis.core import (
     QgsCategorizedSymbolRenderer,
     QgsEditorWidgetSetup,
@@ -36,6 +34,7 @@ from qgis.core import (
     QgsRectangle,
     QgsRenderContext,
     QgsRendererCategory,
+    QgsRuleBasedRenderer,
     QgsSimpleMarkerSymbolLayer,
     QgsSingleSymbolRenderer,
     QgsStyle,
@@ -43,11 +42,11 @@ from qgis.core import (
     QgsSymbolLayer,
     QgsSymbolLayerReference,
     QgsVectorLayer,
-    QgsRuleBasedRenderer,
 )
-import unittest
-from qgis.testing import start_app, QgisTestCase
-
+from qgis.PyQt.QtCore import QLocale, QSize, Qt, QTemporaryDir, QVariant
+from qgis.PyQt.QtGui import QColor
+from qgis.PyQt.QtXml import QDomDocument
+from qgis.testing import QgisTestCase, start_app
 from utilities import unitTestDataPath
 
 start_app()
@@ -73,7 +72,6 @@ def createFillSymbol():
 
 
 class TestQgsCategorizedSymbolRenderer(QgisTestCase):
-
     def testFilter(self):
         """Test filter creation"""
         renderer = QgsCategorizedSymbolRenderer()
@@ -1782,6 +1780,95 @@ class TestQgsCategorizedSymbolRenderer(QgisTestCase):
         self.assertEqual(layer.featureCount(cat_a_id), 3)
         self.assertEqual(layer.featureCount(cat_b_id), 2)
         self.assertEqual(layer.featureCount(cat_default_id), 1)
+
+    def test_layer_counts_other_categories(self):
+        """Test that features with values that don't match any category are counted in the
+        fallback 'else' category"""
+
+        def _test(type, values, fallback_value):
+            layer = QgsVectorLayer(
+                f"Point?field=test_field:{type}", "test_layer", "memory"
+            )
+            self.assertTrue(layer.isValid())
+            fields = layer.fields()
+            layer.startEditing()
+
+            # add test values
+            values.append(None)
+            for attr_value in values:
+                f = QgsFeature(fields)
+                f.setAttributes([attr_value])
+                self.assertTrue(layer.addFeature(f))
+
+            self.assertEqual(layer.featureCount(), 3)
+            layer.commitChanges()
+
+            renderer = QgsCategorizedSymbolRenderer()
+            renderer.setClassAttribute("test_field")
+
+            renderer.addCategory(
+                QgsRendererCategory(
+                    str(values[0]), createMarkerSymbol(), str(values[0])
+                )
+            )
+            cat_a_id = renderer.categories()[-1].uuid()
+            renderer.addCategory(
+                QgsRendererCategory(
+                    fallback_value, createMarkerSymbol(), "other values"
+                )
+            )
+            cat_other_id = renderer.categories()[-1].uuid()
+
+            self.assertEqual(renderer.legendKeys(), {cat_a_id, cat_other_id})
+
+            ctx = QgsRenderContext()
+            renderer.startRender(ctx, layer.fields())
+
+            self.assertEqual(
+                renderer.legendKeysForFeature(layer.getFeature(1), ctx), {cat_a_id}
+            )
+            self.assertEqual(
+                renderer.legendKeysForFeature(layer.getFeature(3), ctx), {cat_other_id}
+            )
+            self.assertEqual(
+                renderer.legendKeysForFeature(layer.getFeature(2), ctx), {cat_other_id}
+            )
+
+        _test("string", ["a", "b"], QVariant())
+        _test("int", [1, 2], QVariant())
+        _test("int", [1, 2], "")
+
+    def testSetLegendSymbolItemLabel(self):
+        cat1 = QgsRendererCategory(1, createMarkerSymbol(), "category 1")
+        cat2 = QgsRendererCategory(2, createMarkerSymbol(), "category 2")
+        cat3 = QgsRendererCategory(3, createMarkerSymbol(), "category 3")
+
+        renderer = QgsCategorizedSymbolRenderer("field", [cat1, cat2, cat3])
+
+        # verify initial labels
+        self.assertEqual(renderer.categories()[0].label(), "category 1")
+        self.assertEqual(renderer.categories()[1].label(), "category 2")
+        self.assertEqual(renderer.categories()[2].label(), "category 3")
+
+        # change label for second category using its key
+        key2 = renderer.categories()[1].uuid()
+        renderer.setLegendSymbolItemLabel(key2, "updated category 2")
+
+        self.assertEqual(renderer.categories()[0].label(), "category 1")
+        self.assertEqual(renderer.categories()[1].label(), "updated category 2")
+        self.assertEqual(renderer.categories()[2].label(), "category 3")
+
+        # change label via legendSymbolItems key
+        items = renderer.legendSymbolItems()
+        self.assertEqual(len(items), 3)
+        renderer.setLegendSymbolItemLabel(items[0].ruleKey(), "new category 1")
+        self.assertEqual(renderer.categories()[0].label(), "new category 1")
+
+        # non-existent key should not change anything
+        renderer.setLegendSymbolItemLabel("nonexistent", "nonexistent_label")
+        self.assertEqual(renderer.categories()[0].label(), "new category 1")
+        self.assertEqual(renderer.categories()[1].label(), "updated category 2")
+        self.assertEqual(renderer.categories()[2].label(), "category 3")
 
 
 if __name__ == "__main__":

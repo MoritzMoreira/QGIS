@@ -18,9 +18,8 @@
 #ifndef QGSOBJECTVISITOR_H
 #define QGSOBJECTVISITOR_H
 
-#include "qgis_core.h"
 #include "qgis.h"
-
+#include "qgis_core.h"
 
 /**
  * \class QgsEmbeddedScriptEntity
@@ -31,7 +30,6 @@
 class CORE_EXPORT QgsEmbeddedScriptEntity
 {
   public:
-
     /**
      * Constructor for QgsEmbeddedScriptEntity.
      */
@@ -57,11 +55,9 @@ class CORE_EXPORT QgsEmbeddedScriptEntity
     QString script() const { return mScript; }
 
   private:
-
     Qgis::EmbeddedScriptType mType;
     QString mName;
     QString mScript;
-
 };
 
 
@@ -76,7 +72,6 @@ class CORE_EXPORT QgsEmbeddedScriptEntity
 class CORE_EXPORT QgsObjectVisitorContext
 {
   public:
-
     QgsObjectVisitorContext() = default;
 };
 
@@ -91,9 +86,7 @@ class CORE_EXPORT QgsObjectVisitorContext
  */
 class CORE_EXPORT QgsObjectEntityVisitorInterface
 {
-
   public:
-
     virtual ~QgsObjectEntityVisitorInterface() = default;
 
     /**
@@ -108,7 +101,6 @@ class CORE_EXPORT QgsObjectEntityVisitorInterface
       Q_UNUSED( context )
       return true;
     }
-
 };
 
 
@@ -121,7 +113,6 @@ class CORE_EXPORT QgsObjectEntityVisitorInterface
 class CORE_EXPORT QgsEmbeddedScriptVisitor : public QgsObjectEntityVisitorInterface
 {
   public:
-
     bool visitEmbeddedScript( const QgsEmbeddedScriptEntity &entity, const QgsObjectVisitorContext & ) override
     {
       mEmbeddedScripts << entity;

@@ -16,20 +16,17 @@
  ***************************************************************************/
 
 #include "qgstiledscenetile.h"
+
 #include "qgstiledsceneboundingvolume.h"
 
 QgsTiledSceneTile::QgsTiledSceneTile()
   : mBoundingVolume( QgsTiledSceneBoundingVolume( QgsOrientedBox3D() ) )
-{
-
-}
+{}
 
 QgsTiledSceneTile::QgsTiledSceneTile( long long id )
   : mId( id )
   , mBoundingVolume( QgsTiledSceneBoundingVolume( QgsOrientedBox3D() ) )
-{
-
-}
+{}
 
 QgsTiledSceneTile::~QgsTiledSceneTile() = default;
 

@@ -13,25 +13,30 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "qgsapplication.h"
-#include "qgsguiutils.h"
-#include "qgsjsonutils.h"
 #include "qgsnetworkloggerpanelwidget.h"
-#include "moc_qgsnetworkloggerpanelwidget.cpp"
-#include "qgsnetworkloggernode.h"
+
+#include <nlohmann/json.hpp>
+
+#include "qgsapplication.h"
+#include "qgsgui.h"
+#include "qgsjsonutils.h"
 #include "qgsnetworklogger.h"
+#include "qgsnetworkloggernode.h"
 #include "qgssettings.h"
 
+#include <QCheckBox>
 #include <QFileDialog>
 #include <QFontDatabase>
 #include <QMenu>
 #include <QMessageBox>
 #include <QScrollBar>
-#include <QToolButton>
-#include <QCheckBox>
+#include <QString>
 #include <QTextStream>
+#include <QToolButton>
 
-#include <nlohmann/json.hpp>
+#include "moc_qgsnetworkloggerpanelwidget.cpp"
+
+using namespace Qt::StringLiterals;
 
 //
 // QgsNetworkLoggerTreeView
@@ -169,7 +174,7 @@ QgsNetworkLoggerPanelWidget::QgsNetworkLoggerPanelWidget( QgsNetworkLogger *logg
 
   mTreeView = new QgsNetworkLoggerTreeView( mLogger );
   verticalLayout->addWidget( mTreeView );
-  mToolbar->setIconSize( QgsGuiUtils::iconSize( true ) );
+  mToolbar->setIconSize( QgsGui::iconSize( Qgis::UserInterfaceIconType::DockedToolbar ) );
 
   mFilterLineEdit->setShowClearButton( true );
   mFilterLineEdit->setShowSearchIcon( true );
@@ -186,11 +191,17 @@ QgsNetworkLoggerPanelWidget::QgsNetworkLoggerPanelWidget( QgsNetworkLogger *logg
   connect( mActionShowCached, &QAction::toggled, mTreeView, &QgsNetworkLoggerTreeView::setShowCached );
   connect( mActionClear, &QAction::triggered, mLogger, &QgsNetworkLogger::clear );
   connect( mActionRecord, &QAction::toggled, this, [this]( bool enabled ) {
-    QgsSettings().setValue( QStringLiteral( "logNetworkRequests" ), enabled, QgsSettings::App );
+    QgsSettings().setValue( u"logNetworkRequests"_s, enabled, QgsSettings::App );
     mLogger->enableLogging( enabled );
   } );
   connect( mActionSaveLog, &QAction::triggered, this, [this]() {
-    if ( QMessageBox::warning( this, tr( "Save Network Log" ), tr( "Security warning: network logs may contain sensitive data including usernames or passwords. Treat this log as confidential and be careful who you share it with. Continue?" ), QMessageBox::Yes | QMessageBox::No ) == QMessageBox::No )
+    if ( QMessageBox::warning(
+           this,
+           tr( "Save Network Log" ),
+           tr( "Security warning: network logs may contain sensitive data including usernames or passwords. Treat this log as confidential and be careful who you share it with. Continue?" ),
+           QMessageBox::Yes | QMessageBox::No
+         )
+         == QMessageBox::No )
       return;
 
     const QString saveFilePath = QFileDialog::getSaveFileName( this, tr( "Save Network Log" ), QDir::homePath(), tr( "Log files" ) + " (*.json)" );
@@ -219,7 +230,7 @@ QgsNetworkLoggerPanelWidget::QgsNetworkLoggerPanelWidget( QgsNetworkLogger *logg
   settingsButton->setToolTip( tr( "Settings" ) );
   settingsButton->setMenu( settingsMenu );
   settingsButton->setPopupMode( QToolButton::InstantPopup );
-  settingsButton->setIcon( QgsApplication::getThemeIcon( QStringLiteral( "/mActionOptions.svg" ) ) );
+  settingsButton->setIcon( QgsApplication::getThemeIcon( u"/mActionOptions.svg"_s ) );
   mToolbar->addWidget( settingsButton );
 
   settingsMenu->addAction( mActionShowSuccessful );

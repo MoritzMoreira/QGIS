@@ -12,7 +12,7 @@
 
 
 
-class QgsModelDesignerDialog : QMainWindow
+class QgsModelDesignerDialog : QMainWindow, QgsProcessingFeedbackGenerator, QgsProcessingContextGenerator, QgsProcessingWidgetContextGenerator
 {
 %Docstring(signature="appended")
 Model designer dialog base class.
@@ -34,7 +34,7 @@ Model designer dialog base class.
     virtual void closeEvent( QCloseEvent *event );
 
 
-    void beginUndoCommand( const QString &text, int id = 0 );
+    void beginUndoCommand( const QString &text, const QString &id = QString() );
 %Docstring
 Starts an undo command. This should be called before any changes are
 made to the model.
@@ -74,7 +74,23 @@ Loads a model into the designer from the specified file ``path``.
     void setModelScene( QgsModelGraphicsScene *scene /Transfer/ );
 %Docstring
 Sets the related ``scene``.
+
+.. seealso:: :py:func:`modelScene`
 %End
+
+    QgsModelGraphicsScene *modelScene();
+%Docstring
+Returns the related model scene.
+
+.. seealso:: :py:func:`setModelScene`
+
+.. versionadded:: 4.0
+%End
+
+    virtual QgsProcessingFeedback *createFeedback() /Factory/;
+
+    virtual QgsProcessingParameterWidgetContext createWidgetContext();
+
 
     enum class SaveAction
     {
@@ -102,14 +118,22 @@ Raise, unminimize and activate this window.
 
     virtual bool saveModel( bool saveAs = false ) = 0;
 
-    virtual QgsProcessingAlgorithmDialogBase *createExecutionDialog() = 0 /TransferBack/;
+    virtual QgsProcessingAlgorithmWidgetBase *createExecutionWidget() = 0 /TransferBack/;
+
+    void registerProcessingContextGenerator( QgsProcessingContextGenerator *generator );
+%Docstring
+Registers a Processing context ``generator`` class that will be used to
+retrieve a Processing context for the dialog when required.
+%End
+    virtual QgsProcessingContext *processingContext() const;
+
 
     QToolBar *toolbar();
     QAction *actionOpen();
     QAction *actionSaveInProject();
     QAction *actionRun();
     QgsMessageBar *messageBar();
-    QGraphicsView *view();
+    QgsModelGraphicsView *view();
 
     void setDirty( bool dirty );
 
@@ -147,7 +171,6 @@ Updates both the name text edit and the model name itself.
 
 class QgsModelChildDependenciesWidget : QWidget
 {
-
 %TypeHeaderCode
 #include "qgsmodeldesignerdialog.h"
 %End
@@ -155,6 +178,16 @@ class QgsModelChildDependenciesWidget : QWidget
     QgsModelChildDependenciesWidget( QWidget *parent, QgsProcessingModelAlgorithm *model, const QString &childId );
     QList<QgsProcessingModelChildDependency> value() const;
     void setValue( const QList<QgsProcessingModelChildDependency> &value );
+
+  signals:
+
+    void changed();
+%Docstring
+Emitted when the dependencies are changed in the widget.
+
+.. versionadded:: 4.4
+%End
+
 };
 
 /************************************************************************

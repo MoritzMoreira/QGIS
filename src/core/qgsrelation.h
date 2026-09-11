@@ -16,19 +16,17 @@
 #ifndef QGSRELATION_H
 #define QGSRELATION_H
 
-#include <QList>
-#include <QDomNode>
-#include <QPair>
-
 #include "qgis_core.h"
+#include "qgis_sip.h"
+#include "qgsattributes.h"
 #include "qgsreadwritecontext.h"
 #include "qgsrelationcontext.h"
-#include "qgsattributes.h"
 
-#include "qgis_sip.h"
+#include <QDomNode>
+#include <QList>
+#include <QPair>
 
 class QgsFeatureIterator;
-class QgsFeature;
 class QgsFeatureRequest;
 class QgsVectorLayer;
 class QgsRelationPrivate;
@@ -58,7 +56,6 @@ class CORE_EXPORT QgsRelation
     Q_PROPERTY( QgsPolymorphicRelation polymorphicRelation READ polymorphicRelation )
 
   public:
-
 #ifndef SIP_RUN
 
     /**
@@ -78,7 +75,8 @@ class CORE_EXPORT QgsRelation
 
         //! Constructor which takes two fields
         FieldPair( const QString &referencingField, const QString &referencedField )
-          : QPair< QString, QString >( referencingField, referencedField ) {}
+          : QPair< QString, QString >( referencingField, referencedField )
+        {}
 
         //! Gets the name of the referencing (child) field
         QString referencingField() const { return first; }
@@ -116,6 +114,18 @@ class CORE_EXPORT QgsRelation
     QgsRelation &operator=( const QgsRelation &other );
     QgsRelation &operator=( QgsRelation &&other );
 
+    // TODO QGIS 5.0 -- Remove the deprecated createFromXml method without the relationContext parameter
+    /**
+     * Creates a relation from an XML structure. Used for reading .qgs projects.
+     *
+     * \param node The dom node containing the relation information
+     * \param context to pass project translator
+     *
+     * \returns A relation
+     * \deprecated QGIS 4.4. Use createFromXml( const QDomNode &node, QgsReadWriteContext &context, const QgsRelationContext &relationContext ) instead.
+     */
+    Q_DECL_DEPRECATED static QgsRelation createFromXml( const QDomNode &node, QgsReadWriteContext &context ) SIP_DEPRECATED;
+
     /**
      * Creates a relation from an XML structure. Used for reading .qgs projects.
      *
@@ -125,7 +135,7 @@ class CORE_EXPORT QgsRelation
      *
      * \returns A relation
      */
-    static QgsRelation createFromXml( const QDomNode &node, QgsReadWriteContext &context, const QgsRelationContext &relationContext = QgsRelationContext() );
+    static QgsRelation createFromXml( const QDomNode &node, QgsReadWriteContext &context, const QgsRelationContext &relationContext );
 
     /**
      * Writes a relation to an XML structure. Used for saving .qgs projects
@@ -313,6 +323,7 @@ class CORE_EXPORT QgsRelation
 #ifndef SIP_RUN
     QList< QgsRelation::FieldPair > fieldPairs() const;
 #else
+    // clang-format off
     QMap< QString, QString > fieldPairs() const;
     % MethodCode
     const QList< QgsRelation::FieldPair > &pairs = sipCpp->fieldPairs();
@@ -322,6 +333,7 @@ class CORE_EXPORT QgsRelation
       sipRes->insert( pair.first, pair.second );
     }
     % End
+// clang-format on
 #endif
 
     /**
@@ -433,7 +445,6 @@ class CORE_EXPORT QgsRelation
     static QString strengthToDisplayString( Qgis::RelationshipStrength strength );
 
   private:
-
     mutable QExplicitlySharedDataPointer<QgsRelationPrivate> d;
 
     QgsRelationContext mContext;

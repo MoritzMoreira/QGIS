@@ -27,6 +27,8 @@
 #include <QMetaEnum>
 #include <QCoreApplication>
 
+#include "config.h"
+
 namespace pdf
 {
 
@@ -48,7 +50,7 @@ PDFApplicationTranslator::ELanguage PDFApplicationTranslator::getLanguage() cons
 void PDFApplicationTranslator::installTranslator()
 {
     QDir applicationDirectory(QCoreApplication::applicationDirPath());
-    applicationDirectory.cd("translations");
+    applicationDirectory.cd(PDF4QT_TRANSLATIONS_RELATIVE_PATH);
     QString translationPath = applicationDirectory.absolutePath();
 
     Q_ASSERT(!m_translator);
@@ -75,7 +77,8 @@ void PDFApplicationTranslator::installTranslator()
         case E_LANGUAGE_GERMAN:
         case E_LANGUAGE_KOREAN:
         case E_LANGUAGE_SPANISH:
-        case E_LANGUAGE_CHINESE:
+        case E_LANGUAGE_CHINESE_SIMPLIFIED:
+        case E_LANGUAGE_CHINESE_TRADITIONAL:
         case E_LANGUAGE_FRENCH:
         case E_LANGUAGE_TURKISH:
         case E_LANGUAGE_RUSSIAN:
@@ -169,6 +172,11 @@ QString PDFApplicationTranslator::loadLanguageKeyFromSettings(QSettings& setting
     QString languageKey = settings.value("language", metaEnum.valueToKey(E_LANGUAGE_AUTOMATIC_SELECTION)).toString();
     settings.endGroup();
 
+    if (languageKey == QLatin1String("E_LANGUAGE_CHINESE"))
+    {
+        languageKey = QLatin1String("E_LANGUAGE_CHINESE_SIMPLIFIED");
+    }
+
     return languageKey;
 }
 
@@ -183,11 +191,13 @@ QString PDFApplicationTranslator::getLanguageFileName() const
         case E_LANGUAGE_GERMAN:
             return QLatin1String("PDF4QT_de.qm");
         case E_LANGUAGE_KOREAN:
-            return QLatin1String("PDF4QT_es.qm");
-        case E_LANGUAGE_SPANISH:
             return QLatin1String("PDF4QT_ko.qm");
-        case E_LANGUAGE_CHINESE:
+        case E_LANGUAGE_SPANISH:
+            return QLatin1String("PDF4QT_es.qm");
+        case E_LANGUAGE_CHINESE_SIMPLIFIED:
             return QLatin1String("PDF4QT_zh_CN.qm");
+        case E_LANGUAGE_CHINESE_TRADITIONAL:
+            return QLatin1String("PDF4QT_zh_TW.qm");
         case E_LANGUAGE_FRENCH:
             return QLatin1String("PDF4QT_fr.qm");
         case E_LANGUAGE_TURKISH:

@@ -15,19 +15,21 @@
  ***************************************************************************/
 
 #include "qgsfieldformatterregistry.h"
-#include "moc_qgsfieldformatterregistry.cpp"
-#include "qgsfieldformatter.h"
 
-#include "qgsvaluerelationfieldformatter.h"
-#include "qgsvaluemapfieldformatter.h"
+#include "qgscheckboxfieldformatter.h"
 #include "qgsdatetimefieldformatter.h"
-#include "qgsrelationreferencefieldformatter.h"
+#include "qgsenumerationfieldformatter.h"
+#include "qgsfallbackfieldformatter.h"
+#include "qgsfieldformatter.h"
 #include "qgskeyvaluefieldformatter.h"
 #include "qgslistfieldformatter.h"
 #include "qgsrangefieldformatter.h"
-#include "qgscheckboxfieldformatter.h"
-#include "qgsfallbackfieldformatter.h"
 #include "qgsreadwritelocker.h"
+#include "qgsrelationreferencefieldformatter.h"
+#include "qgsvaluemapfieldformatter.h"
+#include "qgsvaluerelationfieldformatter.h"
+
+#include "moc_qgsfieldformatterregistry.cpp"
 
 QgsFieldFormatterRegistry::QgsFieldFormatterRegistry( QObject *parent )
   : QObject( parent )
@@ -40,6 +42,7 @@ QgsFieldFormatterRegistry::QgsFieldFormatterRegistry( QObject *parent )
   addFieldFormatter( new QgsDateTimeFieldFormatter() );
   addFieldFormatter( new QgsRangeFieldFormatter() );
   addFieldFormatter( new QgsCheckBoxFieldFormatter() );
+  addFieldFormatter( new QgsEnumerationFieldFormatter() );
 
   mFallbackFieldFormatter = std::make_unique<QgsFallbackFieldFormatter>();
 }
@@ -48,7 +51,6 @@ QgsFieldFormatterRegistry::~QgsFieldFormatterRegistry()
 {
   const QgsReadWriteLocker locker( mLock, QgsReadWriteLocker::Write );
   qDeleteAll( mFieldFormatters );
-
 }
 
 void QgsFieldFormatterRegistry::addFieldFormatter( QgsFieldFormatter *formatter )

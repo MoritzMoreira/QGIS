@@ -16,10 +16,12 @@
 #ifndef QGSTEXTUREATLASGENERATOR_H
 #define QGSTEXTUREATLASGENERATOR_H
 
-#include "qgis_3d.h"
 #include <vector>
-#include <QRect>
+
+#include "qgis_3d.h"
+
 #include <QImage>
+#include <QRect>
 
 ///@cond PRIVATE
 class QgsTextureRect;
@@ -63,6 +65,7 @@ class _3D_EXPORT QgsTextureAtlas
      */
     QRect rect( int index ) const;
 #else
+
     /**
      * Returns the packed rectangle for the texture with the specified \a index.
      *
@@ -104,19 +107,19 @@ class _3D_EXPORT QgsTextureAtlas
     int count() const;
 
 #ifdef SIP_RUN
+    // clang-format off
     int __len__() const;
     % Docstring
-        Returns the number of textures in the atlas.
-      % End
-        //%MethodCode
-        sipRes
-      = sipCpp->count();
+    Returns the number of textures in the atlas.
+    % End
+    //%MethodCode
+    sipRes = sipCpp->count();
     //% End
+// clang-format on
 #endif
 
   private:
-    std::vector< QgsTextureRect >
-      mRects;
+    std::vector< QgsTextureRect > mRects;
     QSize mAtlasSize;
 
     friend class QgsTextureAtlasGenerator;

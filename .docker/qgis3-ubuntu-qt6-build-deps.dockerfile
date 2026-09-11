@@ -1,5 +1,4 @@
-
-ARG DISTRO_VERSION=25.10
+ARG DISTRO_VERSION=26.04
 
 # Oracle Docker image is too large, so we add as less dependencies as possible
 # so there is enough space on GitHub runner
@@ -28,9 +27,10 @@ RUN  apt-get update \
     gpsbabel \
     graphviz \
     'libaio1|libaio1t64' \
-    'libdraco4|libdraco8' \
+    'libdraco4|libdraco8|libdraco9' \
     libexiv2-28 \
     'libfcgi0ldbl|libfcgi0t64' \
+    libgeographiclib26 \
     libgsl28 \
     'libprotobuf-lite17|libprotobuf-lite23|libprotobuf-lite32t64' \
     libqca-qt6-plugins \
@@ -104,10 +104,13 @@ RUN  apt-get update \
     xfonts-scalable \
     xvfb \
     ocl-icd-libopencl1
+
 RUN  pip3 install --break-system-packages \
     future \
     capturer \
-    hdbcli
+    hdbcli \
+    pyarrow
+
 RUN  apt-get clean
 
 # Node.js and Yarn for server landingpage webapp
@@ -145,7 +148,7 @@ RUN  apt-get update \
      libgdal-dev \
      libproj-dev
 
-RUN 
+RUN
 FROM binary-for-oracle AS binary-only
 
 RUN  apt-get update \
@@ -181,8 +184,10 @@ FROM binary-only
 RUN  apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y \
     bison \
+    build-essential \
+    g++-x86-64-linux-gnu \
     ccache \
-    clang \
+    clang-22 \
     cmake \
     flex \
     mold \
@@ -191,6 +196,7 @@ RUN  apt-get update \
     libexiv2-dev \
     libexpat1-dev \
     libfcgi-dev \
+    libgeographiclib-dev \
     libgeos-dev \
     libgsl-dev \
     libpq-dev \
@@ -230,6 +236,9 @@ RUN  apt-get update \
     opencl-headers \
     ocl-icd-opencl-dev \
   && apt-get clean
+
+RUN update-alternatives --install /usr/bin/clang   clang   /usr/bin/clang-22  220 \
+    --slave /usr/bin/clang++ clang++ /usr/bin/clang++-22
 
 ENV PATH="/usr/local/bin:${PATH}"
 

@@ -13,17 +13,19 @@
  *                                                                         *
  ***************************************************************************/
 
-#include <QGuiApplication>
-#include <QFont>
-
 #include "qgssettingstreemodel.h"
-#include "moc_qgssettingstreemodel.cpp"
-#include "qgssettingsentry.h"
-#include "qgssettingstreenode.h"
-#include "qgssettingseditorwidgetwrapper.h"
-#include "qgssettingseditorwidgetregistry.h"
+
 #include "qgsgui.h"
 #include "qgslogger.h"
+#include "qgssettingseditorwidgetregistry.h"
+#include "qgssettingseditorwidgetwrapper.h"
+#include "qgssettingsentry.h"
+#include "qgssettingstreenode.h"
+
+#include <QFont>
+#include <QGuiApplication>
+
+#include "moc_qgssettingstreemodel.cpp"
 
 ///@cond PRIVATE
 
@@ -454,8 +456,7 @@ bool QgsSettingsTreeModel::setData( const QModelIndex &index, const QVariant &va
 QgsSettingsTreeItemDelegate::QgsSettingsTreeItemDelegate( QgsSettingsTreeModel *model, QObject *parent )
   : QItemDelegate( parent )
   , mModel( model )
-{
-}
+{}
 
 QWidget *QgsSettingsTreeItemDelegate::createEditor( QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index ) const
 {

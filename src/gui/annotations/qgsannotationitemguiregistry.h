@@ -16,14 +16,16 @@
 #ifndef QGSANNOTATIONITEMGUIREGISTRY_H
 #define QGSANNOTATIONITEMGUIREGISTRY_H
 
+#include <functional>
+
+#include "qgis.h"
 #include "qgis_gui.h"
 #include "qgis_sip.h"
+#include "qgsannotationitemregistry.h"
 #include "qgsapplication.h"
 #include "qgspathresolver.h"
-#include "qgsannotationitemregistry.h"
-#include "qgis.h"
+
 #include <QIcon>
-#include <functional>
 
 class QgsAnnotationLayer;
 class QgsAnnotationItem;
@@ -162,7 +164,16 @@ class GUI_EXPORT QgsAnnotationItemGuiMetadata : public QgsAnnotationItemAbstract
      *
      * An optional \a groupId can be set, which allows grouping of related annotation item classes. See QgsAnnotationItemGuiMetadata for details.
      */
-    QgsAnnotationItemGuiMetadata( const QString &type, const QString &visibleName, const QIcon &creationIcon, const QgsAnnotationItemWidgetFunc &pfWidget = nullptr, const QString &groupId = QString(), Qgis::AnnotationItemGuiFlags flags = Qgis::AnnotationItemGuiFlags(), const QgsAnnotationItemCreateFunc &pfCreateFunc = nullptr, const QgsCreateAnnotationItemMapToolFunc &pfCreateMapToolFunc = nullptr )
+    QgsAnnotationItemGuiMetadata(
+      const QString &type,
+      const QString &visibleName,
+      const QIcon &creationIcon,
+      const QgsAnnotationItemWidgetFunc &pfWidget = nullptr,
+      const QString &groupId = QString(),
+      Qgis::AnnotationItemGuiFlags flags = Qgis::AnnotationItemGuiFlags(),
+      const QgsAnnotationItemCreateFunc &pfCreateFunc = nullptr,
+      const QgsCreateAnnotationItemMapToolFunc &pfCreateMapToolFunc = nullptr
+    )
       : QgsAnnotationItemAbstractGuiMetadata( type, visibleName, groupId, flags )
       , mIcon( creationIcon )
       , mWidgetFunc( pfWidget )

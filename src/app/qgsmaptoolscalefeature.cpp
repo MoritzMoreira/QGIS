@@ -13,32 +13,36 @@
  *                                                                         *
  ***************************************************************************/
 
-#include <QSettings>
-#include <QEvent>
-#include <QHBoxLayout>
-#include <QKeyEvent>
-#include <QLabel>
+#include "qgsmaptoolscalefeature.h"
 
-#include <limits>
 #include <cmath>
+#include <limits>
 
+#include "qgisapp.h"
 #include "qgsadvanceddigitizingdockwidget.h"
 #include "qgsavoidintersectionsoperation.h"
-#include "qgsmaptoolscalefeature.h"
-#include "moc_qgsmaptoolscalefeature.cpp"
+#include "qgsdoublespinbox.h"
 #include "qgsfeatureiterator.h"
 #include "qgsgeometry.h"
 #include "qgslogger.h"
 #include "qgsmapcanvas.h"
-#include "qgsrubberband.h"
-#include "qgsvectorlayer.h"
-#include "qgstolerance.h"
-#include "qgisapp.h"
-#include "qgsspinbox.h"
-#include "qgsdoublespinbox.h"
-#include "qgssnapindicator.h"
 #include "qgsmapmouseevent.h"
+#include "qgsrubberband.h"
+#include "qgssnapindicator.h"
+#include "qgsspinbox.h"
+#include "qgstolerance.h"
+#include "qgsvectorlayer.h"
 
+#include <QEvent>
+#include <QHBoxLayout>
+#include <QKeyEvent>
+#include <QLabel>
+#include <QSettings>
+#include <QString>
+
+#include "moc_qgsmaptoolscalefeature.cpp"
+
+using namespace Qt::StringLiterals;
 
 QgsScaleMagnetWidget::QgsScaleMagnetWidget( const QString &label, QWidget *parent )
   : QWidget( parent )
@@ -265,22 +269,26 @@ void QgsMapToolScaleFeature::cadCanvasReleaseEvent( QgsMapMouseEvent *e )
       mScaledFeatures << cf.id(); //todo: take the closest feature, not the first one...
       mOriginalGeometries << cf.geometry();
 
-      mRubberBand = createRubberBand( vlayer->geometryType() );
+      mRubberBand = createRubberBandForLayer( vlayer, { cf.id() } );
       mRubberBand->setToGeometry( cf.geometry(), vlayer );
     }
     else
     {
       mScaledFeatures = vlayer->selectedFeatureIds();
 
-      mRubberBand = createRubberBand( vlayer->geometryType() );
-
       QgsFeature feat;
       QgsFeatureIterator it = vlayer->getSelectedFeatures();
+      QList< QgsFeatureId > ids;
+      QVector< QgsGeometry > selectedGeometries;
       while ( it.nextFeature( feat ) )
       {
-        mRubberBand->addGeometry( feat.geometry(), vlayer, false );
         mOriginalGeometries << feat.geometry();
+        selectedGeometries << feat.geometry();
+        ids << feat.id();
       }
+      mRubberBand = createRubberBandForLayer( vlayer, ids );
+      mRubberBand->setToGeometry( QgsGeometry::collectGeometry( selectedGeometries ), vlayer );
+
       mRubberBand->updatePosition();
       mRubberBand->update();
     }
@@ -480,7 +488,7 @@ void QgsMapToolScaleFeature::createScalingWidget()
 
   deleteScalingWidget();
 
-  mScalingWidget = new QgsScaleMagnetWidget( QStringLiteral( "Scaling:" ) );
+  mScalingWidget = new QgsScaleMagnetWidget( u"Scaling:"_s );
   QgisApp::instance()->addUserInputWidget( mScalingWidget );
   mScalingWidget->setFocus( Qt::TabFocusReason );
 

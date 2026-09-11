@@ -19,13 +19,14 @@
 #define QGSELEVATIONPROFILECANVAS_H
 
 #include "qgsconfig.h"
-#include "qgis_sip.h"
+
 #include "qgis_gui.h"
-#include "qgsplotcanvas.h"
-#include "qgsmaplayer.h"
+#include "qgis_sip.h"
 #include "qgscoordinatereferencesystem.h"
-#include "qgsprofilepoint.h"
 #include "qgslinesymbol.h"
+#include "qgsmaplayer.h"
+#include "qgsplotcanvas.h"
+#include "qgsprofilepoint.h"
 
 class QgsElevationProfilePlotItem;
 class QgsElevationProfileCrossHairsItem;
@@ -204,6 +205,16 @@ class GUI_EXPORT QgsElevationProfileCanvas : public QgsPlotCanvas
     QgsDoubleRange visibleElevationRange() const;
 
     /**
+     * Returns elevation range of the computed profile results.
+     *
+     * Calculated from data, not from visible extent.
+     *
+     * \see visibleElevationRange()
+     * \since QGIS 4.2
+     */
+    QgsDoubleRange dataElevationRange() const;
+
+    /**
      * Returns a reference to the 2D plot used by the widget.
      *
      * \note Not available in Python bindings
@@ -310,10 +321,7 @@ class GUI_EXPORT QgsElevationProfileCanvas : public QgsPlotCanvas
      * \see setSubsectionsSymbol()
      * \since QGIS 3.44
      */
-    QgsLineSymbol *subsectionsSymbol()
-    {
-      return mSubsectionsSymbol.get();
-    }
+    QgsLineSymbol *subsectionsSymbol() { return mSubsectionsSymbol.get(); }
 
     /**
      * Sets the \a symbol used to draw the subsections. If \a symbol is NULLPTR, the subsections are not drawn.
@@ -394,7 +402,7 @@ class GUI_EXPORT QgsElevationProfileCanvas : public QgsPlotCanvas
     Qgis::DistanceUnit mDistanceUnit = Qgis::DistanceUnit::Unknown;
 
     QgsWeakMapLayerPointerList mLayers;
-    QList< QgsAbstractProfileSource * > mSources;
+    QList< std::variant< QgsWeakMapLayerPointer, QgsAbstractProfileSource * > > mSources;
 
     QgsElevationProfilePlotItem *mPlotItem = nullptr;
     QgsElevationProfileCrossHairsItem *mCrossHairsItem = nullptr;

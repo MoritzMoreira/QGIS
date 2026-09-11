@@ -23,18 +23,18 @@ import os
 
 from qgis.core import (
     QgsProcessingAlgorithm,
-    QgsRasterFileWriter,
     QgsProcessingException,
-    QgsProcessingParameterDefinition,
-    QgsProcessingParameterRasterLayer,
     QgsProcessingParameterBand,
-    QgsProcessingParameterNumber,
     QgsProcessingParameterBoolean,
-    QgsProcessingParameterString,
+    QgsProcessingParameterDefinition,
+    QgsProcessingParameterNumber,
     QgsProcessingParameterRasterDestination,
+    QgsProcessingParameterRasterLayer,
+    QgsProcessingParameterString,
+    QgsRasterFileWriter,
 )
+
 from processing.algs.gdal.GdalAlgorithm import GdalAlgorithm
-from processing.tools.system import isWindows
 from processing.algs.gdal.GdalUtils import GdalUtils
 
 pluginPath = os.path.split(os.path.split(os.path.dirname(__file__))[0])[0]
@@ -110,7 +110,7 @@ class fillnodata(GdalAlgorithm):
         )
 
         # backwards compatibility parameter
-        # TODO QGIS 4: remove parameter and related logic
+        # TODO QGIS 5: remove parameter and related logic
         options_param = QgsProcessingParameterString(
             self.OPTIONS,
             self.tr("Additional creation options"),
@@ -202,7 +202,7 @@ class fillnodata(GdalAlgorithm):
             arguments.append("-mask")
             arguments.append(mask.source())
 
-        output_format = QgsRasterFileWriter.driverForExtension(os.path.splitext(out)[1])
+        output_format = self.outputFormat(parameters, self.OUTPUT, context)
         if not output_format:
             raise QgsProcessingException(self.tr("Output format is invalid"))
 
@@ -225,6 +225,6 @@ class fillnodata(GdalAlgorithm):
             arguments.extend(GdalUtils.parseCreationOptions(options))
 
         return [
-            self.commandName() + (".bat" if isWindows() else ".py"),
+            self.commandName() + (".bat" if GdalUtils.is_windows() else ".py"),
             GdalUtils.escapeAndJoin(arguments),
         ]
